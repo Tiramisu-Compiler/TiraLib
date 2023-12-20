@@ -3,6 +3,7 @@ from .expansion import Expansion
 from .fusion import Fusion
 from .interchange import Interchange
 from .parallelization import Parallelization
+from .matrix import MatrixTransform
 from .reversal import Reversal
 from .skewing import Skewing
 from .tiling_2d import Tiling2D
@@ -20,6 +21,7 @@ __all__ = [
     "TiramisuActionType",
     "CannotApplyException",
     "Interchange",
+    "MatrixTransform",
     "Tiling2D",
     "Tiling3D",
     "TilingGeneral",

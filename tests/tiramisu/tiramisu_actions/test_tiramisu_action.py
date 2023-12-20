@@ -71,7 +71,7 @@ def test_get_candidates():
 
 
 def test_get_types():
-    assert len(TiramisuAction.get_types()) == 11
+    assert len(TiramisuAction.get_types()) == 12
 
 
 def test_str():
