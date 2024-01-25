@@ -26,8 +26,10 @@ class MatrixTransform(TiramisuAction):
     def __init__(self, params: List[int], comps: List[str]):
         # MatrixTransform takes the list of parameters of the polyhedral transformation matrix
         # assert that len(params) is a square number (square matrix)
-        assert math.sqrt(len(params)) == int(math.sqrt(len(params)))
-        assert len(comps) == 1
+        assert math.sqrt(len(params)) == int(
+            math.sqrt(len(params))
+        ), "Matrix is not square"
+        assert len(comps) == 1, "MatrixTransform can only be applied to one computation"
         rowLength = int(math.sqrt(len(params)))
         matrix = [params[i : i + rowLength] for i in range(0, len(params), rowLength)]
 
