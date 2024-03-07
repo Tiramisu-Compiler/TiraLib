@@ -26,9 +26,7 @@ def test_set_string_representations():
     sample = test_utils.fusion_sample()
     fusion = Fusion([("comp03", 3), ("comp04", 3)])
     fusion.initialize_action_for_tree(sample.tree)
-    assert (
-        "comp01.then(comp03,0).then(comp04,3);\n" in fusion.tiramisu_optim_str
-    )
+    assert "comp01.then(comp03,0).then(comp04,3);\n" in fusion.tiramisu_optim_str
 
 
 def test_get_candidates():
@@ -106,10 +104,7 @@ def test_fusion_application():
 
     schedule.add_optimizations([fusion])
 
-    assert (
-        "A_hat.then(x_temp,0).then(x,-1).then(w,-1);\n"
-        in fusion.tiramisu_optim_str
-    )
+    assert "A_hat.then(x_temp,0).then(x,-1).then(w,-1);\n" in fusion.tiramisu_optim_str
     assert not schedule.is_legal()
 
     schedule = Schedule(sample)
@@ -124,10 +119,7 @@ def test_fusion_application():
     fusion = Fusion([("A_hat", 0), ("x_temp", 0)])
     schedule.add_optimizations([fusion])
 
-    assert (
-        "A_hat.then(x_temp,0).then(x,-1).then(w,-1);"
-        in fusion.tiramisu_optim_str
-    )
+    assert "A_hat.then(x_temp,0).then(x,-1).then(w,-1);" in fusion.tiramisu_optim_str
 
     assert schedule.is_legal()
 

@@ -72,9 +72,7 @@ def test_set_string_representations():
     )
     schedule = Schedule(sample)
     schedule.add_optimizations([tiling_3d])
-    assert (
-        tiling_3d.tiramisu_optim_str == "comp00.tile(0, 1, 2, 32, 32, 32);\n"
-    )
+    assert tiling_3d.tiramisu_optim_str == "comp00.tile(0, 1, 2, 32, 32, 32);\n"
 
 
 def test_get_candidates():
@@ -112,9 +110,7 @@ def test_get_candidates():
 def test_fusion_levels():
     t_tree = test_utils.tree_test_sample_3()
 
-    action = Tiling3D(
-        [("comp03", 2), ("comp03", 3), ("comp03", 4), 32, 32, 32]
-    )
+    action = Tiling3D([("comp03", 2), ("comp03", 3), ("comp03", 4), 32, 32, 32])
     action.initialize_action_for_tree(t_tree)
     assert (
         action.tiramisu_optim_str.split("\n")[-2]

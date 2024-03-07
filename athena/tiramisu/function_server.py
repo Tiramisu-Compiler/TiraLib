@@ -71,9 +71,7 @@ class ResultInterface:
             else []
         )
         self.additional_info = (
-            result_dict["additional_info"]
-            if "additional_info" in result_dict
-            else None
+            result_dict["additional_info"] if "additional_info" in result_dict else None
         )
 
     def __str__(self) -> str:
@@ -85,9 +83,7 @@ class ResultInterface:
 
 
 class FunctionServer:
-    def __init__(
-        self, tiramisu_program: "TiramisuProgram", reuseServer: bool = False
-    ):
+    def __init__(self, tiramisu_program: "TiramisuProgram", reuseServer: bool = False):
         if not BaseConfig.base_config:
             raise ValueError("BaseConfig not initialized")
 
@@ -102,8 +98,7 @@ class FunctionServer:
         )
 
         server_path = (
-            Path(BaseConfig.base_config.workspace)
-            / f"{tiramisu_program.name}_server"
+            Path(BaseConfig.base_config.workspace) / f"{tiramisu_program.name}_server"
         )
 
         if reuseServer and server_path.exists():
@@ -111,10 +106,8 @@ class FunctionServer:
             return
 
         # Generate the server code
-        server_code = (
-            FunctionServer._generate_server_code_from_original_string(
-                tiramisu_program
-            )
+        server_code = FunctionServer._generate_server_code_from_original_string(
+            tiramisu_program
         )
 
         # Write the server code to a file
@@ -197,10 +190,13 @@ class FunctionServer:
         schedule: "Schedule | None" = None,
         nbr_executions: int = 30,
     ):
-        assert operation in [
-            "execution",
-            "legality",
-        ], f"Invalid operation {operation}. Valid operations are: execution, legality, annotations"  # noqa: E501
+        assert (
+            operation
+            in [
+                "execution",
+                "legality",
+            ]
+        ), f"Invalid operation {operation}. Valid operations are: execution, legality, annotations"  # noqa: E501
 
         env_vars = " && ".join(
             [

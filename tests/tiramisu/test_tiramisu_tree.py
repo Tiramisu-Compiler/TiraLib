@@ -7,9 +7,7 @@ def test_from_annotations():
     data, _ = test_utils.load_test_data()
     # get program of first key from data
     program = data[list(data.keys())[0]]
-    tiramisu_tree = TiramisuTree.from_annotations(
-        program["program_annotation"]
-    )
+    tiramisu_tree = TiramisuTree.from_annotations(program["program_annotation"])
     assert len(tiramisu_tree.roots) == 1
 
     BaseConfig.init()

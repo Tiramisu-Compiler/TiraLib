@@ -5,17 +5,13 @@ from athena.tiramisu.tiramisu_actions import TiramisuAction, TiramisuActionType
 
 
 def test_initialize_action_for_tree():
-    tiramisu_action = TiramisuAction(
-        type=None, params=[1, 2, 3], comps=["a", "b", "c"]
-    )
+    tiramisu_action = TiramisuAction(type=None, params=[1, 2, 3], comps=["a", "b", "c"])
     with pytest.raises(NotImplementedError):
         tiramisu_action.initialize_action_for_tree(tiramisu_tree=None)
 
 
 def test_set_string_representations():
-    tiramisu_action = TiramisuAction(
-        type=None, params=[1, 2, 3], comps=["a", "b", "c"]
-    )
+    tiramisu_action = TiramisuAction(type=None, params=[1, 2, 3], comps=["a", "b", "c"])
     with pytest.raises(NotImplementedError):
         tiramisu_action.set_string_representations(tiramisu_tree=None)
 

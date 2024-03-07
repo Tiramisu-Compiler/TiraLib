@@ -42,15 +42,11 @@ class Distribution(TiramisuAction):
 
         if self.children is None:
             self.children = []
-            iterator = tiramisu_tree.get_iterator_of_computation(
-                *self.iterator_id
-            )
+            iterator = tiramisu_tree.get_iterator_of_computation(*self.iterator_id)
             # For each iterator get its comps and add them
             for child_iterator in iterator.child_iterators:
-                child_iterator_comps = (
-                    tiramisu_tree.get_iterator_subtree_computations(
-                        child_iterator
-                    )
+                child_iterator_comps = tiramisu_tree.get_iterator_subtree_computations(
+                    child_iterator
                 )
                 self.children.append(child_iterator_comps)
             # Add the computation of the iterator itself
@@ -61,9 +57,7 @@ class Distribution(TiramisuAction):
                 for index, child in enumerate(child_list):
                     # convert an iterator into its comps
                     if isinstance(child, tuple):
-                        tmp_iterator = (
-                            tiramisu_tree.get_iterator_of_computation(*child)
-                        )
+                        tmp_iterator = tiramisu_tree.get_iterator_of_computation(*child)
                         tmp_iterator_comps = (
                             tiramisu_tree.get_iterator_subtree_computations(
                                 tmp_iterator.name
@@ -100,10 +94,7 @@ class Distribution(TiramisuAction):
         candidates: List[str] = []
 
         for iterator in program_tree.iterators.values():
-            if (
-                len(iterator.computations_list) + len(iterator.child_iterators)
-                > 1
-            ):
+            if len(iterator.computations_list) + len(iterator.child_iterators) > 1:
                 candidates.append(iterator.id)
 
         return candidates

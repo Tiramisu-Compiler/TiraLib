@@ -40,9 +40,7 @@ def test_initialize_action_for_tree():
     for child_list in distribution.children:
         assert child_list in expected_children
 
-    distribution = Distribution(
-        [("comp03", 2)], [[("comp03", 3)], [("comp04", 3)]]
-    )
+    distribution = Distribution([("comp03", 2)], [[("comp03", 3)], [("comp04", 3)]])
     distribution.initialize_action_for_tree(sample)
     assert distribution.iterator_id == ("comp03", 2)
     expected_children = [["comp03"], ["comp04"]]
@@ -79,12 +77,8 @@ def test_get_fusion_levels():
     distribution = Distribution([("R_up_init", 1)])
     distribution.initialize_action_for_tree(sample.tree)
     ordered_computations = sample.tree.computations
-    ordered_computations.sort(
-        key=lambda x: sample.tree.computations_absolute_order[x]
-    )
-    assert distribution.get_fusion_levels(
-        ordered_computations, sample.tree
-    ) == [
+    ordered_computations.sort(key=lambda x: sample.tree.computations_absolute_order[x])
+    assert distribution.get_fusion_levels(ordered_computations, sample.tree) == [
         0,
         0,
         0,
@@ -97,9 +91,7 @@ def test_get_fusion_levels():
     distribution = Distribution([("comp05", 1)])
     distribution.initialize_action_for_tree(t_tree)
     ordered_computations = t_tree.computations
-    ordered_computations.sort(
-        key=lambda x: t_tree.computations_absolute_order[x]
-    )
+    ordered_computations.sort(key=lambda x: t_tree.computations_absolute_order[x])
     assert distribution.get_fusion_levels(ordered_computations, t_tree) == [
         0,
         0,
@@ -114,9 +106,7 @@ def test_get_fusion_levels():
     )
     distribution.initialize_action_for_tree(t_tree)
     ordered_computations = t_tree.computations
-    ordered_computations.sort(
-        key=lambda x: t_tree.computations_absolute_order[x]
-    )
+    ordered_computations.sort(key=lambda x: t_tree.computations_absolute_order[x])
     assert distribution.get_fusion_levels(ordered_computations, t_tree) == [
         0,
         1,

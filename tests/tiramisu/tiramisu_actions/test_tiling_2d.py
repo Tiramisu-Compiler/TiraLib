@@ -49,9 +49,7 @@ def test_get_candidates():
     tree = test_utils.tree_test_sample()
     candidates = Tiling2D.get_candidates(tree)
     assert candidates == {
-        tree.iterators["root"].id: [
-            (tree.iterators["j"].id, tree.iterators["k"].id)
-        ]
+        tree.iterators["root"].id: [(tree.iterators["j"].id, tree.iterators["k"].id)]
     }
 
 

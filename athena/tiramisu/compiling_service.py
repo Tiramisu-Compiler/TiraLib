@@ -273,9 +273,7 @@ class CompilingService:
                 raise Exception("Compiler returned no output")
 
         except subprocess.CalledProcessError as e:
-            logging.error(
-                f"Process terminated with error code: {e.returncode}"
-            )
+            logging.error(f"Process terminated with error code: {e.returncode}")
             logging.error(f"Error output: {e.stderr}")
             logging.error(env_vars + shell_script)
             raise e
@@ -315,9 +313,7 @@ class CompilingService:
         legality_cpp_code = legality_cpp_code.replace(
             "is_legal &= check_legality_of_function();", ""
         )
-        legality_cpp_code = legality_cpp_code.replace(
-            "bool is_legal=true;", ""
-        )
+        legality_cpp_code = legality_cpp_code.replace("bool is_legal=true;", "")
         legality_cpp_code = re.sub(
             r"is_legal &= loop_parallelization_is_legal.*\n",
             "",
@@ -371,9 +367,7 @@ class CompilingService:
             f"{schedule.tiramisu_program.name}_skewing_solver",
         )
 
-        result_str = cls.run_cpp_code(
-            cpp_code=solver_code, output_path=output_path
-        )
+        result_str = cls.run_cpp_code(cpp_code=solver_code, output_path=output_path)
         result_str = result_str.split(",")
 
         # Skewing Solver returns 3 solutions in form of tuples:
@@ -433,9 +427,7 @@ class CompilingService:
         return cpp_code
 
     @classmethod
-    def write_to_disk(
-        cls, cpp_code: str, output_path: str, extension: str = ".cpp"
-    ):
+    def write_to_disk(cls, cpp_code: str, output_path: str, extension: str = ".cpp"):
         """
         Writes the code to a file
 
@@ -605,9 +597,7 @@ class CompilingService:
                         max_runs = int(max_millis_per_run / exec_time)
                         max_runs = min(0, max_runs - 1)
                 else:
-                    raise ScheduleExecutionCrashed(
-                        "No output from schedule execution"
-                    )
+                    raise ScheduleExecutionCrashed("No output from schedule execution")
 
             # run the wrapper and get the execution time
             compiler = subprocess.run(
@@ -638,13 +628,9 @@ class CompilingService:
                 logging.error(
                     f"The following schedule execution crashed: {tiramisu_program.name}, schedule: {optims_list} \n\n {cpp_code}\n\n"  # noqa: E501
                 )
-                raise ScheduleExecutionCrashed(
-                    "No output from schedule execution"
-                )
+                raise ScheduleExecutionCrashed("No output from schedule execution")
         except subprocess.CalledProcessError as e:
-            logging.error(
-                f"Process terminated with error code: {e.returncode}"
-            )
+            logging.error(f"Process terminated with error code: {e.returncode}")
             logging.error(f"Error output: {e.stderr}")
             logging.error(f"Output: {e.stdout}")
             raise ScheduleExecutionCrashed(

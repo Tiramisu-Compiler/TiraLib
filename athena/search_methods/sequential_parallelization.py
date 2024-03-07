@@ -11,9 +11,7 @@ def parallelize_first_legal_outermost(
 
     for root in tiramisu_program.tree.roots:
         tmp_schedule = schedule.copy()
-        for candidate in candidates_per_root[
-            tiramisu_program.tree.iterators[root].id
-        ]:
+        for candidate in candidates_per_root[tiramisu_program.tree.iterators[root].id]:
             for node in candidate:
                 tmp_schedule.add_optimizations(
                     [

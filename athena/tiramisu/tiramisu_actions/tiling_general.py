@@ -53,9 +53,7 @@ class TilingGeneral(TiramisuAction):
         self.tree = copy.deepcopy(tiramisu_tree)
 
         self.tiled_iterator_names = [
-            tiramisu_tree.get_iterator_of_computation(
-                iterator[0], iterator[1]
-            ).name
+            tiramisu_tree.get_iterator_of_computation(iterator[0], iterator[1]).name
             for iterator in self.iterators
         ]
 
@@ -67,9 +65,7 @@ class TilingGeneral(TiramisuAction):
         if self.comps is None:
             self.comps = []
             for iterator in self.tiled_iterator_names:
-                self.comps.extend(
-                    tiramisu_tree.iterators[iterator].computations_list
-                )
+                self.comps.extend(tiramisu_tree.iterators[iterator].computations_list)
 
         self.set_string_representations(self.tree)
 
@@ -82,9 +78,7 @@ class TilingGeneral(TiramisuAction):
         all_comps = tiramisu_tree.computations
         if len(all_comps) > 1:
             all_comps.sort(
-                key=lambda comp: tiramisu_tree.computations_absolute_order[
-                    comp
-                ]
+                key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
             )
 
         self.tiramisu_optim_str = ""
@@ -110,12 +104,8 @@ class TilingGeneral(TiramisuAction):
             # loop first
             loop_levels.reverse()
             tile_sizes.reverse()
-            loop_levels_and_factors = [
-                str(loop_level) for loop_level in loop_levels
-            ]
-            loop_levels_and_factors.extend(
-                [str(tile_size) for tile_size in tile_sizes]
-            )
+            loop_levels_and_factors = [str(loop_level) for loop_level in loop_levels]
+            loop_levels_and_factors.extend([str(tile_size) for tile_size in tile_sizes])
 
             self.tiramisu_optim_str += (
                 f"{comp}.tile({', '.join(loop_levels_and_factors)});\n"
@@ -157,9 +147,7 @@ class TilingGeneral(TiramisuAction):
                         # Get all possible combinations of
                         # 2 or 3 successive iterators
                         tmp_candidates = []
-                        tmp_candidates.extend(
-                            list(itertools.pairwise(section))
-                        )
+                        tmp_candidates.extend(list(itertools.pairwise(section)))
                         successive_3_iterators = [
                             tuple(section[i : i + 3])  # noqa: E203
                             for i in range(len(section) - 2)
@@ -169,9 +157,7 @@ class TilingGeneral(TiramisuAction):
                         for candidate in tmp_candidates:
                             perfect = True
                             for i in range(len(candidate) - 1):
-                                tmp_iterator = program_tree.iterators[
-                                    candidate[i]
-                                ]
+                                tmp_iterator = program_tree.iterators[candidate[i]]
                                 if tmp_iterator.computations_list:
                                     perfect = False
                                     break

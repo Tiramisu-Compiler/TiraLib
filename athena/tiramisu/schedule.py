@@ -28,9 +28,7 @@ class Schedule:
         The list of optimizations to be applied to the Tiramisu program.
     """
 
-    def __init__(
-        self, tiramisu_program: TiramisuProgram | None = None
-    ) -> None:
+    def __init__(self, tiramisu_program: TiramisuProgram | None = None) -> None:
         self.tiramisu_program = tiramisu_program
         self.optims_list: List[TiramisuAction] = []
         if tiramisu_program:
@@ -77,7 +75,9 @@ class Schedule:
         """
         Removes the last optimization from the schedule and returns it.
         """
-        return self.optims_list.pop()
+        action = self.optims_list.pop()
+        self.update_tree_from_isl_ast()
+        return action
 
     def execute(
         self,
@@ -160,9 +160,7 @@ class Schedule:
                                 action.set_string_representations(self.tree)
             return result.legality
 
-        legality, new_tree = CompilingService.compile_legality(
-            self, with_ast=with_ast
-        )
+        legality, new_tree = CompilingService.compile_legality(self, with_ast=with_ast)
 
         assert isinstance(legality, bool)
         self.legality = legality
@@ -187,9 +185,7 @@ class Schedule:
             isl_ast_str = CompilingService.compile_isl_ast_tree(
                 tiramisu_program=self.tiramisu_program, schedule=self
             )
-            self.tree = TiramisuTree.from_isl_ast_string_list(
-                isl_ast_str.split("\n")
-            )
+            self.tree = TiramisuTree.from_isl_ast_string_list(isl_ast_str.split("\n"))
 
     @classmethod
     def from_sched_str(
@@ -291,7 +287,9 @@ class Schedule:
                         ]
                     )
             elif optimization_str[:2] == "T3":
-                regex = r"T3\(L(\d),L(\d),L(\d),(\d+),(\d+),(\d+),comps=\[([\w', ]*)\]\)"  # noqa: E501
+                regex = (
+                    r"T3\(L(\d),L(\d),L(\d),(\d+),(\d+),(\d+),comps=\[([\w', ]*)\]\)"  # noqa: E501
+                )
                 match = re.match(regex, optimization_str)
                 if match:
                     outer_loop_level = int(match.group(1))
@@ -317,9 +315,7 @@ class Schedule:
                         ]
                     )
             elif optimization_str[0] == "S":
-                regex = (
-                    r"S\(L(\d),L(\d),(-?\d+),(-?\d+),comps=\[([\w', ]*)\]\)"
-                )
+                regex = r"S\(L(\d),L(\d),(-?\d+),(-?\d+),comps=\[([\w', ]*)\]\)"
                 match = re.match(regex, optimization_str)
                 if match:
                     outer_loop_level = int(match.group(1))

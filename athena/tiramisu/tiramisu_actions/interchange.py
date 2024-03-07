@@ -58,12 +58,8 @@ class Interchange(TiramisuAction):
         self.tiramisu_optim_str = ""
         levels = [param[1] for param in self.params]
         for comp in self.comps:
-            self.tiramisu_optim_str += (
-                f"{comp}.interchange({levels[0]},{levels[1]});\n"
-            )
-        self.str_representation = (
-            f"I(L{levels[0]},L{levels[1]},comps={self.comps})"
-        )
+            self.tiramisu_optim_str += f"{comp}.interchange({levels[0]},{levels[1]});\n"
+        self.str_representation = f"I(L{levels[0]},L{levels[1]},comps={self.comps})"
 
         self.legality_check_string = self.tiramisu_optim_str
 

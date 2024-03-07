@@ -25,35 +25,29 @@ class Unrolling(TiramisuAction):
         # Unrolling takes 2 parameters: the iterator to unroll and the
         # unrolling factor
         assert len(params) == 2
-        assert type(params[0]) is tuple and type(params[1]) is int
+        assert isinstance(params[0], IteratorIdentifier) and isinstance(
+            params[1], int
+        ), f"Invalid unrolling parameters: {params}"
         self.iterator_id = params[0]
         self.unrolling_factor = params[1]
 
         self.params = params
         self.comps = comps
 
-        super().__init__(
-            type=TiramisuActionType.UNROLLING, params=params, comps=comps
-        )
+        super().__init__(type=TiramisuActionType.UNROLLING, params=params, comps=comps)
 
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
         self.tree = copy.deepcopy(tiramisu_tree)
 
         if self.comps is None:
-            iterator = tiramisu_tree.get_iterator_of_computation(
-                *self.iterator_id
-            )
+            iterator = tiramisu_tree.get_iterator_of_computation(*self.iterator_id)
 
             # Get the computations that are in the loop to be unrolled
-            self.comps = tiramisu_tree.get_iterator_subtree_computations(
-                iterator.name
-            )
+            self.comps = tiramisu_tree.get_iterator_subtree_computations(iterator.name)
             # order the computations by their absolute order
             self.comps.sort(
-                key=lambda comp: tiramisu_tree.computations_absolute_order[
-                    comp
-                ]
+                key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
             )
 
         self.set_string_representations(tiramisu_tree)
@@ -68,10 +62,7 @@ class Unrolling(TiramisuAction):
         unrolling_factor = self.unrolling_factor
         # for comp in self.comps:
         self.tiramisu_optim_str = "\n    ".join(
-            [
-                f"{comp}.unroll({loop_level},{unrolling_factor});"
-                for comp in self.comps
-            ]
+            [f"{comp}.unroll({loop_level},{unrolling_factor});" for comp in self.comps]
         )
         self.str_representation = (
             f"U(L{str(loop_level)},{str(unrolling_factor)},comps={self.comps})"
@@ -85,10 +76,7 @@ class Unrolling(TiramisuAction):
 
         for iterator in program_tree.iterators:
             iterator_node = program_tree.iterators[iterator]
-            if (
-                not iterator_node.child_iterators
-                and iterator_node.computations_list
-            ):
+            if not iterator_node.child_iterators and iterator_node.computations_list:
                 candidates.append(program_tree.iterators[iterator].id)
 
         return candidates

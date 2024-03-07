@@ -28,9 +28,7 @@ class Expansion(TiramisuAction):
         assert isinstance(params[0], str)
         self.computation = params[0]
 
-        super().__init__(
-            type=TiramisuActionType.EXPANSION, params=params, comps=None
-        )
+        super().__init__(type=TiramisuActionType.EXPANSION, params=params, comps=None)
 
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
@@ -57,7 +55,9 @@ class Expansion(TiramisuAction):
             candidates_code += "    " + optim.tiramisu_optim_str
 
         for comp in schedule.tree.computations:
-            candidates_code += f'    std::cout << "{comp}|" << {comp}.expandable() << std::endl;\n'  # noqa
+            candidates_code += (
+                f'    std::cout << "{comp}|" << {comp}.expandable() << std::endl;\n'  # noqa
+            )
 
         cpp_code = schedule.tiramisu_program.original_str.replace(
             schedule.tiramisu_program.code_gen_line, candidates_code

@@ -51,9 +51,7 @@ def test_get_legality():
 
     schedule.add_optimizations(
         [
-            tiramisu_actions.Interchange(
-                params=[("x_temp", 0), ("x_temp", 1)]
-            ),
+            tiramisu_actions.Interchange(params=[("x_temp", 0), ("x_temp", 1)]),
         ]
     )
 
@@ -75,9 +73,7 @@ def test_get_exec_times():
 
     schedule.add_optimizations(
         [
-            tiramisu_actions.Interchange(
-                params=[("x_temp", 0), ("x_temp", 1)]
-            ),
+            tiramisu_actions.Interchange(params=[("x_temp", 0), ("x_temp", 1)]),
         ]
     )
 

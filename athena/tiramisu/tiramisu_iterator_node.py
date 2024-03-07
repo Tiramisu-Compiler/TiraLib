@@ -32,14 +32,14 @@ class IteratorNode:
 
     def has_non_rectangular(self) -> bool:
         return (
-            type(self.lower_bound) is str or type(self.upper_bound) is str
+            isinstance(self.lower_bound, str) or isinstance(self.upper_bound, str)
         ) and (self.lower_bound != "UNK" and self.upper_bound != "UNK")
 
     def has_unkown_bounds(self) -> bool:
         return self.lower_bound == "UNK" or self.upper_bound == "UNK"
 
     def has_integer_bounds(self) -> bool:
-        return type(self.lower_bound) is int and type(self.upper_bound) is int
+        return isinstance(self.lower_bound, int) and isinstance(self.upper_bound, int)
 
     def clone(self, suffix: str | None) -> "IteratorNode":
         if suffix is None:
@@ -53,9 +53,7 @@ class IteratorNode:
             lower_bound=self.lower_bound,
             upper_bound=self.upper_bound,
             child_iterators=[child + suffix for child in self.child_iterators],
-            computations_list=[
-                comp + suffix for comp in self.computations_list
-            ],
+            computations_list=[comp + suffix for comp in self.computations_list],
             level=self.level,
         )
 

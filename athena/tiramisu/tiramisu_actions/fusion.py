@@ -32,9 +32,7 @@ class Fusion(TiramisuAction):
         self.comps: List[str] | None = None
         self.main_fusion_level = params[0][1]
 
-        super().__init__(
-            type=TiramisuActionType.FUSION, params=params, comps=None
-        )
+        super().__init__(type=TiramisuActionType.FUSION, params=params, comps=None)
 
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
@@ -48,8 +46,8 @@ class Fusion(TiramisuAction):
                 iterator_id[0], iterator_id[1]
             )
             self.iterators.append(iterator)
-            iterator_computations = (
-                tiramisu_tree.get_iterator_subtree_computations(iterator.name)
+            iterator_computations = tiramisu_tree.get_iterator_subtree_computations(
+                iterator.name
             )
             self.itertors_computations.append(iterator_computations)
             self.comps.extend(iterator_computations)
@@ -81,8 +79,8 @@ class Fusion(TiramisuAction):
         )
 
         computation_to_fuse = self.params[1][0]
-        computation_to_fuse_iterator = (
-            tiramisu_tree.get_iterator_of_computation(computation_to_fuse)
+        computation_to_fuse_iterator = tiramisu_tree.get_iterator_of_computation(
+            computation_to_fuse
         )
 
         self.tiramisu_optim_str += f"""
@@ -110,9 +108,7 @@ perform_full_dependency_analysis();
         )
 
     @classmethod
-    def get_candidates(
-        cls, program_tree: TiramisuTree
-    ) -> List[Tuple[str, str]]:
+    def get_candidates(cls, program_tree: TiramisuTree) -> List[Tuple[str, str]]:
         # We will try to fuse all possible nodes that have the same level
         candidates: List[Tuple[str, str]] = []
 
@@ -122,9 +118,7 @@ perform_full_dependency_analysis();
             candidates.extend(itertools.combinations(program_tree.roots, 2))
 
         # Check the different levels of the iterators
-        levels = set(
-            [iterator.level for iterator in program_tree.iterators.values()]
-        )
+        levels = set([iterator.level for iterator in program_tree.iterators.values()])
 
         # For each level, we will try to fuse all possible nodes
         # that have the same level and have the same root
@@ -141,9 +135,9 @@ perform_full_dependency_analysis();
             for root in program_tree.roots:
                 iterators_dict[root] = []
             for iterator in iterators:
-                iterators_dict[
-                    program_tree.get_root_of_node(iterator.name)
-                ].append(iterator.name)
+                iterators_dict[program_tree.get_root_of_node(iterator.name)].append(
+                    iterator.name
+                )
             for root in iterators_dict:
                 candidates.extend(
                     [
@@ -151,9 +145,7 @@ perform_full_dependency_analysis();
                             program_tree.iterators[comb[0]].id,
                             program_tree.iterators[comb[1]].id,
                         )
-                        for comb in itertools.combinations(
-                            iterators_dict[root], 2
-                        )
+                        for comb in itertools.combinations(iterators_dict[root], 2)
                     ]
                 )
 
@@ -175,10 +167,8 @@ perform_full_dependency_analysis();
         fused_in_iterator = tiramisu_tree.get_iterator_of_computation(
             fused_computations[0], self.main_fusion_level
         )
-        comps_in_fused_iterator = (
-            tiramisu_tree.get_iterator_subtree_computations(
-                fused_in_iterator.name
-            )
+        comps_in_fused_iterator = tiramisu_tree.get_iterator_subtree_computations(
+            fused_in_iterator.name
         )
         max_order = max(
             [
