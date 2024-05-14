@@ -77,7 +77,7 @@ class Unrolling(TiramisuAction):
             f"U(L{str(loop_level)},{str(unrolling_factor)},comps={self.comps})"
         )
 
-        self.legality_check_string = f"prepare_schedules_for_legality_checks(true);\n    is_legal &= loop_unrolling_is_legal({loop_level}, {{{', '.join([f'&{comp}' for comp in self.comps])}}});\n    {self.tiramisu_optim_str}"   # noqa: E501
+        self.legality_check_string = f"prepare_schedules_for_legality_checks(true);\n    is_legal &= loop_unrolling_is_legal({loop_level}, {{{', '.join([f'&{comp}' for comp in self.comps])}}});\n    {self.tiramisu_optim_str}"  # noqa: E501
 
     @classmethod
     def get_candidates(cls, program_tree: TiramisuTree) -> List[str]:
@@ -89,6 +89,6 @@ class Unrolling(TiramisuAction):
                 not iterator_node.child_iterators
                 and iterator_node.computations_list
             ):
-                candidates.append(iterator)
+                candidates.append(program_tree.iterators[iterator].id)
 
         return candidates

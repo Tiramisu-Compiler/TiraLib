@@ -77,7 +77,12 @@ class Parallelization(TiramisuAction):
         node = program_tree.iterators[node_name]
 
         if node.child_iterators:
-            candidates.append(node.child_iterators)
+            candidates.append(
+                [
+                    program_tree.iterators[child].id
+                    for child in node.child_iterators
+                ]
+            )
 
             for child in node.child_iterators:
                 candidates += cls._get_candidates_of_node(child, program_tree)
@@ -104,7 +109,8 @@ class Parallelization(TiramisuAction):
         candidates = {}
 
         for root in program_tree.roots:
-            candidates[root] = [[root]] + cls._get_candidates_of_node(
+            rootId = program_tree.iterators[root].id
+            candidates[rootId] = [[rootId]] + cls._get_candidates_of_node(
                 root, program_tree
             )
 

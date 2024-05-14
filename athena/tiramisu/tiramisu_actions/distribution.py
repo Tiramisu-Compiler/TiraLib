@@ -104,7 +104,7 @@ class Distribution(TiramisuAction):
                 len(iterator.computations_list) + len(iterator.child_iterators)
                 > 1
             ):
-                candidates.append(iterator.name)
+                candidates.append(iterator.id)
 
         return candidates
 

@@ -1,6 +1,4 @@
 import tests.utils as test_utils
-from athena.tiramisu.tiramisu_actions.fusion import Fusion
-from athena.tiramisu.tiramisu_iterator_node import IteratorNode
 from athena.tiramisu.tiramisu_tree import TiramisuTree
 from athena.utils.config import BaseConfig
 

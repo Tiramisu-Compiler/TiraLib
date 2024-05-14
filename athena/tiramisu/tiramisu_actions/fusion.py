@@ -146,7 +146,15 @@ perform_full_dependency_analysis();
                 ].append(iterator.name)
             for root in iterators_dict:
                 candidates.extend(
-                    itertools.combinations(iterators_dict[root], 2)
+                    [
+                        (
+                            program_tree.iterators[comb[0]].id,
+                            program_tree.iterators[comb[1]].id,
+                        )
+                        for comb in itertools.combinations(
+                            iterators_dict[root], 2
+                        )
+                    ]
                 )
 
         return candidates

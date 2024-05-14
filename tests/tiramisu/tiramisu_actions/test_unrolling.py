@@ -35,7 +35,7 @@ def test_set_string_representations():
     assert reversal.tiramisu_optim_str == "comp00.unroll(0,4);"
     assert (
         reversal.legality_check_string
-        == "prepare_schedules_for_legality_checks(true);\n    is_legal &= loop_unrolling_is_legal(0, {&comp00});\n    comp00.unroll(0,4);"
+        == "prepare_schedules_for_legality_checks(true);\n    is_legal &= loop_unrolling_is_legal(0, {&comp00});\n    comp00.unroll(0,4);"  # noqa: E501
     )
 
 
@@ -43,7 +43,12 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.unrolling_sample()
     candidates = Unrolling.get_candidates(sample.tree)
-    assert candidates == ["i1"]
+    assert candidates == [sample.tree.iterators["i1"].id]
 
-    candidates = Unrolling.get_candidates(test_utils.tree_test_sample())
-    assert candidates == ["i", "l", "m"]
+    tree = test_utils.tree_test_sample()
+    candidates = Unrolling.get_candidates(tree)
+    assert candidates == [
+        tree.iterators["i"].id,
+        tree.iterators["l"].id,
+        tree.iterators["m"].id,
+    ]

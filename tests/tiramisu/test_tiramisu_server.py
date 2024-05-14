@@ -57,7 +57,7 @@ def test_get_legality():
         ]
     )
 
-    assert schedule.is_legal() == True
+    assert schedule.is_legal() is True
 
 
 def test_get_exec_times():

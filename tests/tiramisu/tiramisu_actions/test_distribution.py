@@ -67,7 +67,10 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.gramschmidt_sample()
     candidates = Distribution.get_candidates(sample.tree)
-    assert candidates == ["c1", "c3_2"]
+    assert candidates == [
+        sample.tree.iterators["c1"].id,
+        sample.tree.iterators["c3_2"].id,
+    ]
 
 
 def test_get_fusion_levels():

@@ -81,10 +81,32 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.tiling_3d_sample()
     candidates = Tiling3D.get_candidates(sample.tree)
-    assert candidates == {"i0": [("i0", "i1", "i2")]}
+    assert candidates == {
+        sample.tree.iterators["i0"].id: [
+            (
+                sample.tree.iterators["i0"].id,
+                sample.tree.iterators["i1"].id,
+                sample.tree.iterators["i2"].id,
+            )
+        ]
+    }
 
-    candidates = Tiling3D.get_candidates(test_utils.tiling_3d_tree_sample())
-    assert candidates == {"root": [("root", "j", "k"), ("j", "k", "l")]}
+    tree = test_utils.tiling_3d_tree_sample()
+    candidates = Tiling3D.get_candidates(tree)
+    assert candidates == {
+        tree.iterators["root"].id: [
+            (
+                tree.iterators["root"].id,
+                tree.iterators["j"].id,
+                tree.iterators["k"].id,
+            ),
+            (
+                tree.iterators["j"].id,
+                tree.iterators["k"].id,
+                tree.iterators["l"].id,
+            ),
+        ]
+    }
 
 
 def test_fusion_levels():

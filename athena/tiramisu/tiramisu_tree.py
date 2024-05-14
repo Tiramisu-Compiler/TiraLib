@@ -139,6 +139,7 @@ class TiramisuTree:
             for root, _ in sorted(root_with_order, key=lambda item: item[1])
         ]
 
+        tiramisu_space.set_iterator_ids()
         return tiramisu_space
 
     @classmethod
@@ -239,6 +240,7 @@ class TiramisuTree:
                 tiramisu_tree.computations_absolute_order[comp_name] = i
                 i += 1
 
+        tiramisu_tree.set_iterator_ids()
         return tiramisu_tree
 
     def _get_subtree_representation(self, node_name: str) -> str:
@@ -416,13 +418,14 @@ class TiramisuTree:
 
         return (identifying_comp, iterator.level)
 
-    def __str__(self) -> str:
+    def set_iterator_ids(self) -> None:
+        for iterator in self.iterators.values():
+            iterator.id = self.get_iterator_id_from_name(iterator.name)
+
+    def __repr__(self) -> str:
         representation = ""
 
         for root in self.roots:
             representation += self._get_subtree_representation(root)
 
         return representation
-
-    def __repr__(self) -> str:
-        return self.__str__()

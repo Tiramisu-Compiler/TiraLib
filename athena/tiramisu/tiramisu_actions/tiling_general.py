@@ -140,13 +140,19 @@ class TilingGeneral(TiramisuAction):
         candidate_sections = cls.get_imperfect_candidate_sections(program_tree)
 
         for root in candidate_sections:
-            candidates[root] = []
+            rootId = program_tree.iterators[root].id
+            candidates[rootId] = []
             for section in candidate_sections[root]:
                 # Only consider sections with more than one iterator
                 if len(section) > 1:
                     first_node = program_tree.iterators[section[0]]
                     if len(first_node.child_iterators) > 1:
-                        candidates[root].append(tuple(section))
+                        candidates[rootId].append(
+                            [
+                                program_tree.iterators[iterator].id
+                                for iterator in section
+                            ]
+                        )
                     else:
                         # Get all possible combinations of
                         # 2 or 3 successive iterators
@@ -170,7 +176,12 @@ class TilingGeneral(TiramisuAction):
                                     perfect = False
                                     break
                             if not perfect:
-                                candidates[root].append(candidate)
+                                candidates[rootId].append(
+                                    [
+                                        program_tree.iterators[iterator].id
+                                        for iterator in candidate
+                                    ]
+                                )
 
         return candidates
 

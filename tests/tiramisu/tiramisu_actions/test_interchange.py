@@ -38,7 +38,13 @@ def test_get_candidates():
     BaseConfig.init()
     sample = interchange_example()
     candidates = Interchange.get_candidates(sample.tree)
-    assert candidates == {"i0": [("i0", "i1"), ("i0", "i2"), ("i1", "i2")]}
+    assert candidates == {
+        sample.tree.iterators["i0"].id: [
+            (sample.tree.iterators["i0"].id, sample.tree.iterators["i1"].id),
+            (sample.tree.iterators["i0"].id, sample.tree.iterators["i2"].id),
+            (sample.tree.iterators["i1"].id, sample.tree.iterators["i2"].id),
+        ]
+    }
 
 
 def test_legality_check():

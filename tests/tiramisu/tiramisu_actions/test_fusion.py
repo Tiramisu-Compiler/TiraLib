@@ -35,7 +35,10 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.fusion_sample()
     candidates = Fusion.get_candidates(sample.tree)
-    assert candidates == [("i", "j"), ("l", "m")]
+    assert candidates == [
+        (sample.tree.iterators["i"].id, sample.tree.iterators["j"].id),
+        (sample.tree.iterators["l"].id, sample.tree.iterators["m"].id),
+    ]
 
 
 def test_reorder_computations():

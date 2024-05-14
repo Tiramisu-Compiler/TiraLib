@@ -13,8 +13,10 @@ class IteratorNode:
         child_iterators: List[str],
         computations_list: List[str],
         level: int,
+        id: IteratorIdentifier = None,
     ):
         self.name = name
+        self.id: IteratorIdentifier = id
         self.parent_iterator = parent_iterator
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
@@ -58,7 +60,7 @@ class IteratorNode:
         )
 
     def __str__(self) -> str:
-        return f"{self.name}(lower_bound={self.lower_bound}, upper_bound={self.upper_bound}, child_iterators={self.child_iterators}, computations_list={self.computations_list}, level={self.level})"  # noqa: E501
+        return f"{self.name}(id={self.id}, lower_bound={self.lower_bound}, upper_bound={self.upper_bound}, child_iterators={self.child_iterators}, computations_list={self.computations_list}, level={self.level})"  # noqa: E501
 
     def __repr__(self) -> str:
         return self.__str__()

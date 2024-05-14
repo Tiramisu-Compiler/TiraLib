@@ -68,23 +68,57 @@ def test_get_candidates():
     sample = test_utils.gramschmidt_sample()
     candidates = TilingGeneral.get_candidates(sample.tree)
     assert candidates == {
-        "c1": [
-            ("c1", "c3", "c3_1", "c3_2", "c5", "c5_1"),
-            ("c3_2", "c5", "c5_1"),
+        sample.tree.iterators["c1"].id: [
+            [
+                sample.tree.iterators["c1"].id,
+                sample.tree.iterators["c3"].id,
+                sample.tree.iterators["c3_1"].id,
+                sample.tree.iterators["c3_2"].id,
+                sample.tree.iterators["c5"].id,
+                sample.tree.iterators["c5_1"].id,
+            ],
+            [
+                sample.tree.iterators["c3_2"].id,
+                sample.tree.iterators["c5"].id,
+                sample.tree.iterators["c5_1"].id,
+            ],
         ]
     }
 
-    candidates = TilingGeneral.get_candidates(test_utils.tree_test_sample())
-    assert candidates == {"root": [("root", "i", "j", "k", "l", "m")]}
+    tree = test_utils.tree_test_sample()
+    candidates = TilingGeneral.get_candidates(tree)
+    assert candidates == {
+        tree.iterators["root"].id: [
+            [
+                tree.iterators["root"].id,
+                tree.iterators["i"].id,
+                tree.iterators["j"].id,
+                tree.iterators["k"].id,
+                tree.iterators["l"].id,
+                tree.iterators["m"].id,
+            ]
+        ]
+    }
 
     t_tree = test_utils.tree_test_sample_imperfect_loops()
     candidates = TilingGeneral.get_candidates(t_tree)
     assert candidates == {
-        "root": [
-            ("root", "i", "i_1", "j", "j_1", "k"),
-            ("i", "j"),
-            ("j", "k"),
-            ("i", "j", "k"),
-            ("i_1", "j_1"),
+        t_tree.iterators["root"].id: [
+            [
+                t_tree.iterators["root"].id,
+                t_tree.iterators["i"].id,
+                t_tree.iterators["i_1"].id,
+                t_tree.iterators["j"].id,
+                t_tree.iterators["j_1"].id,
+                t_tree.iterators["k"].id,
+            ],
+            [t_tree.iterators["i"].id, t_tree.iterators["j"].id],
+            [t_tree.iterators["j"].id, t_tree.iterators["k"].id],
+            [
+                t_tree.iterators["i"].id,
+                t_tree.iterators["j"].id,
+                t_tree.iterators["k"].id,
+            ],
+            [t_tree.iterators["i_1"].id, t_tree.iterators["j_1"].id],
         ]
     }

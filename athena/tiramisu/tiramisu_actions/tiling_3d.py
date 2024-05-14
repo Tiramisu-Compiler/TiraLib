@@ -126,16 +126,21 @@ class Tiling3D(TiramisuAction):
         candidate_sections = program_tree.get_candidate_sections()
 
         for root in candidate_sections:
-            candidates[root] = []
+            rootId = program_tree.iterators[root].id
+            candidates[rootId] = []
             for section in candidate_sections[root]:
                 # Only consider sections with more than two iterators
                 if len(section) > 2:
                     # Get all possible combinations of 3 successive iterators
                     successive_3_iterators = [
-                        tuple(section[i : i + 3])
+                        (
+                            program_tree.iterators[section[i]].id,
+                            program_tree.iterators[section[i + 1]].id,
+                            program_tree.iterators[section[i + 2]].id,
+                        )
                         for i in range(len(section) - 2)
                     ]
-                    candidates[root].extend(successive_3_iterators)
+                    candidates[rootId].extend(successive_3_iterators)
 
         return candidates
 

@@ -36,4 +36,9 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.reversal_sample()
     candidates = Reversal.get_candidates(sample.tree)
-    assert candidates == {"i0": ["i0", "i1"]}
+    assert candidates == {
+        sample.tree.iterators["i0"].id: [
+            sample.tree.iterators["i0"].id,
+            sample.tree.iterators["i1"].id,
+        ]
+    }

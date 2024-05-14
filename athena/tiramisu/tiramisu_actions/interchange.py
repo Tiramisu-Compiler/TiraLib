@@ -76,13 +76,20 @@ class Interchange(TiramisuAction):
         candidate_sections = program_tree.get_candidate_sections()
 
         for root in candidate_sections:
-            candidates[root] = []
+            rootId = program_tree.iterators[root].id
+            candidates[rootId] = []
             for section in candidate_sections[root]:
                 # Only consider sections with more than one iterator
                 if len(section) > 1:
                     # Get all possible combinations of 2 iterators
-                    candidates[root].extend(
-                        list(itertools.combinations(section, 2))
+                    candidates[rootId].extend(
+                        [
+                            (
+                                program_tree.iterators[comb[0]].id,
+                                program_tree.iterators[comb[1]].id,
+                            )
+                            for comb in itertools.combinations(section, 2)
+                        ]
                     )
 
         return candidates

@@ -40,10 +40,19 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.tiling_2d_sample()
     candidates = Tiling2D.get_candidates(sample.tree)
-    assert candidates == {"i0": [("i0", "i1")]}
+    assert candidates == {
+        sample.tree.iterators["i0"].id: [
+            (sample.tree.iterators["i0"].id, sample.tree.iterators["i1"].id)
+        ]
+    }
 
-    candidates = Tiling2D.get_candidates(test_utils.tree_test_sample())
-    assert candidates == {"root": [("j", "k")]}
+    tree = test_utils.tree_test_sample()
+    candidates = Tiling2D.get_candidates(tree)
+    assert candidates == {
+        tree.iterators["root"].id: [
+            (tree.iterators["j"].id, tree.iterators["k"].id)
+        ]
+    }
 
 
 def test_fusion_levels():

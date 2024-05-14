@@ -8,7 +8,7 @@ def test_initialize_action_for_tree():
     tiramisu_action = TiramisuAction(
         type=None, params=[1, 2, 3], comps=["a", "b", "c"]
     )
-    with pytest.raises(NotImplementedError) as e_info:
+    with pytest.raises(NotImplementedError):
         tiramisu_action.initialize_action_for_tree(tiramisu_tree=None)
 
 
@@ -16,7 +16,7 @@ def test_set_string_representations():
     tiramisu_action = TiramisuAction(
         type=None, params=[1, 2, 3], comps=["a", "b", "c"]
     )
-    with pytest.raises(NotImplementedError) as e_info:
+    with pytest.raises(NotImplementedError):
         tiramisu_action.set_string_representations(tiramisu_tree=None)
 
 
@@ -70,7 +70,7 @@ def test_is_distribution():
 
 
 def test_get_candidates():
-    with pytest.raises(NotImplementedError) as e_info:
+    with pytest.raises(NotImplementedError):
         TiramisuAction.get_candidates(program_tree=None)
 
 
