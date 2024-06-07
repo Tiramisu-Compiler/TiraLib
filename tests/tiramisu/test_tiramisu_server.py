@@ -1,7 +1,7 @@
-from athena.tiramisu import tiramisu_actions
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_program import TiramisuProgram
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu import tiramisu_actions
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_program import TiramisuProgram
+from tiralib.utils.config import BaseConfig
 import tests.utils as test_utils
 
 

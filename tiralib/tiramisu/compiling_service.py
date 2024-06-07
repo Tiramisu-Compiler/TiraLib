@@ -7,14 +7,14 @@ import re
 import subprocess
 from typing import TYPE_CHECKING, List
 
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 if TYPE_CHECKING:
-    from athena.tiramisu.tiramisu_actions.tiramisu_action import TiramisuAction
-    from athena.tiramisu.schedule import Schedule
-    from athena.tiramisu.tiramisu_program import TiramisuProgram
+    from tiralib.tiramisu.tiramisu_actions.tiramisu_action import TiramisuAction
+    from tiralib.tiramisu.schedule import Schedule
+    from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 
-from athena.utils.config import BaseConfig
+from tiralib.utils.config import BaseConfig
 
 
 class CompilingService:

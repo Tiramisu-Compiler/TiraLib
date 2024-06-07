@@ -5,11 +5,11 @@ import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
-from athena.utils.config import BaseConfig
+from tiralib.utils.config import BaseConfig
 
 if TYPE_CHECKING:
-    from athena.tiramisu.schedule import Schedule
-    from athena.tiramisu.tiramisu_program import TiramisuProgram
+    from tiralib.tiramisu.schedule import Schedule
+    from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 
 templateWithEverythinginUtils = """
 #include <tiramisu/tiramisu.h>

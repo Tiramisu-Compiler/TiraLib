@@ -1,7 +1,7 @@
 import tests.utils as test_utils
-from athena.tiramisu.tiramisu_actions.tiling_general import TilingGeneral
+from tiralib.tiramisu.tiramisu_actions.tiling_general import TilingGeneral
 
-from athena.utils.config import BaseConfig
+from tiralib.utils.config import BaseConfig
 
 
 def test_tiling_general_init():

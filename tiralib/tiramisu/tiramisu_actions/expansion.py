@@ -4,14 +4,14 @@ import copy
 import os
 from typing import TYPE_CHECKING, List
 
-from athena.tiramisu.compiling_service import CompilingService
-from athena.tiramisu.tiramisu_tree import TiramisuTree
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu.compiling_service import CompilingService
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.utils.config import BaseConfig
 
 if TYPE_CHECKING:
-    from athena.tiramisu.schedule import Schedule
+    from tiralib.tiramisu.schedule import Schedule
 
-from athena.tiramisu.tiramisu_actions.tiramisu_action import (
+from tiralib.tiramisu.tiramisu_actions.tiramisu_action import (
     TiramisuAction,
     TiramisuActionType,
 )

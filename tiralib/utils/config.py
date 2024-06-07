@@ -12,7 +12,7 @@ class TiramisuConfig:
 
 
 @dataclass
-class AthenaConfig:
+class tiralibConfig:
     tiramisu: TiramisuConfig
     workspace: str = "workspace"
     env_vars: Dict[str, str] = field(default_factory=dict)
@@ -31,16 +31,16 @@ def parse_yaml_file(yaml_string: str) -> Dict[Any, Any]:
     return yaml.safe_load(yaml_string)
 
 
-def dict_to_config(parsed_yaml: Dict[Any, Any]) -> AthenaConfig:
+def dict_to_config(parsed_yaml: Dict[Any, Any]) -> tiralibConfig:
     tiramisu = (
         TiramisuConfig(**parsed_yaml["tiramisu"])
         if "tiramisu" in parsed_yaml
         else TiramisuConfig()
     )
-    athena = parsed_yaml["athena"] if "athena" in parsed_yaml else {}
+    tiralib = parsed_yaml["tiralib"] if "tiralib" in parsed_yaml else {}
     env_vars = parsed_yaml["env_vars"] if "env_vars" in parsed_yaml else {}
-    return AthenaConfig(
-        **athena,
+    return tiralibConfig(
+        **tiralib,
         env_vars=env_vars,
         tiramisu=tiramisu,
     )
@@ -59,10 +59,10 @@ class BaseConfig:
         )
 
     @classmethod
-    def from_athena_config(
-        cls, athena_config: AthenaConfig, logging_level=logging.DEBUG
+    def from_tiralib_config(
+        cls, tiralib_config: tiralibConfig, logging_level=logging.DEBUG
     ):
-        BaseConfig.base_config = athena_config
+        BaseConfig.base_config = tiralib_config
         logging.basicConfig(
             level=logging_level,
             format="|%(asctime)s|%(levelname)s| %(message)s",

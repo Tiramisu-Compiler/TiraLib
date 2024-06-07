@@ -1,7 +1,7 @@
 import re
 from typing import Dict, List, Tuple
 
-from athena.tiramisu.tiramisu_iterator_node import (
+from tiralib.tiramisu.tiramisu_iterator_node import (
     IteratorIdentifier,
     IteratorNode,
 )

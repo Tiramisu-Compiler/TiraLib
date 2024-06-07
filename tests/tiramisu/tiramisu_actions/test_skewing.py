@@ -1,7 +1,7 @@
 import tests.utils as test_utils
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.skewing import Skewing
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.skewing import Skewing
+from tiralib.utils.config import BaseConfig
 
 
 def test_skewing_init():

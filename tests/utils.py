@@ -1,9 +1,9 @@
 import pickle
 from typing import Tuple
 
-from athena.tiramisu.tiramisu_iterator_node import IteratorNode
-from athena.tiramisu.tiramisu_program import TiramisuProgram
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.tiramisu_iterator_node import IteratorNode
+from tiralib.tiramisu.tiramisu_program import TiramisuProgram
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 
 def load_test_data() -> Tuple[dict, dict]:
