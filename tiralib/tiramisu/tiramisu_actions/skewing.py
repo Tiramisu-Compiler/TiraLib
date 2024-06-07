@@ -4,15 +4,14 @@ import copy
 import itertools
 from typing import TYPE_CHECKING, Dict, List, Tuple
 
-from athena.tiramisu.compiling_service import CompilingService
-from athena.tiramisu.tiramisu_iterator_node import IteratorIdentifier
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.compiling_service import CompilingService
+from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 if TYPE_CHECKING:
-    from athena.tiramisu.tiramisu_tree import TiramisuTree
-    from athena.tiramisu.schedule import Schedule
+    from tiralib.tiramisu.schedule import Schedule
 
-from athena.tiramisu.tiramisu_actions.tiramisu_action import (
+from tiralib.tiramisu.tiramisu_actions.tiramisu_action import (
     TiramisuAction,
     TiramisuActionType,
 )
@@ -55,7 +54,8 @@ class Skewing(TiramisuAction):
                 *outermost_iterator_id
             )
 
-            # get the computations of the outermost iterator subtree (includes the innermost iterator)
+            # get the computations of the outermost iterator subtree
+            # (includes the innermost iterator)
             self.comps = self.tree.get_iterator_subtree_computations(
                 outermost_iterator.name
             )
@@ -76,9 +76,9 @@ class Skewing(TiramisuAction):
 
         self.tiramisu_optim_str = ""
         for comp in self.comps:
-            self.tiramisu_optim_str += f"{comp}.skew({self.iterators[0][1]}, {self.iterators[1][1]}, {self.factors[0]}, {self.factors[1]});\n"
+            self.tiramisu_optim_str += f"{comp}.skew({self.iterators[0][1]}, {self.iterators[1][1]}, {self.factors[0]}, {self.factors[1]});\n"  # noqa: E501
 
-        self.str_representation = f"S(L{self.iterators[0][1]},L{self.iterators[1][1]},{self.factors[0]},{self.factors[1]},comps={self.comps})"
+        self.str_representation = f"S(L{self.iterators[0][1]},L{self.iterators[1][1]},{self.factors[0]},{self.factors[1]},comps={self.comps})"  # noqa: E501
 
         self.legality_check_string = self.tiramisu_optim_str
 
@@ -91,12 +91,21 @@ class Skewing(TiramisuAction):
         candidate_sections = program_tree.get_candidate_sections()
 
         for root in candidate_sections:
-            candidates[root] = []
+            rootId = program_tree.iterators[root].id
+            candidates[rootId] = []
             for section in candidate_sections[root]:
                 # Only consider sections with more than one iterator
                 if len(section) > 1:
                     # Get all possible combinations of 2 successive iterators
-                    candidates[root].extend(list(itertools.pairwise(section)))
+                    candidates[rootId].extend(
+                        [
+                            (
+                                program_tree.iterators[comb[0]].id,
+                                program_tree.iterators[comb[1]].id,
+                            )
+                            for comb in itertools.pairwise(section)
+                        ]
+                    )
         return candidates
 
     @classmethod
@@ -112,4 +121,4 @@ class Skewing(TiramisuAction):
         if factors is not None:
             return factors
         else:
-            raise ValueError("Skewing did not return any factors")
+            return None

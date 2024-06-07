@@ -1,7 +1,7 @@
 import tests.utils as test_utils
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.distribution import Distribution
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.distribution import Distribution
+from tiralib.config.config import BaseConfig
 
 
 def test_distribution_init():
@@ -57,7 +57,7 @@ def test_set_string_representations():
     schedule.add_optimizations([distribution])
     assert (
         distribution.tiramisu_optim_str
-        == "clear_implicit_function_sched_graph();\n    nrm_init.then(nrm_comp,0).then(R_diag,0).then(Q_out,0).then(R_up_init,0).then(R_up,0).then(A_out,0);\n"
+        == "clear_implicit_function_sched_graph();\n    nrm_init.then(nrm_comp,0).then(R_diag,0).then(Q_out,0).then(R_up_init,0).then(R_up,0).then(A_out,0);\n"  # noqa: E501
     )
 
 
@@ -65,7 +65,10 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.gramschmidt_sample()
     candidates = Distribution.get_candidates(sample.tree)
-    assert candidates == ["c1", "c3_2"]
+    assert candidates == [
+        sample.tree.iterators["c1"].id,
+        sample.tree.iterators["c3_2"].id,
+    ]
 
 
 def test_get_fusion_levels():
@@ -127,7 +130,7 @@ def test_distribution_application():
 
     assert (
         distribution.tiramisu_optim_str
-        == "clear_implicit_function_sched_graph();\n    nrm_init.then(nrm_comp,-1).then(R_diag,-1).then(Q_out,-1).then(R_up_init,-1).then(R_up,1).then(A_out,1);\n"
+        == "clear_implicit_function_sched_graph();\n    nrm_init.then(nrm_comp,-1).then(R_diag,-1).then(Q_out,-1).then(R_up_init,-1).then(R_up,1).then(A_out,1);\n"  # noqa: E501
     )
     assert not schedule.is_legal()
 
@@ -145,7 +148,7 @@ def test_distribution_application():
 
     assert (
         distribution.tiramisu_optim_str
-        == "clear_implicit_function_sched_graph();\n    nrm_init.then(nrm_comp,0).then(R_diag,0).then(Q_out,0).then(R_up_init,0).then(R_up,0).then(A_out,0);\n"
+        == "clear_implicit_function_sched_graph();\n    nrm_init.then(nrm_comp,0).then(R_diag,0).then(Q_out,0).then(R_up_init,0).then(R_up,0).then(A_out,0);\n"  # noqa: E501
     )
 
     assert schedule.is_legal()

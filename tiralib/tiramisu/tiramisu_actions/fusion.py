@@ -2,16 +2,15 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
-from athena.tiramisu.tiramisu_iterator_node import IteratorIdentifier, IteratorNode
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.tiramisu_iterator_node import (
+    IteratorIdentifier,
+    IteratorNode,
+)
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
-if TYPE_CHECKING:
-    from athena.tiramisu.tiramisu_tree import TiramisuTree
-
-from athena.tiramisu.tiramisu_actions.tiramisu_action import (
-    CannotApplyException,
+from tiralib.tiramisu.tiramisu_actions.tiramisu_action import (
     TiramisuAction,
     TiramisuActionType,
 )
@@ -84,7 +83,6 @@ class Fusion(TiramisuAction):
             computation_to_fuse
         )
 
-        # self.tiramisu_optim_str += f"clear_implicit_function_sched_graph();\n    {first_comp}{''.join([f'.then({comp},{fusion_level})' for comp, fusion_level in zip(ordered_computations[1:], fusion_levels)])};\n"
         self.tiramisu_optim_str += f"""
 perform_full_dependency_analysis();
     clear_implicit_function_sched_graph();
@@ -101,7 +99,7 @@ perform_full_dependency_analysis();
             {computation_to_fuse}.shift(var, value);
         }}
     }}
-"""
+"""  # noqa: E501
 
         self.str_representation = f"F(L{self.params[0][1]},comps={self.comps})"
 
@@ -122,7 +120,8 @@ perform_full_dependency_analysis();
         # Check the different levels of the iterators
         levels = set([iterator.level for iterator in program_tree.iterators.values()])
 
-        # For each level, we will try to fuse all possible nodes that have the same level and have the same root
+        # For each level, we will try to fuse all possible nodes
+        # that have the same level and have the same root
         for level in levels:
             # get all iterator nodes that have the same level
             iterators = [
@@ -140,7 +139,15 @@ perform_full_dependency_analysis();
                     iterator.name
                 )
             for root in iterators_dict:
-                candidates.extend(itertools.combinations(iterators_dict[root], 2))
+                candidates.extend(
+                    [
+                        (
+                            program_tree.iterators[comb[0]].id,
+                            program_tree.iterators[comb[1]].id,
+                        )
+                        for comb in itertools.combinations(iterators_dict[root], 2)
+                    ]
+                )
 
         return candidates
 
@@ -175,7 +182,8 @@ perform_full_dependency_analysis();
             if tiramisu_tree.computations_absolute_order[comp] > max_order
         ]
 
-        # move the computations that are after the fused iterator and not included in fusion
+        # move the computations that are after the fused
+        # iterator and not included in fusion
         for comp in tiramisu_tree.computations_absolute_order:
             if (
                 tiramisu_tree.computations_absolute_order[comp] > max_order
@@ -190,7 +198,8 @@ perform_full_dependency_analysis();
         computations.sort(key=lambda x: new_absolute_order[x])
 
         fusion_levels: List[int] = []
-        # for every pair of successive computations get the shared iterator level
+        # for every pair of successive computations
+        # get the shared iterator level
         for comp1, comp2 in itertools.pairwise(computations):
             # get the shared iterator level
             iter_comp_1 = tiramisu_tree.get_iterator_of_computation(comp1)
@@ -200,7 +209,8 @@ perform_full_dependency_analysis();
             # get the shared iterator level
             while iter_comp_1.name != iter_comp_2.name:
                 if iter_comp_1.level > iter_comp_2.level:
-                    # if parent is None then the iterators don't have a common parent
+                    # if parent is None
+                    # then the iterators don't have a common parent
                     if iter_comp_1.parent_iterator is None:
                         fusion_level = -1
                         break

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "athena"
+name = "tiralib"
 version = "0.1.0"
 description = ""
 authors = ["Smail KOURTA <sk10691@nyu.edu>"]
@@ -14,6 +14,7 @@ pyyaml = "^6.0.1"
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^4.1.0"
 coverage = "^7.2.7"
+ruff = "^0.3.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -21,8 +22,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.run]
 branch = true
-source = ["athena"]
+source = ["tiralib"]
 
 [tool.coverage.report]
 # omit main.py from coverage report
-omit = ["athena/main.py"]
+omit = ["tiralib/main.py"]

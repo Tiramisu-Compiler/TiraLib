@@ -1,8 +1,8 @@
 import tests.utils as test_utils
-from athena.tiramisu import tiramisu_actions
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.parallelization import Parallelization
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu import tiramisu_actions
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.parallelization import Parallelization
+from tiralib.config.config import BaseConfig
 from tests.utils import benchmark_program_test_sample
 
 
@@ -13,7 +13,7 @@ def test_execute():
     schedule = Schedule(test_program)
     assert schedule.tree
     schedule.add_optimizations([Parallelization(params=[("comp02", 0)])])
-    results = schedule.execute(nb_exec_tiems=10)
+    results = schedule.execute(nb_exec_times=10)
 
     assert results is not None
     assert len(results) == 10

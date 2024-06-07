@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import List  # ,TYPE_CHECKING
 
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 
 class TiramisuActionType(Enum):
@@ -115,7 +115,7 @@ class TiramisuAction:
         return self.str_representation
 
     def __repr__(self) -> str:
-        return f"Action(type={self.type}, params={self.params}, comps={self.comps})"
+        return f"Action(type={self.type}, params={self.params}, comps={self.comps})"  # noqa: E501
 
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, TiramisuAction):

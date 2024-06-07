@@ -1,7 +1,7 @@
 import tests.utils as test_utils
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.reversal import Reversal
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.reversal import Reversal
+from tiralib.config.config import BaseConfig
 
 
 def test_reversal_init():
@@ -36,4 +36,9 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.reversal_sample()
     candidates = Reversal.get_candidates(sample.tree)
-    assert candidates == {"i0": ["i0", "i1"]}
+    assert candidates == {
+        sample.tree.iterators["i0"].id: [
+            sample.tree.iterators["i0"].id,
+            sample.tree.iterators["i1"].id,
+        ]
+    }

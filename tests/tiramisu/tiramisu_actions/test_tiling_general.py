@@ -1,10 +1,7 @@
-import pytest
-
 import tests.utils as test_utils
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.tiling_general import TilingGeneral
-from athena.tiramisu.tiramisu_actions.tiramisu_action import CannotApplyException
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu.tiramisu_actions.tiling_general import TilingGeneral
+
+from tiralib.config.config import BaseConfig
 
 
 def test_tiling_general_init():
@@ -55,8 +52,7 @@ def test_set_string_representations():
 
     assert (
         tiling_general.tiramisu_optim_str
-        == "R_up_init.tile(1, 10);\nR_up.tile(1, 2, 10, 5);\nA_out.tile(1, 2, 10, 2);\n"
-        # clear_implicit_function_sched_graph();\n    nrm_init.then(nrm_comp,0).then(R_diag,0).then(Q_out,0).then(R_up_init,0).then(R_up,2).then(A_out,2);\n"
+        == "R_up_init.tile(1, 10);\nR_up.tile(1, 2, 10, 5);\nA_out.tile(1, 2, 10, 2);\n"  # noqa: E501
     )
 
     assert (
@@ -70,20 +66,57 @@ def test_get_candidates():
     sample = test_utils.gramschmidt_sample()
     candidates = TilingGeneral.get_candidates(sample.tree)
     assert candidates == {
-        "c1": [("c1", "c3", "c3_1", "c3_2", "c5", "c5_1"), ("c3_2", "c5", "c5_1")]
+        sample.tree.iterators["c1"].id: [
+            [
+                sample.tree.iterators["c1"].id,
+                sample.tree.iterators["c3"].id,
+                sample.tree.iterators["c3_1"].id,
+                sample.tree.iterators["c3_2"].id,
+                sample.tree.iterators["c5"].id,
+                sample.tree.iterators["c5_1"].id,
+            ],
+            [
+                sample.tree.iterators["c3_2"].id,
+                sample.tree.iterators["c5"].id,
+                sample.tree.iterators["c5_1"].id,
+            ],
+        ]
     }
 
-    candidates = TilingGeneral.get_candidates(test_utils.tree_test_sample())
-    assert candidates == {"root": [("root", "i", "j", "k", "l", "m")]}
+    tree = test_utils.tree_test_sample()
+    candidates = TilingGeneral.get_candidates(tree)
+    assert candidates == {
+        tree.iterators["root"].id: [
+            [
+                tree.iterators["root"].id,
+                tree.iterators["i"].id,
+                tree.iterators["j"].id,
+                tree.iterators["k"].id,
+                tree.iterators["l"].id,
+                tree.iterators["m"].id,
+            ]
+        ]
+    }
 
     t_tree = test_utils.tree_test_sample_imperfect_loops()
     candidates = TilingGeneral.get_candidates(t_tree)
     assert candidates == {
-        "root": [
-            ("root", "i", "i_1", "j", "j_1", "k"),
-            ("i", "j"),
-            ("j", "k"),
-            ("i", "j", "k"),
-            ("i_1", "j_1"),
+        t_tree.iterators["root"].id: [
+            [
+                t_tree.iterators["root"].id,
+                t_tree.iterators["i"].id,
+                t_tree.iterators["i_1"].id,
+                t_tree.iterators["j"].id,
+                t_tree.iterators["j_1"].id,
+                t_tree.iterators["k"].id,
+            ],
+            [t_tree.iterators["i"].id, t_tree.iterators["j"].id],
+            [t_tree.iterators["j"].id, t_tree.iterators["k"].id],
+            [
+                t_tree.iterators["i"].id,
+                t_tree.iterators["j"].id,
+                t_tree.iterators["k"].id,
+            ],
+            [t_tree.iterators["i_1"].id, t_tree.iterators["j_1"].id],
         ]
     }

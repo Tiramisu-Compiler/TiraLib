@@ -1,30 +1,34 @@
 import re
-import uuid
 from typing import Dict, List, Tuple
 
-from athena.tiramisu.tiramisu_iterator_node import IteratorIdentifier, IteratorNode
+from tiralib.tiramisu.tiramisu_iterator_node import (
+    IteratorIdentifier,
+    IteratorNode,
+)
 
 
 class TiramisuTree:
     """This class represents the tree structure of a Tiramisu program.
-    It is composed of a list of IteratorNode objects, each of which represents an iterator
-    in the Tiramisu program. Each IteratorNode object contains information about its
-    parent iterator, child iterators, lower and upper bounds, and the computations that
-    it is associated with.
+    It is composed of a list of IteratorNode objects, each of which represents
+    an iterator in the Tiramisu program. Each IteratorNode object contains
+    information about its parent iterator, child iterators, lower and upper
+    bounds, and the computations that it is associated with.
 
     Attributes:
     ----------
     `roots`: `List[str]`
         List of names of the root iterators in the Tiramisu program.
     `iterators`: `Dict[str, IteratorNode]`
-        Dictionary of IteratorNode objects, indexed by the name of the iterator.
+        Dictionary of IteratorNode objects, indexed by the name of
+        the iterator.
     `computations`: `List[str]`
         List of names of the computations in the Tiramisu program.
 
     Methods:
     -------
     `from_annotations(cls, annotations: Dict) -> "TiramisuTree":`
-        Creates a TiramisuTree object from the annotations of a Tiramisu program.
+        Creates a TiramisuTree object from the annotations of a
+        Tiramisu program.
     `get_candidate_sections(self) -> List[List[str]]:`
         Returns a list of candidate sections in the Tiramisu program.
 
@@ -46,7 +50,8 @@ class TiramisuTree:
     @classmethod
     def from_annotations(cls, annotations: Dict) -> "TiramisuTree":
         """
-        Creates a TiramisuTree object from the annotations of a Tiramisu program.
+        Creates a TiramisuTree object from the annotations of a
+        Tiramisu program.
 
         Parameters:
         ----------
@@ -84,7 +89,8 @@ class TiramisuTree:
             else:
                 iterator_level = tiramisu_space.iterators[parent_iterator].level + 1
 
-            # get the computations that are associated with this iterator ordered by their absolute order
+            # get the computations that are associated with this iterator
+            # ordered by their absolute order
             ordered_node_comps = [
                 comp
                 for comp in tiramisu_space.computations
@@ -126,6 +132,7 @@ class TiramisuTree:
             root for root, _ in sorted(root_with_order, key=lambda item: item[1])
         ]
 
+        tiramisu_space.set_iterator_ids()
         return tiramisu_space
 
     @classmethod
@@ -185,9 +192,11 @@ class TiramisuTree:
                     upper_bound=upper_bound,
                     child_iterators=[],
                     computations_list=[],
-                    parent_iterator=None
-                    if iterator_level == 0
-                    else level_iterator_map[iterator_level - 1][-1],
+                    parent_iterator=(
+                        None
+                        if iterator_level == 0
+                        else level_iterator_map[iterator_level - 1][-1]
+                    ),
                     level=iterator_level,
                 )
                 if iterator_level not in level_iterator_map:
@@ -197,7 +206,8 @@ class TiramisuTree:
                 if iterator_level == 0:
                     tiramisu_tree.roots.append(iterator_name)
                 else:
-                    # Add the iterator to its parent's child iterators (the last iterator we added in the previous level)
+                    # Add the iterator to its parent's child iterators
+                    # (the last iterator we added in the previous level)
                     tiramisu_tree.iterators[
                         level_iterator_map[iterator_level - 1][-1]
                     ].child_iterators.append(iterator_name)
@@ -207,7 +217,8 @@ class TiramisuTree:
                 level = int(level_str)
                 tiramisu_tree.computations.append(comp_name)
 
-                # Add the computation to its iterator's computations list (the last iterator we added in the previous level)
+                # Add the computation to its iterator's computations list
+                # (the last iterator we added in the previous level)
                 tiramisu_tree.iterators[
                     level_iterator_map[level - 1][-1]
                 ].computations_list.append(comp_name)
@@ -216,6 +227,7 @@ class TiramisuTree:
                 tiramisu_tree.computations_absolute_order[comp_name] = i
                 i += 1
 
+        tiramisu_tree.set_iterator_ids()
         return tiramisu_tree
 
     def _get_subtree_representation(self, node_name: str) -> str:
@@ -237,11 +249,13 @@ class TiramisuTree:
         # sort them by computations_absolute_order
         comps_and_iterators = sorted(
             comps_and_iterators,
-            key=lambda item: self.computations_absolute_order[item[0]]
-            if item[1] == "comp"
-            else self.computations_absolute_order[
-                self.get_iterator_subtree_computations(item[0])[0]
-            ],
+            key=lambda item: (
+                self.computations_absolute_order[item[0]]
+                if item[1] == "comp"
+                else self.computations_absolute_order[
+                    self.get_iterator_subtree_computations(item[0])[0]
+                ]
+            ),
         )
 
         for comp_or_iterator, type in comps_and_iterators:
@@ -258,7 +272,8 @@ class TiramisuTree:
 
     def get_candidate_sections(self) -> Dict[str, List[List[str]]]:
         """
-        Returns a dictionary with lists of candidate sections for each root iterator.
+        Returns a dictionary with lists of candidate sections for each
+        root iterator.
 
         Returns:
         -------
@@ -331,8 +346,8 @@ class TiramisuTree:
         # Get the root node of the iterator
         current_node_name = iterator_name
 
-        while self.iterators[current_node_name].parent_iterator:  # type: ignore
-            current_node_name = self.iterators[current_node_name].parent_iterator  # type: ignore
+        while self.iterators[current_node_name].parent_iterator:
+            current_node_name = self.iterators[current_node_name].parent_iterator
 
         if current_node_name is None:
             raise ValueError("The iterator has no root node")
@@ -368,21 +383,20 @@ class TiramisuTree:
         """
         iterator = self.iterators[iterator_name]
         identifying_comp = None
-        if iterator.computations_list:
-            identifying_comp = iterator.computations_list[0]
-        else:
-            identifying_comp = self.get_iterator_subtree_computations(iterator_name)[0]
+        comps = self.get_iterator_subtree_computations(iterator_name)
+        comps.sort(key=lambda comp: self.computations_absolute_order[comp])
+        identifying_comp = comps[0]
 
         return (identifying_comp, iterator.level)
 
-    def __str__(self) -> str:
-        # return f"Roots: {self.roots}\nComputations: {self.computations}\nIterators: {self.iterators}"
+    def set_iterator_ids(self) -> None:
+        for iterator in self.iterators.values():
+            iterator.id = self.get_iterator_id_from_name(iterator.name)
+
+    def __repr__(self) -> str:
         representation = ""
 
         for root in self.roots:
             representation += self._get_subtree_representation(root)
 
         return representation
-
-    def __repr__(self) -> str:
-        return self.__str__()

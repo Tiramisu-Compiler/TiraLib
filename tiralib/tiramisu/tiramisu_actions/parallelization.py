@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 import copy
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import Dict, List
 
-from athena.tiramisu.tiramisu_iterator_node import IteratorIdentifier
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
-if TYPE_CHECKING:
-    from athena.tiramisu.tiramisu_tree import TiramisuTree
-
-from athena.tiramisu.tiramisu_actions.tiramisu_action import (
+from tiralib.tiramisu.tiramisu_actions.tiramisu_action import (
     TiramisuAction,
     TiramisuActionType,
 )
@@ -25,7 +22,8 @@ class Parallelization(TiramisuAction):
         params: List[IteratorIdentifier],
         comps: List[str] | None = None,
     ):
-        # Parallelization only takes one parameter the loop to parallelize specified by a tuple (computation_name, iterator_level)
+        # Parallelization only takes one parameter the loop to
+        # parallelize specified by a tuple (computation_name, iterator_level)
         assert len(params) == 1
         self.params = params
         self.comps = comps
@@ -63,7 +61,7 @@ class Parallelization(TiramisuAction):
 
         self.str_representation = f"P(L{level},comps={self.comps})"
 
-        self.legality_check_string = f"prepare_schedules_for_legality_checks(true);\n    is_legal &= loop_parallelization_is_legal({level}, {{{', '.join([f'&{comp}' for comp in self.comps]) }}});\n    {self.tiramisu_optim_str}"
+        self.legality_check_string = f"prepare_schedules_for_legality_checks(true);\n    is_legal &= loop_parallelization_is_legal({level}, {{{', '.join([f'&{comp}' for comp in self.comps]) }}});\n    {self.tiramisu_optim_str}"  # noqa: E501
 
     @classmethod
     def _get_candidates_of_node(
@@ -73,7 +71,9 @@ class Parallelization(TiramisuAction):
         node = program_tree.iterators[node_name]
 
         if node.child_iterators:
-            candidates.append(node.child_iterators)
+            candidates.append(
+                [program_tree.iterators[child].id for child in node.child_iterators]
+            )
 
             for child in node.child_iterators:
                 candidates += cls._get_candidates_of_node(child, program_tree)
@@ -98,7 +98,8 @@ class Parallelization(TiramisuAction):
         candidates = {}
 
         for root in program_tree.roots:
-            candidates[root] = [[root]] + cls._get_candidates_of_node(
+            rootId = program_tree.iterators[root].id
+            candidates[rootId] = [[rootId]] + cls._get_candidates_of_node(
                 root, program_tree
             )
 

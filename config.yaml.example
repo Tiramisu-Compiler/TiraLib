@@ -1,6 +1,6 @@
-# Check the AthenaConfig class in athena/utils/config.py for more information about the config file
+# Check the tiralibConfig class in tiralib/utils/config.py for more information about the config file
 
-athena:
+tiralib:
   workspace: "workspace"
 
 tiramisu: 
@@ -11,3 +11,5 @@ env_vars:
   CC: "${CC}"
   TIRAMISU_ROOT: "path/to/tiramisu"
   LD_LIBRARY_PATH: "${TIRAMISU_ROOT}/3rdParty/Halide/build/src:${TIRAMISU_ROOT}/3rdParty/llvm/build/lib:${TIRAMISU_ROOT}/build:${TIRAMISU_ROOT}/3rdParty/isl/build/lib"
+  TIRAMISU_TIRALIBCPP_PATH: "path/to/hermesii/installation"
+  CONDA_ENV: "path/to/conda/env"

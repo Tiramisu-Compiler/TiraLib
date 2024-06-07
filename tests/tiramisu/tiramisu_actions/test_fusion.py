@@ -1,8 +1,8 @@
 import tests.utils as test_utils
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.fusion import Fusion
-from athena.tiramisu.tiramisu_actions.interchange import Interchange
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.fusion import Fusion
+from tiralib.tiramisu.tiramisu_actions.interchange import Interchange
+from tiralib.config.config import BaseConfig
 
 
 def test_fusion_init():
@@ -33,7 +33,10 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.fusion_sample()
     candidates = Fusion.get_candidates(sample.tree)
-    assert candidates == [("i", "j"), ("l", "m")]
+    assert candidates == [
+        (sample.tree.iterators["i"].id, sample.tree.iterators["j"].id),
+        (sample.tree.iterators["l"].id, sample.tree.iterators["m"].id),
+    ]
 
 
 def test_reorder_computations():

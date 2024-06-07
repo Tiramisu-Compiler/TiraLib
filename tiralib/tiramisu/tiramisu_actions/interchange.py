@@ -2,16 +2,12 @@ from __future__ import annotations
 
 import copy
 import itertools
-import re
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
-from athena.tiramisu.tiramisu_iterator_node import IteratorIdentifier
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
-if TYPE_CHECKING:
-    from athena.tiramisu.tiramisu_tree import TiramisuTree
-
-from athena.tiramisu.tiramisu_actions.tiramisu_action import (
+from tiralib.tiramisu.tiramisu_actions.tiramisu_action import (
     TiramisuAction,
     TiramisuActionType,
 )
@@ -76,11 +72,20 @@ class Interchange(TiramisuAction):
         candidate_sections = program_tree.get_candidate_sections()
 
         for root in candidate_sections:
-            candidates[root] = []
+            rootId = program_tree.iterators[root].id
+            candidates[rootId] = []
             for section in candidate_sections[root]:
                 # Only consider sections with more than one iterator
                 if len(section) > 1:
                     # Get all possible combinations of 2 iterators
-                    candidates[root].extend(list(itertools.combinations(section, 2)))
+                    candidates[rootId].extend(
+                        [
+                            (
+                                program_tree.iterators[comb[0]].id,
+                                program_tree.iterators[comb[1]].id,
+                            )
+                            for comb in itertools.combinations(section, 2)
+                        ]
+                    )
 
         return candidates

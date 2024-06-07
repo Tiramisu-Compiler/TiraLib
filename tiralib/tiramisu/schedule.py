@@ -5,15 +5,15 @@ import re
 from copy import deepcopy
 from typing import TYPE_CHECKING, List
 
-from athena.tiramisu.compiling_service import CompilingService
-from athena.tiramisu.tiramisu_actions.tiramisu_action import TiramisuActionType
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.compiling_service import CompilingService
+from tiralib.tiramisu.tiramisu_actions.tiramisu_action import TiramisuActionType
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 if TYPE_CHECKING:
     from .tiramisu_actions.tiramisu_action import TiramisuAction
 
-from athena.tiramisu import tiramisu_actions
-from athena.tiramisu.tiramisu_program import TiramisuProgram
+from tiralib.tiramisu import tiramisu_actions
+from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 
 
 class Schedule:
@@ -43,7 +43,8 @@ class Schedule:
 
     def add_optimizations(self, list_optim_cmds: List[TiramisuAction]) -> None:
         """
-        Adds a list of optimizations to the schedule while maintaining the schedule tree. The order of the optimizations in the list is important.
+        Adds a list of optimizations to the schedule while maintaining the
+        schedule tree. The order of the optimizations in the list is important.
 
         Parameters
         ----------
@@ -61,28 +62,26 @@ class Schedule:
 
             self.optims_list.append(optim_cmd)
 
-            # Fusion, distribution and tiling are special cases, we need to get the new tree with the new fusion levels
+            # Fusion, distribution and tiling are special cases,
+            # we need to get the new tree with the new fusion levels
             if (
                 optim_cmd.is_fusion()
                 or optim_cmd.is_distribution()
                 or optim_cmd.is_any_tiling()
             ):
-                isl_ast_str = CompilingService.compile_isl_ast_tree(
-                    tiramisu_program=self.tiramisu_program, schedule=self
-                )
-                self.tree = TiramisuTree.from_isl_ast_string_list(
-                    isl_ast_str.split("\n")
-                )
+                self.update_tree_from_isl_ast()
 
     def pop_optimization(self) -> TiramisuAction:
         """
         Removes the last optimization from the schedule and returns it.
         """
-        return self.optims_list.pop()
+        action = self.optims_list.pop()
+        self.update_tree_from_isl_ast()
+        return action
 
     def execute(
         self,
-        nb_exec_tiems=1,
+        nb_exec_times=1,
         max_mins_per_schedule: float | None = None,
         delete_files: bool = True,
     ) -> List[float]:
@@ -92,7 +91,8 @@ class Schedule:
         Parameters
         ----------
         `nb_exec_times` : int
-            The number of times the Tiramisu program will be executed after applying the schedule.
+            The number of times the Tiramisu program will be executed after
+            applying the schedule.
         Returns
         -------
         The execution time of the Tiramisu program after applying the schedule.
@@ -100,16 +100,27 @@ class Schedule:
         if self.tiramisu_program is None:
             raise Exception("No Tiramisu program to apply the schedule to")
 
+        if self.tiramisu_program.server:
+            result = self.tiramisu_program.server.run(
+                operation="execution",
+                schedule=self,
+                nbr_executions=nb_exec_times,
+            )
+            if result.legality is False:
+                raise Exception("Schedule is not legal")
+
+            return result.exec_times
+
         if self.legality is None and self.optims_list:
             self.is_legal()
 
-        if self.legality == False:
+        if self.legality is False:
             raise Exception("Schedule is not legal")
 
         return CompilingService.get_cpu_exec_times(
             self.tiramisu_program,
             self.optims_list,
-            nb_exec_tiems,
+            nb_exec_times,
             max_mins_per_schedule,
             delete_files,
         )
@@ -126,6 +137,29 @@ class Schedule:
         if self.tiramisu_program is None:
             raise Exception("No Tiramisu program to apply the schedule to")
 
+        if self.tiramisu_program.server:
+            result = self.tiramisu_program.server.run("legality", self)
+            self.tree = TiramisuTree.from_isl_ast_string_list(
+                isl_ast_string_list=result.isl_ast.split("\n")
+            )
+            self.legality = result.legality
+
+            # Update the skewing factors if they are not set
+            if result.additional_info:
+                if "skewing_factors" in result.additional_info:
+                    for action in self.optims_list:
+                        if action.type == TiramisuActionType.SKEWING:
+                            if action.params[2] == 0:
+                                factors = result.additional_info.replace(
+                                    "skewing_factors:", ""
+                                ).split(",")
+                                factors = [int(factor) for factor in factors]
+                                action.params[2] = factors[0]
+                                action.params[3] = factors[1]
+                                action.factors = factors
+                                action.set_string_representations(self.tree)
+            return result.legality
+
         legality, new_tree = CompilingService.compile_legality(self, with_ast=with_ast)
 
         assert isinstance(legality, bool)
@@ -134,6 +168,24 @@ class Schedule:
             assert new_tree
             self.tree = new_tree
         return self.legality
+
+    def update_tree_from_isl_ast(self):
+        """
+        Updates the schedule tree from the isl ast.
+        """
+        if self.tiramisu_program is None:
+            raise Exception("No Tiramisu program to apply the schedule to")
+
+        if self.tiramisu_program.server:
+            result = self.tiramisu_program.server.run("legality", self)
+            self.tree = TiramisuTree.from_isl_ast_string_list(
+                isl_ast_string_list=result.isl_ast.split("\n")
+            )
+        else:
+            isl_ast_str = CompilingService.compile_isl_ast_tree(
+                tiramisu_program=self.tiramisu_program, schedule=self
+            )
+            self.tree = TiramisuTree.from_isl_ast_string_list(isl_ast_str.split("\n"))
 
     @classmethod
     def from_sched_str(
@@ -161,7 +213,8 @@ class Schedule:
                     )
 
             elif optimization_str[0] == "U":
-                # extract loop level, factor and comps using U\(L(\d),(\d+),comps=\[([\w',]*)\]\)
+                # extract loop level, factor and comps using
+                # U\(L(\d),(\d+),comps=\[([\w',]*)\]\)
                 regex = r"U\(L(\d),(\d+),comps=\[([\w', ]*)\]\)"
                 match = re.match(regex, optimization_str)
                 if match:
@@ -235,7 +288,7 @@ class Schedule:
                     )
             elif optimization_str[:2] == "T3":
                 regex = (
-                    r"T3\(L(\d),L(\d),L(\d),(\d+),(\d+),(\d+),comps=\[([\w', ]*)\]\)"
+                    r"T3\(L(\d),L(\d),L(\d),(\d+),(\d+),(\d+),comps=\[([\w', ]*)\]\)"  # noqa: E501
                 )
                 match = re.match(regex, optimization_str)
                 if match:
@@ -301,7 +354,7 @@ class Schedule:
                         ]
                     )
             elif optimization_str[0] == "D":
-                regex = r"D\(L(\d),comps=\[([\w', ]*)\],distribution=([\[\]'\w, ]*)\)"
+                regex = r"D\(L(\d),comps=\[([\w', ]*)\],distribution=([\[\]'\w, ]*)\)"  # noqa: E501
                 match = re.match(regex, optimization_str)
                 if match:
                     loop_level = int(match.group(1))

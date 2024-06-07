@@ -1,0 +1,57 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python package
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    container:
+      image: skourta/tiramisu:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10"]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install ruff pytest
+        if [ -f requirements.txt ]; then pip install --user -r requirements.txt; fi
+    - name: Lint with ruff
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        ruff check
+    - name: Install TiraLibCPP
+      run: |
+        apt install -y sqlite3 libsqlite3-dev zlib1g-dev
+        git clone https://github.com/skourta/TiraLibCpp.git
+        cd TiraLibCpp
+        cmake . -B build -DTIRAMISU_ROOT=${TIRAMISU_ROOT}
+        cmake --build build
+        cmake --install build --prefix install
+        export TIRAMISU_TIRALIBCPP_PATH=$(pwd)/install
+    - name: Create config.yaml
+      run: |
+        mkdir workspace
+        echo "tiramisu:" > config.yaml
+        echo "  is_new_tiramisu: True" >> config.yaml
+        echo "env_vars:" >> config.yaml
+        echo "  CXX: g++" >> config.yaml
+        echo "  CC: cc" >> config.yaml
+        echo "  TIRAMISU_ROOT: \"${TIRAMISU_ROOT}\"" >> config.yaml
+        echo "  LD_LIBRARY_PATH: \"${LD_LIBRARY_PATH}\"" >> config.yaml
+        echo "  TIRAMISU_TIRALIBCPP_PATH: $(pwd)/TiraLibCpp/install" >> config.yaml
+        echo "  CONDA_ENV: ." >> config.yaml
+    - name: Test with pytest
+      run: |
+        pytest

@@ -1,17 +1,12 @@
-import pytest
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.interchange import Interchange
 
-import tests.utils as test_utils
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.interchange import Interchange
-from athena.tiramisu.tiramisu_actions.tiling_2d import Tiling2D
-from athena.tiramisu.tiramisu_actions.tiramisu_action import CannotApplyException
-from athena.utils.config import BaseConfig
+from tiralib.config.config import BaseConfig
 from tests.utils import interchange_example
 
 
 def test_interchange_init():
     BaseConfig.init()
-    sample = interchange_example()
     interchange = Interchange([("comp00", 0), ("comp00", 1)])
     assert interchange.params == [("comp00", 0), ("comp00", 1)]
     assert interchange.comps is None
@@ -43,7 +38,13 @@ def test_get_candidates():
     BaseConfig.init()
     sample = interchange_example()
     candidates = Interchange.get_candidates(sample.tree)
-    assert candidates == {"i0": [("i0", "i1"), ("i0", "i2"), ("i1", "i2")]}
+    assert candidates == {
+        sample.tree.iterators["i0"].id: [
+            (sample.tree.iterators["i0"].id, sample.tree.iterators["i1"].id),
+            (sample.tree.iterators["i0"].id, sample.tree.iterators["i2"].id),
+            (sample.tree.iterators["i1"].id, sample.tree.iterators["i2"].id),
+        ]
+    }
 
 
 def test_legality_check():

@@ -1,10 +1,8 @@
-import pytest
-
 import tests.utils as test_utils
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.tiling_2d import Tiling2D
-from athena.tiramisu.tiramisu_actions.tiramisu_action import CannotApplyException
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.tiling_2d import Tiling2D
+
+from tiralib.config.config import BaseConfig
 
 
 def test_tiling_2d_init():
@@ -42,10 +40,17 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.tiling_2d_sample()
     candidates = Tiling2D.get_candidates(sample.tree)
-    assert candidates == {"i0": [("i0", "i1")]}
+    assert candidates == {
+        sample.tree.iterators["i0"].id: [
+            (sample.tree.iterators["i0"].id, sample.tree.iterators["i1"].id)
+        ]
+    }
 
-    candidates = Tiling2D.get_candidates(test_utils.tree_test_sample())
-    assert candidates == {"root": [("j", "k")]}
+    tree = test_utils.tree_test_sample()
+    candidates = Tiling2D.get_candidates(tree)
+    assert candidates == {
+        tree.iterators["root"].id: [(tree.iterators["j"].id, tree.iterators["k"].id)]
+    }
 
 
 def test_fusion_levels():
@@ -55,5 +60,5 @@ def test_fusion_levels():
     action.initialize_action_for_tree(t_tree)
     assert (
         action.tiramisu_optim_str.split("\n")[-2]
-        == "    comp01.then(comp05,0).then(comp06,1).then(comp07,1).then(comp03,1).then(comp04,6);"
+        == "    comp01.then(comp05,0).then(comp06,1).then(comp07,1).then(comp03,1).then(comp04,6);"  # noqa: E501
     )

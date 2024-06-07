@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict
 
 import yaml
 
@@ -12,10 +12,16 @@ class TiramisuConfig:
 
 
 @dataclass
-class AthenaConfig:
+class TiraLibCppConfig:
+    use_sqlite: bool = False
+
+
+@dataclass
+class TiraLibConfig:
     tiramisu: TiramisuConfig
     workspace: str = "workspace"
     env_vars: Dict[str, str] = field(default_factory=dict)
+    tiralib_cpp: TiraLibCppConfig = field(default_factory=TiraLibCppConfig)
 
     def __post_init__(self):
         if isinstance(self.tiramisu, dict):
@@ -31,18 +37,24 @@ def parse_yaml_file(yaml_string: str) -> Dict[Any, Any]:
     return yaml.safe_load(yaml_string)
 
 
-def dict_to_config(parsed_yaml: Dict[Any, Any]) -> AthenaConfig:
+def dict_to_config(parsed_yaml: Dict[Any, Any]) -> TiraLibConfig:
     tiramisu = (
         TiramisuConfig(**parsed_yaml["tiramisu"])
         if "tiramisu" in parsed_yaml
         else TiramisuConfig()
     )
-    athena = parsed_yaml["athena"] if "athena" in parsed_yaml else {}
+    tiralib = parsed_yaml["tiralib"] if "tiralib" in parsed_yaml else {}
     env_vars = parsed_yaml["env_vars"] if "env_vars" in parsed_yaml else {}
-    return AthenaConfig(
-        **athena,
+    tiralibcpp = (
+        TiraLibCppConfig(**parsed_yaml["tiralib_cpp"])
+        if "tiralib_cpp" in parsed_yaml
+        else TiraLibCppConfig()
+    )
+    return TiraLibConfig(
+        **tiralib,
         env_vars=env_vars,
         tiramisu=tiramisu,
+        tiralib_cpp=tiralibcpp,
     )
 
 
@@ -59,10 +71,10 @@ class BaseConfig:
         )
 
     @classmethod
-    def from_athena_config(
-        cls, athena_config: AthenaConfig, logging_level=logging.DEBUG
+    def from_tiralib_config(
+        cls, tiralib_config: TiraLibConfig, logging_level=logging.DEBUG
     ):
-        BaseConfig.base_config = athena_config
+        BaseConfig.base_config = tiralib_config
         logging.basicConfig(
             level=logging_level,
             format="|%(asctime)s|%(levelname)s| %(message)s",

@@ -1,8 +1,6 @@
 import tests.utils as test_utils
-from athena.tiramisu.tiramisu_actions.fusion import Fusion
-from athena.tiramisu.tiramisu_iterator_node import IteratorNode
-from athena.tiramisu.tiramisu_tree import TiramisuTree
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.config.config import BaseConfig
 
 
 def test_from_annotations():
@@ -50,7 +48,10 @@ def test_get_candidate_computations():
         "comp04",
     ]
     assert t_tree.get_iterator_subtree_computations("i") == ["comp01"]
-    assert t_tree.get_iterator_subtree_computations("j") == ["comp03", "comp04"]
+    assert t_tree.get_iterator_subtree_computations("j") == [
+        "comp03",
+        "comp04",
+    ]
 
 
 def test_get_root_of_node():
@@ -83,4 +84,3 @@ def test_get_iterator_of_computation():
 
     assert t_tree.get_iterator_of_computation("comp01", level=0).name == "root"
     assert t_tree.get_iterator_of_computation("comp03", level=1).name == "j"
-

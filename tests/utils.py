@@ -1,9 +1,9 @@
 import pickle
 from typing import Tuple
 
-from athena.tiramisu.tiramisu_iterator_node import IteratorNode
-from athena.tiramisu.tiramisu_program import TiramisuProgram
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.tiramisu_iterator_node import IteratorNode
+from tiralib.tiramisu.tiramisu_program import TiramisuProgram
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 
 def load_test_data() -> Tuple[dict, dict]:
@@ -84,6 +84,7 @@ def tree_test_sample():
         "comp03": 2,
         "comp04": 3,
     }
+    tiramisu_tree.set_iterator_ids()
     return tiramisu_tree
 
 
@@ -319,6 +320,8 @@ def tree_test_sample_imperfect_loops():
         "comp04": 4,
         "comp05": 5,
     }
+
+    tiramisu_tree.set_iterator_ids()
     return tiramisu_tree
 
 
@@ -480,6 +483,8 @@ def tiling_3d_tree_sample() -> TiramisuTree:
     tiramisu_tree.computations_absolute_order = {
         "comp03": 1,
     }
+
+    tiramisu_tree.set_iterator_ids()
     return tiramisu_tree
 
 
@@ -562,7 +567,9 @@ def fusion_sample():
 
 def multiple_roots_sample():
     tiramisu_func = TiramisuProgram.from_file(
-        "examples/function_gemver_MINI_generator.cpp", load_isl_ast=True, load_tree=True
+        "examples/function_gemver_MINI_generator.cpp",
+        load_isl_ast=True,
+        load_tree=True,
     )
     return tiramisu_func
 

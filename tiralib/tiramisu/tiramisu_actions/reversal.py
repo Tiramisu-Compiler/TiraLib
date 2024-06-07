@@ -1,16 +1,12 @@
 from __future__ import annotations
 
 import copy
-import itertools
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import Dict, List
 
-from athena.tiramisu.tiramisu_iterator_node import IteratorIdentifier
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
-if TYPE_CHECKING:
-    from athena.tiramisu.tiramisu_tree import TiramisuTree
-
-from athena.tiramisu.tiramisu_actions.tiramisu_action import (
+from tiralib.tiramisu.tiramisu_actions.tiramisu_action import (
     TiramisuAction,
     TiramisuActionType,
 )
@@ -66,14 +62,20 @@ class Reversal(TiramisuAction):
     def get_candidates(cls, program_tree: TiramisuTree) -> Dict[str, List[str]]:
         candidates: Dict[str, List[str]] = {}
         for root in program_tree.roots:
-            candidates[root] = [root] + program_tree.iterators[root].child_iterators
+            rootId = program_tree.iterators[root].id
+            candidates[rootId] = [rootId] + [
+                program_tree.iterators[iterator].id
+                for iterator in program_tree.iterators[root].child_iterators
+            ]
             nodes_to_visit = program_tree.iterators[root].child_iterators.copy()
 
             while nodes_to_visit:
                 node = nodes_to_visit.pop(0)
                 node_children = program_tree.iterators[node].child_iterators
                 nodes_to_visit.extend(node_children)
-                candidates[root].extend(node_children)
+                candidates[rootId].extend(
+                    [program_tree.iterators[node].id for node in node_children]
+                )
 
         return candidates
 
@@ -81,8 +83,14 @@ class Reversal(TiramisuAction):
         node = program_tree.iterators[self.params[0]]
 
         # Reverse the loop bounds
-        if type(node.lower_bound) == int and type(node.upper_bound) == int:
+        if isinstance(node.lower_bound, int) and isinstance(node.upper_bound, int):
             # Halide way of reversing to keep increment 1
-            node.lower_bound, node.upper_bound = -node.upper_bound, -node.lower_bound
+            node.lower_bound, node.upper_bound = (
+                -node.upper_bound,
+                -node.lower_bound,
+            )
         else:
-            node.lower_bound, node.upper_bound = node.upper_bound, node.lower_bound
+            node.lower_bound, node.upper_bound = (
+                node.upper_bound,
+                node.lower_bound,
+            )

@@ -1,6 +1,6 @@
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.parallelization import Parallelization
-from athena.tiramisu.tiramisu_program import TiramisuProgram
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.parallelization import Parallelization
+from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 
 
 def parallelize_first_legal_outermost(
@@ -11,13 +11,17 @@ def parallelize_first_legal_outermost(
 
     for root in tiramisu_program.tree.roots:
         tmp_schedule = schedule.copy()
-        for candidate in candidates_per_root[root]:
+        for candidate in candidates_per_root[tiramisu_program.tree.iterators[root].id]:
             for node in candidate:
-                comps = tiramisu_program.tree.get_iterator_subtree_computations(node)
                 tmp_schedule.add_optimizations(
                     [
                         Parallelization(
-                            [(comps[0], tiramisu_program.tree.iterators[node].level)]
+                            [
+                                (
+                                    node[0],
+                                    node[1],
+                                )
+                            ]
                         )
                     ]
                 )

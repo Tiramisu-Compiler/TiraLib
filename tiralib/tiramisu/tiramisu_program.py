@@ -2,16 +2,17 @@ import json
 import random
 import re
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
-from athena.tiramisu.compiling_service import CompilingService
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.compiling_service import CompilingService
+from tiralib.tiramisu.function_server import FunctionServer
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 
 class TiramisuProgram:
     """
-    This class represents a tiramisu function. It contains all the neccessary information
-    about the function to be able to generate the code for it.
+    This class represents a tiramisu function. It contains all the neccessary
+    information about the function to be able to generate the code for it.
 
     Attributes
     ----------
@@ -52,6 +53,7 @@ class TiramisuProgram:
         # self.current_machine_initial_execution_time: float | None = None
         self.tree: TiramisuTree = None
         self.wrapper_obj: bytes | None = None
+        self.server: FunctionServer | None = None
 
     @classmethod
     def from_dict(
@@ -72,13 +74,10 @@ class TiramisuProgram:
         if "schedules_dict" in data:
             tiramisu_prog.schedules_dict = data["schedules_dict"]
 
-            # Initialize the initial_execution_times attribute and the current_machine_initial_execution_time attribute
+            # Initialize the initial_execution_times attribute and
+            # the current_machine_initial_execution_time attribute
             if "initial_execution_times" in data:
                 tiramisu_prog.initial_execution_times = data["initial_execution_times"]
-            # if cfg.Config.config.tiramisu.hpc_name in data["initial_execution_times"]:
-            #     tiramisu_prog.current_machine_initial_execution_time = min(data[
-            #         "initial_execution_times"][cfg.Config.config.tiramisu.hpc_name])
-
         if load_code_lines:
             tiramisu_prog.load_code_lines(original_str)
 
@@ -89,18 +88,7 @@ class TiramisuProgram:
         wrapper_cpp, wrapper_header = tiramisu_prog.construct_wrapper_code()
 
         tiramisu_prog.wrappers = {"cpp": wrapper_cpp, "h": wrapper_header}
-        # If the current_machine_initial_execution_time attribute is not found in the data, compute itcio
-        # if not tiramisu_prog.current_machine_initial_execution_time:
-        #     tmp_exec_times = CompilingModule.CompilingService.get_cpu_exec_times(
-        #         tiramisu_program=tiramisu_prog, optims_list=[])
-        #     # Store the minimum execution time in the initial_execution_time attribute
-        #     tiramisu_prog.current_machine_initial_execution_time = min(
-        #         tmp_exec_times)
 
-        #     tiramisu_prog.initial_execution_times[
-        #         cfg.Config.config.tiramisu.hpc_name] = tmp_exec_times
-
-        # After taking the neccessary fields return the instance
         if load_tree:
             tiramisu_prog.tree = TiramisuTree.from_annotations(
                 tiramisu_prog.annotations
@@ -116,7 +104,8 @@ class TiramisuProgram:
         load_tree=False,
     ) -> "TiramisuProgram":
         """
-        This function loads a tiramisu function from its cpp file and its wrapper files.
+        This function loads a tiramisu function from its cpp file and its
+        wrapper files.
 
         Parameters
         ----------
@@ -161,7 +150,58 @@ class TiramisuProgram:
                 )
             else:
                 raise Exception(
-                    "You should load either the annotations or the isl ast string to load the tree"
+                    "You should load either the annotations or the isl ast\
+                    string to load the tree"
+                )
+
+        # After taking the neccessary fields return the instance
+        return tiramisu_prog
+
+    @classmethod
+    def init_server(
+        cls,
+        original_code: str,
+        from_file: bool = False,
+        load_annotations=False,
+        load_isl_ast=False,
+        load_tree=False,
+        reuseServer=False,
+    ):
+        # Initiate an instante of the TiramisuProgram class
+        tiramisu_prog = cls()
+        if from_file:
+            tiramisu_prog.file_path = original_code
+            tiramisu_prog.load_code_lines()
+        else:
+            tiramisu_prog.load_code_lines(original_code)
+        # load the wrapper code
+        wrapper_cpp, wrapper_header = tiramisu_prog.construct_wrapper_code()
+
+        tiramisu_prog.wrappers = {"cpp": wrapper_cpp, "h": wrapper_header}
+
+        tiramisu_prog.server = FunctionServer(tiramisu_prog, reuseServer=reuseServer)
+
+        if load_annotations:
+            annotations_str = tiramisu_prog.server.get_annotations()
+            tiramisu_prog.annotations = json.loads(annotations_str)
+        elif load_isl_ast:
+            result = tiramisu_prog.server.run()
+            tiramisu_prog.isl_ast_string = result.isl_ast
+
+        if load_tree:
+            if tiramisu_prog.annotations:
+                assert tiramisu_prog.annotations is not None
+                tiramisu_prog.tree = TiramisuTree.from_annotations(
+                    tiramisu_prog.annotations
+                )
+            elif tiramisu_prog.isl_ast_string:
+                tiramisu_prog.tree = TiramisuTree.from_isl_ast_string_list(
+                    tiramisu_prog.isl_ast_string.split("\n")
+                )
+            else:
+                raise Exception(
+                    "You should load either the annotations or the isl ast \
+                    string to load the tree"
                 )
 
         # After taking the neccessary fields return the instance
@@ -169,7 +209,8 @@ class TiramisuProgram:
 
     def load_code_lines(self, original_str: str | None = None):
         """
-        This function loads the file code , it is necessary to generate legality check code and annotations
+        This function loads the file code , it is necessary to generate
+        legality check code and annotations
         """
 
         if original_str:
@@ -184,7 +225,8 @@ class TiramisuProgram:
             else "."
         ) + "/"
         self.body = re.findall(
-            r"(tiramisu::init(?s:.)+)tiramisu::codegen", self.original_str
+            r"int main\([\w\s,*]+\)\s*\{([\W\w\s]*)tiramisu::codegen",
+            self.original_str,
         )[0]
         self.name = re.findall(r"tiramisu::init\(\"(\w+)\"\);", self.original_str)[0]
         # Remove the wrapper include from the original string
@@ -215,7 +257,7 @@ class TiramisuProgram:
     double *c_{buffer_name} = (double*)malloc({'*'.join(self.buffer_sizes[i][::-1])}* sizeof(double));
     parallel_init_buffer(c_{buffer_name}, {'*'.join(self.buffer_sizes[i][::-1])}, (double){str(random.randint(1,10))});
     Halide::Buffer<double> {buffer_name}(c_{buffer_name}, {','.join(self.buffer_sizes[i][::-1])});
-    """
+    """  # noqa: E501
         if self.name is None:
             raise Exception("TiramisuProgram.name is None")
 
@@ -258,27 +300,27 @@ using namespace std::chrono;
 using namespace std;
 
 int main(int, char **argv){
-        
+
 $buffers_init$
-    
+
     //halide_set_num_threads(48);
-    
+
     int nb_execs = get_nb_exec();
 
     double duration;
-    
+
     for (int i = 0; i < nb_execs; ++i) {
-        auto begin = std::chrono::high_resolution_clock::now(); 
+        auto begin = std::chrono::high_resolution_clock::now();
         $func_name$($func_params$);
-        auto end = std::chrono::high_resolution_clock::now(); 
+        auto end = std::chrono::high_resolution_clock::now();
 
         duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count() / (double)1000000;
-        std::cout << duration << " "; 
+        std::cout << duration << " ";
 
     }
     std::cout << std::endl;
     return 0;
-}"""
+}"""  # noqa: E501
 wrapper_h_template = """#include <tiramisu/utils.h>
 #include <sys/time.h>
 #include <cstdlib>
@@ -306,16 +348,16 @@ void *init_part(void *params)
 }
 
 void parallel_init_buffer(double* buf, unsigned long long int size, double value){
-    pthread_t threads[NB_THREAD_INIT]; 
+    pthread_t threads[NB_THREAD_INIT];
     struct args params[NB_THREAD_INIT];
     for (int i = 0; i < NB_THREAD_INIT; i++) {
         unsigned long long int start = i*size/NB_THREAD_INIT;
         unsigned long long int end = std::min((i+1)*size/NB_THREAD_INIT, size);
         params[i] = (struct args){buf, start, end, value};
-        pthread_create(&threads[i], NULL, init_part, (void*)&(params[i])); 
+        pthread_create(&threads[i], NULL, init_part, (void*)&(params[i]));
     }
-    for (int i = 0; i < NB_THREAD_INIT; i++) 
-        pthread_join(threads[i], NULL); 
+    for (int i = 0; i < NB_THREAD_INIT; i++)
+        pthread_join(threads[i], NULL);
     return;
 }
 #ifdef __cplusplus
@@ -356,4 +398,4 @@ int get_nb_exec(){
         return 30;
     }
 }
-"""
+"""  # noqa: E501
