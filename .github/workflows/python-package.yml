@@ -34,8 +34,8 @@ jobs:
     - name: Install TiraLibCPP
       run: |
         apt install -y sqlite3 libsqlite3-dev zlib1g-dev
-        git clone https://github.com/skourta/tiralibcpp.git
-        cd tiralibcpp
+        git clone https://github.com/skourta/TiraLibCpp.git
+        cd TiraLibCpp
         cmake . -B build -DTIRAMISU_ROOT=${TIRAMISU_ROOT}
         cmake --build build
         cmake --install build --prefix install
