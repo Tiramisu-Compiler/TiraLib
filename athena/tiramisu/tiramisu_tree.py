@@ -87,9 +87,7 @@ class TiramisuTree:
                 tiramisu_space.add_root(iterator)
                 iterator_level = 0
             else:
-                iterator_level = (
-                    tiramisu_space.iterators[parent_iterator].level + 1
-                )
+                iterator_level = tiramisu_space.iterators[parent_iterator].level + 1
 
             # get the computations that are associated with this iterator
             # ordered by their absolute order
@@ -126,26 +124,19 @@ class TiramisuTree:
         # order the roots by their first comp's absolute order
         root_with_order = []
         for root in tiramisu_space.roots:
-            first_comp = tiramisu_space.get_iterator_subtree_computations(
-                root
-            )[0]
-            first_comp_order = tiramisu_space.computations_absolute_order[
-                first_comp
-            ]
+            first_comp = tiramisu_space.get_iterator_subtree_computations(root)[0]
+            first_comp_order = tiramisu_space.computations_absolute_order[first_comp]
             root_with_order.append((root, first_comp_order))
 
         tiramisu_space.roots = [
-            root
-            for root, _ in sorted(root_with_order, key=lambda item: item[1])
+            root for root, _ in sorted(root_with_order, key=lambda item: item[1])
         ]
 
         tiramisu_space.set_iterator_ids()
         return tiramisu_space
 
     @classmethod
-    def from_isl_ast_string_list(
-        cls, isl_ast_string_list: List[str]
-    ) -> "TiramisuTree":
+    def from_isl_ast_string_list(cls, isl_ast_string_list: List[str]) -> "TiramisuTree":
         tiramisu_tree = cls()
         tiramisu_tree.computations_absolute_order = {}
         tiramisu_tree.computations = []
@@ -175,9 +166,7 @@ class TiramisuTree:
                     pass
 
                 # Get the upper bound from the loop condition
-                matched_upper_bound = re.match(
-                    upper_bound_regex, loop_condition
-                )
+                matched_upper_bound = re.match(upper_bound_regex, loop_condition)
                 if matched_upper_bound:
                     upper_bound = matched_upper_bound.group(1)
                 else:
@@ -192,9 +181,7 @@ class TiramisuTree:
                         iterator_duplicates[iterator_name] + 1
                     )
                     iterator_name = (
-                        iterator_name
-                        + "_"
-                        + str(iterator_duplicates[iterator_name])
+                        iterator_name + "_" + str(iterator_duplicates[iterator_name])
                     )
                 else:
                     iterator_duplicates[iterator_name] = 0
@@ -252,8 +239,7 @@ class TiramisuTree:
             + "\n"
         )
         comps_and_iterators = [
-            (comp, "comp")
-            for comp in self.iterators[node_name].computations_list
+            (comp, "comp") for comp in self.iterators[node_name].computations_list
         ]
         comps_and_iterators += [
             (iterator, "iterator")
@@ -281,9 +267,7 @@ class TiramisuTree:
                     + "\n"
                 )
             else:
-                representation += self._get_subtree_representation(
-                    comp_or_iterator
-                )
+                representation += self._get_subtree_representation(comp_or_iterator)
         return representation
 
     def get_candidate_sections(self) -> Dict[str, List[List[str]]]:
@@ -303,17 +287,13 @@ class TiramisuTree:
             nodes_to_visit = [root]
             list_candidate_sections = []
             for node in nodes_to_visit:
-                candidate_section, new_nodes_to_visit = (
-                    self._get_section_of_node(node)
-                )
+                candidate_section, new_nodes_to_visit = self._get_section_of_node(node)
                 list_candidate_sections.append(candidate_section)
                 nodes_to_visit.extend(new_nodes_to_visit)
             candidate_sections[root] = list_candidate_sections
         return candidate_sections
 
-    def _get_section_of_node(
-        self, node_name: str
-    ) -> Tuple[List[str], List[str]]:
+    def _get_section_of_node(self, node_name: str) -> Tuple[List[str], List[str]]:
         candidate_section = [node_name]
         current_node = self.iterators[node_name]
 
@@ -329,9 +309,7 @@ class TiramisuTree:
             return candidate_section, current_node.child_iterators
         return candidate_section, []
 
-    def get_iterator_subtree_computations(
-        self, candidate_node_name: str
-    ) -> List[str]:
+    def get_iterator_subtree_computations(self, candidate_node_name: str) -> List[str]:
         """Get the list of computations impacted by this node
 
         Parameters:
@@ -369,9 +347,7 @@ class TiramisuTree:
         current_node_name = iterator_name
 
         while self.iterators[current_node_name].parent_iterator:
-            current_node_name = self.iterators[
-                current_node_name
-            ].parent_iterator
+            current_node_name = self.iterators[current_node_name].parent_iterator
 
         if current_node_name is None:
             raise ValueError("The iterator has no root node")
@@ -401,20 +377,15 @@ class TiramisuTree:
 
         return computation_iterator
 
-    def get_iterator_id_from_name(
-        self, iterator_name: str
-    ) -> IteratorIdentifier:
+    def get_iterator_id_from_name(self, iterator_name: str) -> IteratorIdentifier:
         """
         This function returns the id of the iterator
         """
         iterator = self.iterators[iterator_name]
         identifying_comp = None
-        if iterator.computations_list:
-            identifying_comp = iterator.computations_list[0]
-        else:
-            identifying_comp = self.get_iterator_subtree_computations(
-                iterator_name
-            )[0]
+        comps = self.get_iterator_subtree_computations(iterator_name)
+        comps.sort(key=lambda comp: self.computations_absolute_order[comp])
+        identifying_comp = comps[0]
 
         return (identifying_comp, iterator.level)
 

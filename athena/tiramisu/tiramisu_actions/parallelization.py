@@ -43,14 +43,10 @@ class Parallelization(TiramisuAction):
                 self.iterator_id[0], self.iterator_id[1]
             )
 
-            self.comps = tiramisu_tree.get_iterator_subtree_computations(
-                iterator.name
-            )
+            self.comps = tiramisu_tree.get_iterator_subtree_computations(iterator.name)
             # order the computations by their absolute order
             self.comps.sort(
-                key=lambda comp: tiramisu_tree.computations_absolute_order[
-                    comp
-                ]
+                key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
             )
 
         self.set_string_representations(tiramisu_tree)
@@ -61,9 +57,7 @@ class Parallelization(TiramisuAction):
 
         level = self.iterator_id[1]
         first_comp = self.comps[0]
-        self.tiramisu_optim_str = (
-            f"{first_comp}.tag_parallel_level({level});\n"
-        )
+        self.tiramisu_optim_str = f"{first_comp}.tag_parallel_level({level});\n"
 
         self.str_representation = f"P(L{level},comps={self.comps})"
 
@@ -78,10 +72,7 @@ class Parallelization(TiramisuAction):
 
         if node.child_iterators:
             candidates.append(
-                [
-                    program_tree.iterators[child].id
-                    for child in node.child_iterators
-                ]
+                [program_tree.iterators[child].id for child in node.child_iterators]
             )
 
             for child in node.child_iterators:
@@ -90,9 +81,7 @@ class Parallelization(TiramisuAction):
         return candidates
 
     @classmethod
-    def get_candidates(
-        cls, program_tree: TiramisuTree
-    ) -> Dict[str, List[str]]:
+    def get_candidates(cls, program_tree: TiramisuTree) -> Dict[str, List[str]]:
         """Get the list of candidates for parallelization.
 
         Parameters:

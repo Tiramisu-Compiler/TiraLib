@@ -30,9 +30,7 @@ def test_set_string_representations():
     schedule = Schedule(sample)
     schedule.add_optimizations([parallelization])
 
-    assert (
-        parallelization.tiramisu_optim_str == "comp02.tag_parallel_level(0);\n"
-    )
+    assert parallelization.tiramisu_optim_str == "comp02.tag_parallel_level(0);\n"
 
 
 def test_get_candidates():

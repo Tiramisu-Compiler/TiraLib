@@ -72,9 +72,7 @@ def test_from_sched_str():
     schedule.add_optimizations(
         [
             Parallelization(params=[("A_hat", 0)]),
-            tiramisu_actions.Interchange(
-                params=[("x_temp", 0), ("x_temp", 1)]
-            ),
+            tiramisu_actions.Interchange(params=[("x_temp", 0), ("x_temp", 1)]),
             tiramisu_actions.Fusion(params=[("A_hat", 0), ("x_temp", 0)]),
             tiramisu_actions.Tiling2D(params=[("w", 0), ("w", 1), 4, 4]),
             tiramisu_actions.Unrolling(params=[("x", 0), 4]),

@@ -101,11 +101,7 @@ class TiramisuAction:
         return self.type == TiramisuActionType.TILING_GENERAL
 
     def is_any_tiling(self) -> bool:
-        return (
-            self.is_tiling_2d()
-            or self.is_tiling_3d()
-            or self.is_tiling_general()
-        )
+        return self.is_tiling_2d() or self.is_tiling_3d() or self.is_tiling_general()
 
     @classmethod
     def get_candidates(cls, program_tree: TiramisuTree) -> list:

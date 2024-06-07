@@ -80,9 +80,7 @@ class Tiling2D(TiramisuAction):
         all_comps = tiramisu_tree.computations
         if len(all_comps) > 1:
             all_comps.sort(
-                key=lambda comp: tiramisu_tree.computations_absolute_order[
-                    comp
-                ]
+                key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
             )
             fusion_levels = self.get_fusion_levels(all_comps, tiramisu_tree)
 

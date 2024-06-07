@@ -50,9 +50,7 @@ class Tiling3D(TiramisuAction):
         self.iterators = [params[0], params[1], params[2]]
         self.tile_sizes = [params[3], params[4], params[5]]
 
-        super().__init__(
-            type=TiramisuActionType.TILING_3D, params=params, comps=comps
-        )
+        super().__init__(type=TiramisuActionType.TILING_3D, params=params, comps=comps)
 
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
@@ -89,9 +87,7 @@ class Tiling3D(TiramisuAction):
 
         if len(all_comps) > 1:
             all_comps.sort(
-                key=lambda comp: tiramisu_tree.computations_absolute_order[
-                    comp
-                ]
+                key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
             )
             fusion_levels = self.get_fusion_levels(all_comps, tiramisu_tree)
 
