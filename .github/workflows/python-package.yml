@@ -50,7 +50,7 @@ jobs:
         echo "  CC: cc" >> config.yaml
         echo "  TIRAMISU_ROOT: \"${TIRAMISU_ROOT}\"" >> config.yaml
         echo "  LD_LIBRARY_PATH: \"${LD_LIBRARY_PATH}\"" >> config.yaml
-        echo "  TIRAMISU_TIRALIBCPP_PATH: $(pwd)/tiralibcpp/install" >> config.yaml
+        echo "  TIRAMISU_TIRALIBCPP_PATH: $(pwd)/TiraLibCpp/install" >> config.yaml
         echo "  CONDA_ENV: ." >> config.yaml
     - name: Test with pytest
       run: |
