@@ -2,7 +2,7 @@ import tests.utils as test_utils
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_actions.tiling_2d import Tiling2D
 
-from tiralib.utils.config import BaseConfig
+from tiralib.config.config import BaseConfig
 
 
 def test_tiling_2d_init():

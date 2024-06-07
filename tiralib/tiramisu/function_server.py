@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
-from tiralib.utils.config import BaseConfig
+from tiralib.config.config import BaseConfig
 
 if TYPE_CHECKING:
     from tiralib.tiramisu.schedule import Schedule

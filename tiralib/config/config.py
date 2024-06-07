@@ -12,10 +12,16 @@ class TiramisuConfig:
 
 
 @dataclass
+class TiraLibCppConfig:
+    use_sqlite: bool = False
+
+
+@dataclass
 class TiraLibConfig:
     tiramisu: TiramisuConfig
     workspace: str = "workspace"
     env_vars: Dict[str, str] = field(default_factory=dict)
+    tiralib_cpp: TiraLibCppConfig = field(default_factory=TiraLibCppConfig)
 
     def __post_init__(self):
         if isinstance(self.tiramisu, dict):
@@ -39,10 +45,16 @@ def dict_to_config(parsed_yaml: Dict[Any, Any]) -> TiraLibConfig:
     )
     tiralib = parsed_yaml["tiralib"] if "tiralib" in parsed_yaml else {}
     env_vars = parsed_yaml["env_vars"] if "env_vars" in parsed_yaml else {}
+    tiralibcpp = (
+        TiraLibCppConfig(**parsed_yaml["tiralib_cpp"])
+        if "tiralib_cpp" in parsed_yaml
+        else TiraLibCppConfig()
+    )
     return TiraLibConfig(
         **tiralib,
         env_vars=env_vars,
         tiramisu=tiramisu,
+        tiralib_cpp=tiralibcpp,
     )
 
 

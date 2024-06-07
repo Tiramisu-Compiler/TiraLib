@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, List
 
 from tiralib.tiramisu.compiling_service import CompilingService
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
-from tiralib.utils.config import BaseConfig
+from tiralib.config.config import BaseConfig
 
 if TYPE_CHECKING:
     from tiralib.tiramisu.schedule import Schedule
