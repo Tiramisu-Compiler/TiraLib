@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 
 templateWithEverythinginUtils = """
 #include <tiramisu/tiramisu.h>
-#include <HermesII/actions.h>
-#include <HermesII/utils.h>
+#include <TiraLibCPP/actions.h>
+#include <TiraLibCPP/utils.h>
 
 using namespace tiramisu;
 
@@ -172,7 +172,7 @@ class FunctionServer:
         ):
             lib = "lib64"
 
-        compileCommand = f"cd {BaseConfig.base_config.workspace} && {env_vars} && export FUNC_NAME={self.tiramisu_program.name} && $CXX -I$TIRAMISU_ROOT/3rdParty/Halide/install/include -I$TIRAMISU_ROOT/include -I$TIRAMISU_ROOT/3rdParty/isl/include -I$TIRAMISU_HERMESII_PATH/include -fvisibility-inlines-hidden -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -isystem $CONDA_ENV/include -ldl -g -fno-rtti -lpthread -std=c++17 -MD -MT ${{FUNC_NAME}}.cpp.o -MF ${{FUNC_NAME}}.cpp.o.d -o ${{FUNC_NAME}}.cpp.o -c ${{FUNC_NAME}}_server.cpp && $CXX -fvisibility-inlines-hidden -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -isystem $CONDA_ENV/include -ldl -g -fno-rtti -lpthread ${{FUNC_NAME}}.cpp.o -o ${{FUNC_NAME}}_server -L$TIRAMISU_ROOT/build  -L$TIRAMISU_ROOT/3rdParty/Halide/install/{lib}  -L$TIRAMISU_ROOT/3rdParty/isl/build/lib  -Wl,-rpath,$TIRAMISU_ROOT/build:$TIRAMISU_ROOT/3rdParty/Halide/install/{lib}:$TIRAMISU_ROOT/3rdParty/isl/build/lib:$TIRAMISU_HERMESII_PATH/lib $TIRAMISU_HERMESII_PATH/lib/libHermesII.so -ltiramisu -ltiramisu_auto_scheduler -lHalide -lisl -lsqlite3 -lz"  # noqa: E501
+        compileCommand = f"cd {BaseConfig.base_config.workspace} && {env_vars} && export FUNC_NAME={self.tiramisu_program.name} && $CXX -I$TIRAMISU_ROOT/3rdParty/Halide/install/include -I$TIRAMISU_ROOT/include -I$TIRAMISU_ROOT/3rdParty/isl/include -I$TIRAMISU_TIRALIBCPP_PATH/include -fvisibility-inlines-hidden -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -isystem $CONDA_ENV/include -ldl -g -fno-rtti -lpthread -std=c++17 -MD -MT ${{FUNC_NAME}}.cpp.o -MF ${{FUNC_NAME}}.cpp.o.d -o ${{FUNC_NAME}}.cpp.o -c ${{FUNC_NAME}}_server.cpp && $CXX -fvisibility-inlines-hidden -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -isystem $CONDA_ENV/include -ldl -g -fno-rtti -lpthread ${{FUNC_NAME}}.cpp.o -o ${{FUNC_NAME}}_server -L$TIRAMISU_ROOT/build  -L$TIRAMISU_ROOT/3rdParty/Halide/install/{lib}  -L$TIRAMISU_ROOT/3rdParty/isl/build/lib  -Wl,-rpath,$TIRAMISU_ROOT/build:$TIRAMISU_ROOT/3rdParty/Halide/install/{lib}:$TIRAMISU_ROOT/3rdParty/isl/build/lib:$TIRAMISU_TIRALIBCPP_PATH/lib $TIRAMISU_TIRALIBCPP_PATH/lib/libTiraLibCPP.so -ltiramisu -ltiramisu_auto_scheduler -lHalide -lisl -lsqlite3 -lz"  # noqa: E501
 
         # run the command and retrieve the execution status
         try:

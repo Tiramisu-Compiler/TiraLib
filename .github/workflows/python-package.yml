@@ -31,15 +31,15 @@ jobs:
       run: |
         # stop the build if there are Python syntax errors or undefined names
         ruff check
-    - name: Install HermesII
+    - name: Install TiraLibCPP
       run: |
         apt install -y sqlite3 libsqlite3-dev zlib1g-dev
-        git clone https://github.com/skourta/HermesII.git
-        cd HermesII
+        git clone https://github.com/skourta/tiralibcpp.git
+        cd tiralibcpp
         cmake . -B build -DTIRAMISU_ROOT=${TIRAMISU_ROOT}
         cmake --build build
         cmake --install build --prefix install
-        export TIRAMISU_HERMESII_PATH=$(pwd)/install
+        export TIRAMISU_TIRALIBCPP_PATH=$(pwd)/install
     - name: Create config.yaml
       run: |
         mkdir workspace
@@ -50,7 +50,7 @@ jobs:
         echo "  CC: cc" >> config.yaml
         echo "  TIRAMISU_ROOT: \"${TIRAMISU_ROOT}\"" >> config.yaml
         echo "  LD_LIBRARY_PATH: \"${LD_LIBRARY_PATH}\"" >> config.yaml
-        echo "  TIRAMISU_HERMESII_PATH: $(pwd)/HermesII/install" >> config.yaml
+        echo "  TIRAMISU_TIRALIBCPP_PATH: $(pwd)/tiralibcpp/install" >> config.yaml
         echo "  CONDA_ENV: ." >> config.yaml
     - name: Test with pytest
       run: |

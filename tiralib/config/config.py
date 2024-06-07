@@ -12,7 +12,7 @@ class TiramisuConfig:
 
 
 @dataclass
-class tiralibConfig:
+class TiraLibConfig:
     tiramisu: TiramisuConfig
     workspace: str = "workspace"
     env_vars: Dict[str, str] = field(default_factory=dict)
@@ -31,7 +31,7 @@ def parse_yaml_file(yaml_string: str) -> Dict[Any, Any]:
     return yaml.safe_load(yaml_string)
 
 
-def dict_to_config(parsed_yaml: Dict[Any, Any]) -> tiralibConfig:
+def dict_to_config(parsed_yaml: Dict[Any, Any]) -> TiraLibConfig:
     tiramisu = (
         TiramisuConfig(**parsed_yaml["tiramisu"])
         if "tiramisu" in parsed_yaml
@@ -39,7 +39,7 @@ def dict_to_config(parsed_yaml: Dict[Any, Any]) -> tiralibConfig:
     )
     tiralib = parsed_yaml["tiralib"] if "tiralib" in parsed_yaml else {}
     env_vars = parsed_yaml["env_vars"] if "env_vars" in parsed_yaml else {}
-    return tiralibConfig(
+    return TiraLibConfig(
         **tiralib,
         env_vars=env_vars,
         tiramisu=tiramisu,
@@ -60,7 +60,7 @@ class BaseConfig:
 
     @classmethod
     def from_tiralib_config(
-        cls, tiralib_config: tiralibConfig, logging_level=logging.DEBUG
+        cls, tiralib_config: TiraLibConfig, logging_level=logging.DEBUG
     ):
         BaseConfig.base_config = tiralib_config
         logging.basicConfig(
