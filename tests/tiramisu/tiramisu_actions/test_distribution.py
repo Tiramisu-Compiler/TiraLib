@@ -1,7 +1,7 @@
 import tests.utils as test_utils
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_actions.distribution import Distribution
-from tiralib.utils.config import BaseConfig
+from tiralib.config.config import BaseConfig
 
 
 def test_distribution_init():

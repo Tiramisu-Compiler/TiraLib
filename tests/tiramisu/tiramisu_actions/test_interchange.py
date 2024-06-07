@@ -1,7 +1,7 @@
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_actions.interchange import Interchange
 
-from tiralib.utils.config import BaseConfig
+from tiralib.config.config import BaseConfig
 from tests.utils import interchange_example
 
 

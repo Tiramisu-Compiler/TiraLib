@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from tiralib.tiramisu.schedule import Schedule
     from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 
-from tiralib.utils.config import BaseConfig
+from tiralib.config.config import BaseConfig
 
 
 class CompilingService:
