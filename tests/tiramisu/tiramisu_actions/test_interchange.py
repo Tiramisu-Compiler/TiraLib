@@ -1,7 +1,7 @@
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.interchange import Interchange
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.interchange import Interchange
 
-from athena.utils.config import BaseConfig
+from tiralib.utils.config import BaseConfig
 from tests.utils import interchange_example
 
 

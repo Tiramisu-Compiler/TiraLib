@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import List  # ,TYPE_CHECKING
 
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 
 class TiramisuActionType(Enum):

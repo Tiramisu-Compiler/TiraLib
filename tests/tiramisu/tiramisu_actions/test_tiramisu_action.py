@@ -1,7 +1,7 @@
 import pytest
 
-import athena.tiramisu.tiramisu_actions as tiramisu_actions
-from athena.tiramisu.tiramisu_actions import TiramisuAction, TiramisuActionType
+import tiralib.tiramisu.tiramisu_actions as tiramisu_actions
+from tiralib.tiramisu.tiramisu_actions import TiramisuAction, TiramisuActionType
 
 
 def test_initialize_action_for_tree():

@@ -1,8 +1,8 @@
 import tests.utils as test_utils
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.fusion import Fusion
-from athena.tiramisu.tiramisu_actions.interchange import Interchange
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.fusion import Fusion
+from tiralib.tiramisu.tiramisu_actions.interchange import Interchange
+from tiralib.utils.config import BaseConfig
 
 
 def test_fusion_init():

@@ -5,15 +5,15 @@ import re
 from copy import deepcopy
 from typing import TYPE_CHECKING, List
 
-from athena.tiramisu.compiling_service import CompilingService
-from athena.tiramisu.tiramisu_actions.tiramisu_action import TiramisuActionType
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.compiling_service import CompilingService
+from tiralib.tiramisu.tiramisu_actions.tiramisu_action import TiramisuActionType
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 if TYPE_CHECKING:
     from .tiramisu_actions.tiramisu_action import TiramisuAction
 
-from athena.tiramisu import tiramisu_actions
-from athena.tiramisu.tiramisu_program import TiramisuProgram
+from tiralib.tiramisu import tiramisu_actions
+from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 
 
 class Schedule:

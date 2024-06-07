@@ -1,6 +1,6 @@
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.parallelization import Parallelization
-from athena.tiramisu.tiramisu_program import TiramisuProgram
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.parallelization import Parallelization
+from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 
 
 def parallelize_first_legal_outermost(

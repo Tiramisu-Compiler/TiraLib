@@ -4,9 +4,9 @@ import re
 from pathlib import Path
 from typing import Dict
 
-from athena.tiramisu.compiling_service import CompilingService
-from athena.tiramisu.function_server import FunctionServer
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.compiling_service import CompilingService
+from tiralib.tiramisu.function_server import FunctionServer
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 
 class TiramisuProgram:

@@ -4,12 +4,12 @@ from ast import List
 import copy
 import itertools
 
-from athena.tiramisu.tiramisu_iterator_node import (
+from tiralib.tiramisu.tiramisu_iterator_node import (
     IteratorIdentifier,
 )
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
-from athena.tiramisu.tiramisu_actions.tiramisu_action import (
+from tiralib.tiramisu.tiramisu_actions.tiramisu_action import (
     TiramisuAction,
     TiramisuActionType,
 )

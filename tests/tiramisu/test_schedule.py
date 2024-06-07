@@ -1,8 +1,8 @@
 import tests.utils as test_utils
-from athena.tiramisu import tiramisu_actions
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.parallelization import Parallelization
-from athena.utils.config import BaseConfig
+from tiralib.tiramisu import tiramisu_actions
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.parallelization import Parallelization
+from tiralib.utils.config import BaseConfig
 from tests.utils import benchmark_program_test_sample
 
 
