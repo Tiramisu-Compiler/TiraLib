@@ -10,6 +10,6 @@ env_vars:
   CXX: "${CXX}"
   CC: "${CC}"
   TIRAMISU_ROOT: "path/to/tiramisu"
-  LD_LIBRARY_PATH: "${TIRAMISU_ROOT}/3rdParty/Halide/build/src:${TIRAMISU_ROOT}/3rdParty/llvm/build/lib:${TIRAMISU_ROOT}/build:${TIRAMISU_ROOT}/3rdParty/isl/build/lib"
   TIRAMISU_TIRALIBCPP_PATH: "path/to/hermesii/installation"
   CONDA_ENV: "path/to/conda/env"
+  LD_LIBRARY_PATH: "$CONDA_ENV/lib:${TIRAMISU_ROOT}/3rdParty/Halide/build/src:${TIRAMISU_ROOT}/3rdParty/llvm/build/lib:${TIRAMISU_ROOT}/build:${TIRAMISU_ROOT}/3rdParty/isl/build/lib"
