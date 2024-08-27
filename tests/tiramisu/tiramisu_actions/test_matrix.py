@@ -1,7 +1,9 @@
-from tests.utils import interchange_example
+from tests.utils import interchange_example, load_test_data
 from tiralib.config.config import BaseConfig
+from tiralib.tiramisu import tiramisu_actions
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_actions.matrix import MatrixTransform
+from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 
 
 def test_matrix_init():
@@ -43,3 +45,31 @@ def test_legality_check():
     )
     legality_string = schedule.optims_list[0].legality_check_string
     assert legality_string == "comp00.matrix_transform({{1,0,0},{0,0,1},{0,1,0}});"
+
+
+def test_matrix_transform_application():
+    BaseConfig.init()
+    _, test_cpps = load_test_data()
+    sample = TiramisuProgram.init_server(
+        test_cpps["function837782"],
+        load_annotations=True,
+        load_tree=True,
+        reuseServer=True,
+    )
+
+    matrix_schedule = Schedule(sample)
+    assert matrix_schedule.tree
+    matrix_schedule.add_optimizations(
+        [MatrixTransform([1, 0, 0, 0, 0, 1, 0, 1, 0], ["comp00"])],
+    )
+
+    matrix_result = sample.server.run("execution", matrix_schedule, 1)
+
+    interchange_schedule = Schedule(sample)
+    interchange_schedule.add_optimizations(
+        [tiramisu_actions.Interchange([("comp00", 1), ("comp00", 2)], comps=["comp00"])]
+    )
+
+    interchange_result = sample.server.run("execution", interchange_schedule, 1)
+
+    assert interchange_result.halide_ir == matrix_result.halide_ir
