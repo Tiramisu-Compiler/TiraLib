@@ -1,12 +1,7 @@
-import pytest
-
-import tests.utils as test_utils
-from athena.tiramisu.schedule import Schedule
-from athena.tiramisu.tiramisu_actions.matrix import MatrixTransform
-from athena.tiramisu.tiramisu_actions.tiling_2d import Tiling2D
-from athena.tiramisu.tiramisu_actions.tiramisu_action import CannotApplyException
-from athena.utils.config import BaseConfig
 from tests.utils import interchange_example
+from tiralib.config.config import BaseConfig
+from tiralib.tiramisu.schedule import Schedule
+from tiralib.tiramisu.tiramisu_actions.matrix import MatrixTransform
 
 
 def test_matrix_init():
@@ -45,7 +40,7 @@ def test_legality_check():
     schedule = Schedule(sample)
     assert schedule.tree
     schedule.add_optimizations(
-        [MatrixTransform([1, 0, 0, 0, 0, 1, 0, 1, 0], ["comp00"])]
+        [MatrixTransform([1, 0, 0, 0, 0, 1, 0, 1, 0], ["comp00"])],
     )
     legality_string = schedule.optims_list[0].legality_check_string
     assert legality_string == "comp00.matrix_transform({{1,0,0},{0,0,1},{0,1,0}});"

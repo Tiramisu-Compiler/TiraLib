@@ -1,18 +1,15 @@
 from __future__ import annotations
 
 import copy
-import itertools
 import math
-import re
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import TYPE_CHECKING, List
 
-from athena.tiramisu.tiramisu_iterator_node import IteratorIdentifier
-from athena.tiramisu.tiramisu_tree import TiramisuTree
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 if TYPE_CHECKING:
-    from athena.tiramisu.tiramisu_tree import TiramisuTree
+    from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
-from athena.tiramisu.tiramisu_actions.tiramisu_action import (
+from tiralib.tiramisu.tiramisu_actions.tiramisu_action import (
     TiramisuAction,
     TiramisuActionType,
 )
