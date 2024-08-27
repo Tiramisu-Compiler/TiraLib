@@ -6,7 +6,6 @@ from tiralib.tiramisu.tiramisu_actions.matrix import MatrixTransform
 
 def test_matrix_init():
     BaseConfig.init()
-    sample = interchange_example()
     matrixTransform = MatrixTransform([1, 0, 0, 0, 0, 1, 0, 1, 0], ["comp00"])
     assert matrixTransform.params == [1, 0, 0, 0, 0, 1, 0, 1, 0]
     assert matrixTransform.comps == ["comp00"]
