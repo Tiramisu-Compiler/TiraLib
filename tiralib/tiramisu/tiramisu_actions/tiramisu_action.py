@@ -20,7 +20,8 @@ class TiramisuActionType(Enum):
     DISTRIBUTION = 8
     EXPANSION = 9
     TILING_GENERAL = 10
-    # WHENEVER YOU ADD AN ACTION GO EDIT THE NUMBER OF ACTIONS TEXT
+    MATRIX_TRANSFORM = 11
+    # WHENEVER YOU ADD AN ACTION GO EDIT THE NUMBER OF ACTIONS TEST
 
 
 class TiramisuAction:
@@ -102,6 +103,9 @@ class TiramisuAction:
 
     def is_any_tiling(self) -> bool:
         return self.is_tiling_2d() or self.is_tiling_3d() or self.is_tiling_general()
+
+    def is_matrix(self) -> bool:
+        return self.type == TiramisuActionType.MATRIX_TRANSFORM
 
     @classmethod
     def get_candidates(cls, program_tree: TiramisuTree) -> list:
