@@ -1,8 +1,8 @@
+import tests.utils as test_utils
+from tiralib.config import BaseConfig
 from tiralib.tiramisu import tiramisu_actions
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_program import TiramisuProgram
-from tiralib.config.config import BaseConfig
-import tests.utils as test_utils
 
 
 def test_init_server():
@@ -29,7 +29,7 @@ def test_init_server_annotations():
         load_annotations=True,
         load_tree=True,
         from_file=True,
-        reuseServer=True,
+        reuse_server=True,
     )
 
     assert sample.name == "function_gemver_MINI"
@@ -44,7 +44,7 @@ def test_get_legality():
         load_isl_ast=True,
         load_tree=True,
         from_file=True,
-        reuseServer=True,
+        reuse_server=True,
     )
 
     schedule = Schedule(sample)
@@ -66,7 +66,7 @@ def test_get_exec_times():
         load_isl_ast=True,
         load_tree=True,
         from_file=True,
-        reuseServer=True,
+        reuse_server=True,
     )
 
     schedule = Schedule(sample)
@@ -77,7 +77,7 @@ def test_get_exec_times():
         ]
     )
 
-    len(schedule.execute()) > 0
+    assert len(schedule.execute()) > 0
 
 
 def test_get_skewing_factors():
@@ -90,14 +90,12 @@ def test_get_skewing_factors():
         original_code=test_cpps["function550013"],
         load_annotations=True,
         load_tree=True,
-        reuseServer=True,
+        reuse_server=True,
     )
 
     schedule = Schedule(tiramisu_func)
 
-    schedule.add_optimizations(
-        [tiramisu_actions.Skewing([("comp00", 0), ("comp00", 1), 0, 0])]
-    )
+    schedule.add_optimizations([tiramisu_actions.Skewing([("comp00", 0), ("comp00", 1), 0, 0])])
 
     assert schedule.is_legal()
 

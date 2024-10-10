@@ -1,6 +1,6 @@
 # import the tiralib library
 from tiralib.tiramisu import TiramisuProgram, Schedule, tiramisu_actions
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 
 # initialize the TiraLib configuration
 BaseConfig.init()

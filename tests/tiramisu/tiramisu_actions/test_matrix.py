@@ -1,5 +1,5 @@
 from tests.utils import interchange_example, load_test_data
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 from tiralib.tiramisu import tiramisu_actions
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_actions.matrix import MatrixTransform
@@ -29,10 +29,7 @@ def test_set_string_representations():
     matrix = MatrixTransform([1, 0, 0, 0, 0, 1, 0, 1, 0], ["comp00"])
     schedule = Schedule(sample)
     schedule.add_optimizations([matrix])
-    assert (
-        matrix.tiramisu_optim_str
-        == "comp00.matrix_transform({{1,0,0},{0,0,1},{0,1,0}});"
-    )
+    assert matrix.tiramisu_optim_str == "comp00.matrix_transform({{1,0,0},{0,0,1},{0,1,0}});"
 
 
 def test_legality_check():
@@ -54,7 +51,7 @@ def test_matrix_transform_application():
         test_cpps["function837782"],
         load_annotations=True,
         load_tree=True,
-        reuseServer=True,
+        reuse_server=True,
     )
 
     matrix_schedule = Schedule(sample)

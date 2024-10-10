@@ -2,7 +2,7 @@ from tiralib.search_methods.sequential_parallelization import (
     parallelize_first_legal_outermost,
 )
 from tiralib.tiramisu.tiramisu_actions.parallelization import Parallelization
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 from tests.utils import benchmark_program_test_sample
 
 

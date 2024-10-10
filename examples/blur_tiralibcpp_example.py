@@ -1,6 +1,6 @@
 # import the tiralib library
-from tiralib.tiramisu import TiramisuProgram, Schedule, tiramisu_actions
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
+from tiralib.tiramisu import Schedule, TiramisuProgram, tiramisu_actions
 
 # initialize the TiraLib configuration
 BaseConfig.init()
@@ -12,7 +12,7 @@ tiramisu_program = TiramisuProgram.init_server(
     from_file=True,
     load_annotations=True,
     load_tree=True,
-    reuseServer=True,
+    reuse_server=True,
 )
 
 # The rest of the code is the same as in using TiraLib alone
