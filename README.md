@@ -35,16 +35,15 @@ poetry shell
 TiraLib Python uses a configuration file to specify the paths to the Tiramisu compiler and the Tiramisu runtime. The configuration file is named `config.yaml` and should be placed in the root directory of the project. The configuration file should have the following format (more details can be found in the config module):
 
 ```yaml
-tiramisu: 
-  is_new_tiramisu: False
-
 env_vars:
   CXX: "${CXX}"
   CC: "${CC}"
-  TIRAMISU_ROOT: "path/to/tiramisu"
-  TIRAMISU_TIRALIBCPP_PATH: "path/to/tiralibcpp/installation" # Optional
-  CONDA_ENV: "path/to/conda/env"
-  LD_LIBRARY_PATH: "$CONDA_ENV/lib:${TIRAMISU_ROOT}/3rdParty/Halide/build/src:${TIRAMISU_ROOT}/3rdParty/llvm/build/lib:${TIRAMISU_ROOT}/build:${TIRAMISU_ROOT}/3rdParty/isl/build/lib"
+
+dependencies:
+    includes:
+        - path to where the include of dependencies are
+    libs:
+        - path to lib where dependencies are installed
 ```
 
 A `config.yaml.example` file is provided in the root directory of the project. You can use it as a template for your configuration file.
@@ -52,7 +51,7 @@ A `config.yaml.example` file is provided in the root directory of the project. Y
 Before running any TiraLib Python code, you need to load the configuration file using the following code:
 
 ```python
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 
 BaseConfig.init()
 ```
@@ -63,7 +62,7 @@ To load a Tiramisu program, you need to create a `TiramisuProgram` object and pa
 
 ```python
 from tiralib.tiramisu import TiramisuProgram, Schedule, tiramisu_actions
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 
 BaseConfig.init()
 
@@ -80,7 +79,7 @@ To build a schedule for a Tiramisu program, you need to create a `Schedule` obje
 
 ```python
 from tiralib.tiramisu import TiramisuProgram, Schedule, tiramisu_actions
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 
 BaseConfig.init()
 
@@ -98,7 +97,7 @@ To add a transformation to a schedule, you need to call the `add_optimizations` 
 
 ```python
 from tiralib.tiramisu import TiramisuProgram, Schedule, tiramisu_actions
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 
 BaseConfig.init()
 
@@ -119,7 +118,7 @@ To check the legality of a schedule, you need to call the `is_legal` method of t
 
 ```python
 from tiralib.tiramisu import TiramisuProgram, Schedule, tiramisu_actions
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 
 BaseConfig.init()
 
@@ -143,7 +142,7 @@ To execute a schedule, you need to call the `execute` method of the `Schedule` o
 
 ```python
 from tiralib.tiramisu import TiramisuProgram, Schedule, tiramisu_actions
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 
 BaseConfig.init()
 

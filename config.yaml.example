@@ -1,15 +1,11 @@
-# Check the tiralibConfig class in tiralib/utils/config.py for more information about the config file
-
-tiralib:
-  workspace: "workspace"
-
-tiramisu: 
-  is_new_tiramisu: False
+# Check the tiralibConfig class in tiralib/config.py for more information about the config file
 
 env_vars:
   CXX: "${CXX}"
   CC: "${CC}"
-  TIRAMISU_ROOT: "path/to/tiramisu"
-  TIRAMISU_TIRALIBCPP_PATH: "path/to/hermesii/installation"
-  CONDA_ENV: "path/to/conda/env"
-  LD_LIBRARY_PATH: "$CONDA_ENV/lib:${TIRAMISU_ROOT}/3rdParty/Halide/build/src:${TIRAMISU_ROOT}/3rdParty/llvm/build/lib:${TIRAMISU_ROOT}/build:${TIRAMISU_ROOT}/3rdParty/isl/build/lib"
+
+dependencies:
+    includes:
+        - path to where the include of dependencies are
+    libs:
+        - path to lib where dependencies are installed

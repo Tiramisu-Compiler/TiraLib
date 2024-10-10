@@ -1,3 +1,5 @@
+"""Config module for TiraLib."""
+
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict
@@ -6,63 +8,72 @@ import yaml
 
 
 @dataclass
-class TiramisuConfig:
-    is_new_tiramisu: bool = False
-    max_runs: int = 30
-
-
-@dataclass
 class TiraLibCppConfig:
+    """Config for TiraLibCpp."""
+
     use_sqlite: bool = False
 
 
 @dataclass
+class Dependencies:
+    """Config for dependencies."""
+
+    includes: list[str] = field(default_factory=list)
+    libs: list[str] = field(default_factory=list)
+
+
+@dataclass
 class TiraLibConfig:
-    tiramisu: TiramisuConfig
+    """Config for TiraLib."""
+
+    max_runs: int = 30
     workspace: str = "workspace"
     env_vars: Dict[str, str] = field(default_factory=dict)
     tiralib_cpp: TiraLibCppConfig = field(default_factory=TiraLibCppConfig)
-
-    def __post_init__(self):
-        if isinstance(self.tiramisu, dict):
-            self.tiramisu = TiramisuConfig(**self.tiramisu)
+    dependencies: Dependencies = field(default_factory=Dependencies)
 
 
 def read_yaml_file(path):
+    """Read a yaml file and return its content as a string."""
     with open(path) as yaml_file:
         return yaml_file.read()
 
 
 def parse_yaml_file(yaml_string: str) -> Dict[Any, Any]:
+    """Parse a yaml string and return a dictionary."""
     return yaml.safe_load(yaml_string)
 
 
 def dict_to_config(parsed_yaml: Dict[Any, Any]) -> TiraLibConfig:
-    tiramisu = (
-        TiramisuConfig(**parsed_yaml["tiramisu"])
-        if "tiramisu" in parsed_yaml
-        else TiramisuConfig()
-    )
-    tiralib = parsed_yaml["tiralib"] if "tiralib" in parsed_yaml else {}
+    """Convert a dictionary to a TiraLibConfig object."""
     env_vars = parsed_yaml["env_vars"] if "env_vars" in parsed_yaml else {}
     tiralibcpp = (
         TiraLibCppConfig(**parsed_yaml["tiralib_cpp"])
         if "tiralib_cpp" in parsed_yaml
         else TiraLibCppConfig()
     )
+    deps = (
+        Dependencies(**parsed_yaml["dependencies"])
+        if "dependencies" in parsed_yaml
+        else Dependencies()
+    )
     return TiraLibConfig(
-        **tiralib,
+        max_runs=parsed_yaml["max_runs"] if "max_runs" in parsed_yaml else 30,
+        workspace=parsed_yaml["workspace"] if "workspace" in parsed_yaml else "workspace",
         env_vars=env_vars,
-        tiramisu=tiramisu,
         tiralib_cpp=tiralibcpp,
+        dependencies=deps,
     )
 
 
 class BaseConfig:
+    """Base config class."""
+
     base_config = None
 
     @classmethod
     def init(cls, config_yaml="config.yaml", logging_level=logging.DEBUG):
+        """Initialize the config."""
         parsed_yaml_dict = parse_yaml_file(read_yaml_file(config_yaml))
         BaseConfig.base_config = dict_to_config(parsed_yaml_dict)
         logging.basicConfig(
@@ -71,9 +82,8 @@ class BaseConfig:
         )
 
     @classmethod
-    def from_tiralib_config(
-        cls, tiralib_config: TiraLibConfig, logging_level=logging.DEBUG
-    ):
+    def from_tiralib_config(cls, tiralib_config: TiraLibConfig, logging_level=logging.DEBUG):
+        """Initialize the config from a TiraLibConfig object."""
         BaseConfig.base_config = tiralib_config
         logging.basicConfig(
             level=logging_level,

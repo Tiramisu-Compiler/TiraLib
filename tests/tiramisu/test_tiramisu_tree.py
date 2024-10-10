@@ -1,6 +1,6 @@
 import tests.utils as test_utils
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 
 
 def test_from_annotations():

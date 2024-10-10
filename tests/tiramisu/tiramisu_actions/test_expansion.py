@@ -1,7 +1,7 @@
 import tests.utils as test_utils
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_actions import Expansion, Parallelization
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 
 
 def test_expansion_init():
@@ -43,7 +43,5 @@ def test_expansion_application():
     assert not schedule.is_legal()
 
     schedule = Schedule(sample)
-    schedule.add_optimizations(
-        [Expansion(["addition"]), Parallelization([("addition", 1)])]
-    )
+    schedule.add_optimizations([Expansion(["addition"]), Parallelization([("addition", 1)])])
     assert schedule.is_legal()

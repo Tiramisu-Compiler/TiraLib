@@ -1,7 +1,7 @@
 import tests.utils as test_utils
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_actions.distribution import Distribution
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 
 
 def test_distribution_init():
@@ -101,9 +101,7 @@ def test_get_fusion_levels():
     ]
 
     t_tree = test_utils.tree_test_sample_2()
-    distribution = Distribution(
-        [("comp05", 1)], [["comp05", "comp06"], ["comp07", ("comp03", 2)]]
-    )
+    distribution = Distribution([("comp05", 1)], [["comp05", "comp06"], ["comp07", ("comp03", 2)]])
     distribution.initialize_action_for_tree(t_tree)
     ordered_computations = t_tree.computations
     ordered_computations.sort(key=lambda x: t_tree.computations_absolute_order[x])

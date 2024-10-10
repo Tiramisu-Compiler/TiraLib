@@ -1,7 +1,7 @@
 import tests.utils as test_utils
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_actions.skewing import Skewing
-from tiralib.config.config import BaseConfig
+from tiralib.config import BaseConfig
 
 
 def test_skewing_init():
