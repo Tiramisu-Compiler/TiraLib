@@ -219,9 +219,13 @@ class TiramisuTree:
 
                 # Add the computation to its iterator's computations list
                 # (the last iterator we added in the previous level)
-                tiramisu_tree.iterators[
-                    level_iterator_map[level - 1][-1]
-                ].computations_list.append(comp_name)
+                # After making sure that the computation is in an actual loop. 
+                # Some computations might occur in a single iteration loop which
+                # would be romved by ISL
+                if level!=0: 
+                    tiramisu_tree.iterators[
+                        level_iterator_map[level - 1][-1]
+                    ].computations_list.append(comp_name)
 
                 # Add the computation to the absolute order dict
                 tiramisu_tree.computations_absolute_order[comp_name] = i
