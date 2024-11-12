@@ -10,6 +10,8 @@ from tiralib.config import BaseConfig
 if TYPE_CHECKING:
     from tiralib.tiramisu.schedule import Schedule
     from tiralib.tiramisu.tiramisu_program import TiramisuProgram
+    
+logger = logging.getLogger("TiraLib")
 
 templateWithEverythinginUtils = """
 #include <tiramisu/tiramisu.h>
@@ -114,7 +116,7 @@ class FunctionServer:
         server_path = Path(BaseConfig.base_config.workspace) / f"{tiramisu_program.name}_server"
 
         if reuse_server and server_path.exists():
-            logging.info("Server code already exists. Skipping generation")
+            logger.info("Server code already exists. Skipping generation")
             return
 
         # Generate the server code
@@ -185,8 +187,8 @@ class FunctionServer:
         try:
             subprocess.check_output(compile_command, shell=True)
         except subprocess.CalledProcessError as e:
-            logging.error(f"Error while compiling server code: {e}")
-            logging.error(e.output)
+            logger.error(f"Error while compiling server code: {e}")
+            logger.error(e.output)
             print(e.output)
             print(e.stderr)
             raise e
@@ -220,8 +222,8 @@ class FunctionServer:
         try:
             output = subprocess.check_output(command, shell=True)
         except subprocess.CalledProcessError as e:
-            logging.error(f"Error while running server code: {e}")
-            logging.error(e.output)
+            logger.error(f"Error while running server code: {e}")
+            logger.error(e.output)
             print(e.output)
             print(e.stderr)
             raise e
@@ -245,8 +247,8 @@ class FunctionServer:
         try:
             output = subprocess.check_output(command, shell=True)
         except subprocess.CalledProcessError as e:
-            logging.error(f"Error while running server code: {e}")
-            logging.error(e.output)
+            logger.error(f"Error while running server code: {e}")
+            logger.error(e.output)
             print(e.output)
             print(e.stderr)
             raise e
