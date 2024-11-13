@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from tiralib.tiramisu.tiramisu_actions.tiramisu_action import TiramisuAction
     from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 
-logger = logging.getLogger("TiraLib")
+logger = logging.getLogger(__name__)
 
 class CompilingService:
     """Compile Tiramisu code and run it to get the results.

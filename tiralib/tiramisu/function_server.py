@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from tiralib.tiramisu.schedule import Schedule
     from tiralib.tiramisu.tiramisu_program import TiramisuProgram
     
-logger = logging.getLogger("TiraLib")
+logger = logging.getLogger(__name__)
 
 templateWithEverythinginUtils = """
 #include <tiramisu/tiramisu.h>
