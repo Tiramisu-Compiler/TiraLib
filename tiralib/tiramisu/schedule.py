@@ -84,6 +84,7 @@ class Schedule:
         nb_exec_times=1,
         max_mins_per_schedule: float | None = None,
         delete_files: bool = True,
+        execution_timeout: float | None = None,
     ) -> List[float]:
         """
         Applies the schedule to the Tiramisu program.
@@ -123,6 +124,7 @@ class Schedule:
             nb_exec_times,
             max_mins_per_schedule,
             delete_files,
+            execution_timeout,
         )
 
     def is_legal(self, with_ast: bool = False) -> bool:
