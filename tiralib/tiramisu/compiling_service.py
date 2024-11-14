@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from tiralib.tiramisu.tiramisu_actions.tiramisu_action import TiramisuAction
     from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 
+logger = logging.getLogger(__name__)
 
 class CompilingService:
     """Compile Tiramisu code and run it to get the results.
@@ -43,7 +44,7 @@ class CompilingService:
 
         cpp_code = cls.get_legality_code(schedule=schedule, with_ast=with_ast)
 
-        logging.debug("Legality Code: \n" + cpp_code)
+        logger.debug("Legality Code: \n" + cpp_code)
 
         result = cls.run_cpp_code(cpp_code=cpp_code, output_path=output_path)
 
@@ -230,9 +231,9 @@ class CompilingService:
                 raise Exception("Compiler returned no output")
 
         except subprocess.CalledProcessError as e:
-            logging.error(f"Process terminated with error code: {e.returncode}")
-            logging.error(f"Error output: {e.stderr}")
-            logging.error(env_vars + shell_script)
+            logger.error(f"Process terminated with error code: {e.returncode}")
+            logger.error(f"Error output: {e.stderr}")
+            logger.error(env_vars + shell_script)
             raise e
         except Exception as e:
             raise e
@@ -314,7 +315,7 @@ class CompilingService:
             """
 
         solver_code = legality_cpp_code.replace(to_replace, solver_lines)
-        logging.debug("Skewing Solver Code:\n" + solver_code)
+        logger.debug("Skewing Solver Code:\n" + solver_code)
         output_path = os.path.join(
             BaseConfig.base_config.workspace,
             f"{schedule.tiramisu_program.name}_skewing_solver",
@@ -464,7 +465,7 @@ class CompilingService:
             )
 
             halide_repr = compiler.stdout
-            logging.debug(f"Generated Halide code:\n{halide_repr}")
+            logger.debug(f"Generated Halide code:\n{halide_repr}")
 
             if max_mins_per_schedule:
                 # run the wrapper and get the execution time
@@ -516,17 +517,17 @@ class CompilingService:
                 results += [float(x) for x in compiler.stdout.split()]
                 return results
             else:
-                logging.error("No output from schedule execution")
-                logging.error(compiler.stderr)
-                logging.error(compiler.stdout)
-                logging.error(
+                logger.error("No output from schedule execution")
+                logger.error(compiler.stderr)
+                logger.error(compiler.stdout)
+                logger.error(
                     f"The following schedule execution crashed: {tiramisu_program.name}, schedule: {optims_list} \n\n {cpp_code}\n\n"  # noqa: E501
                 )
                 raise ScheduleExecutionError("No output from schedule execution")
         except subprocess.CalledProcessError as e:
-            logging.error(f"Process terminated with error code: {e.returncode}")
-            logging.error(f"Error output: {e.stderr}")
-            logging.error(f"Output: {e.stdout}")
+            logger.error(f"Process terminated with error code: {e.returncode}")
+            logger.error(f"Error output: {e.stderr}")
+            logger.error(f"Output: {e.stdout}")
             raise ScheduleExecutionError(
                 f"Schedule execution crashed: function: {tiramisu_program.name}, schedule: {optims_list}"  # noqa: E501
             )

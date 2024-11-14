@@ -76,16 +76,13 @@ class BaseConfig:
         """Initialize the config."""
         parsed_yaml_dict = parse_yaml_file(read_yaml_file(config_yaml))
         BaseConfig.base_config = dict_to_config(parsed_yaml_dict)
-        logging.basicConfig(
-            level=logging_level,
-            format="|%(asctime)s|%(levelname)s| %(message)s",
-        )
+        base_logger = logging.getLogger(__name__.split('.')[0])
+        base_logger.setLevel(logging_level)
 
     @classmethod
     def from_tiralib_config(cls, tiralib_config: TiraLibConfig, logging_level=logging.DEBUG):
         """Initialize the config from a TiraLibConfig object."""
         BaseConfig.base_config = tiralib_config
-        logging.basicConfig(
-            level=logging_level,
-            format="|%(asctime)s|%(levelname)s| %(message)s",
-        )
+        base_logger = logging.getLogger(__name__.split('.')[0])
+        base_logger.setLevel(logging_level)
+
