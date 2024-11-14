@@ -60,7 +60,9 @@ def dict_to_config(parsed_yaml: Dict[Any, Any]) -> TiraLibConfig:
     )
     return TiraLibConfig(
         max_runs=parsed_yaml["max_runs"] if "max_runs" in parsed_yaml else 30,
-        workspace=parsed_yaml["workspace"] if "workspace" in parsed_yaml else "workspace",
+        workspace=parsed_yaml["workspace"]
+        if "workspace" in parsed_yaml
+        else "workspace",
         env_vars=env_vars,
         tiralib_cpp=tiralibcpp,
         dependencies=deps,
@@ -77,15 +79,16 @@ class BaseConfig:
         """Initialize the config."""
         parsed_yaml_dict = parse_yaml_file(read_yaml_file(config_yaml))
         BaseConfig.base_config = dict_to_config(parsed_yaml_dict)
-        base_logger = logging.getLogger(__name__.split('.')[0])
+        base_logger = logging.getLogger(__name__.split(".")[0])
         base_logger.setLevel(logging_level)
         Path(BaseConfig.base_config.workspace).mkdir(parents=True, exist_ok=True)
 
     @classmethod
-    def from_tiralib_config(cls, tiralib_config: TiraLibConfig, logging_level=logging.DEBUG):
+    def from_tiralib_config(
+        cls, tiralib_config: TiraLibConfig, logging_level=logging.DEBUG
+    ):
         """Initialize the config from a TiraLibConfig object."""
         BaseConfig.base_config = tiralib_config
-        base_logger = logging.getLogger(__name__.split('.')[0])
+        base_logger = logging.getLogger(__name__.split(".")[0])
         base_logger.setLevel(logging_level)
         Path(BaseConfig.base_config.workspace).mkdir(parents=True, exist_ok=True)
-

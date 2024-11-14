@@ -43,5 +43,7 @@ def test_expansion_application():
     assert not schedule.is_legal()
 
     schedule = Schedule(sample)
-    schedule.add_optimizations([Expansion(["addition"]), Parallelization([("addition", 1)])])
+    schedule.add_optimizations(
+        [Expansion(["addition"]), Parallelization([("addition", 1)])]
+    )
     assert schedule.is_legal()
