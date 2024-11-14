@@ -28,6 +28,9 @@ source = ["tiralib"]
 # omit main.py from coverage report
 omit = ["tiralib/main.py"]
 
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report=lcov:lcov.info --cov-report=term"
+testpaths = ["tests"]
 
 # Linting tools configuration
 # [tool.ruff]

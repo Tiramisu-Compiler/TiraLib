@@ -11,3 +11,4 @@ dist
 main.py
 .env
 poetry.lock
+lcov.info
