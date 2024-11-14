@@ -2,6 +2,7 @@
 
 import logging
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict
 
 import yaml
@@ -78,6 +79,7 @@ class BaseConfig:
         BaseConfig.base_config = dict_to_config(parsed_yaml_dict)
         base_logger = logging.getLogger(__name__.split('.')[0])
         base_logger.setLevel(logging_level)
+        Path(BaseConfig.base_config.workspace).mkdir(parents=True, exist_ok=True)
 
     @classmethod
     def from_tiralib_config(cls, tiralib_config: TiraLibConfig, logging_level=logging.DEBUG):
@@ -85,4 +87,5 @@ class BaseConfig:
         BaseConfig.base_config = tiralib_config
         base_logger = logging.getLogger(__name__.split('.')[0])
         base_logger.setLevel(logging_level)
+        Path(BaseConfig.base_config.workspace).mkdir(parents=True, exist_ok=True)
 
