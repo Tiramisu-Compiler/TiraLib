@@ -54,7 +54,9 @@ class CompilingService:
             legality_result = legality_result.strip()
             if legality_result not in ["0", "1"]:
                 raise Exception(f"Error in legality check: {legality_result}")
-            ast = TiramisuTree.from_isl_ast_string_list(isl_ast_string_list=result_lines[1:])
+            ast = TiramisuTree.from_isl_ast_string_list(
+                isl_ast_string_list=result_lines[1:]
+            )
             return legality_result == "1", ast
 
         else:
@@ -261,7 +263,9 @@ class CompilingService:
         if BaseConfig.base_config is None:
             raise Exception("The base config is not loaded yet")
         legality_cpp_code = cls.get_legality_code(schedule)
-        to_replace = re.findall(r"std::cout << is_legal << std::endl;", legality_cpp_code)[0]
+        to_replace = re.findall(
+            r"std::cout << is_legal << std::endl;", legality_cpp_code
+        )[0]
         header = """
         function * fct = tiramisu::global::get_implicit_function();\n"""
         legality_cpp_code = legality_cpp_code.replace(
@@ -393,6 +397,7 @@ class CompilingService:
         max_runs: int = 0,
         max_mins_per_schedule: float | None = None,
         delete_fiels: bool = True,
+        execution_timeout: float | None = None,
     ) -> List[float]:
         """Return the execution times of the program.
 
@@ -419,7 +424,9 @@ class CompilingService:
         # Get the code of the schedule
         cpp_code = cls.get_schedule_code(tiramisu_program, optims_list)
         # Write the code to a file
-        output_path = os.path.join(BaseConfig.base_config.workspace, tiramisu_program.name)
+        output_path = os.path.join(
+            BaseConfig.base_config.workspace, tiramisu_program.name
+        )
 
         cls.write_to_disk(cpp_code, output_path + "_schedule")
 
@@ -428,13 +435,19 @@ class CompilingService:
             with open(output_path + "_wrapper", "wb") as f:
                 f.write(tiramisu_program.wrapper_obj)
             # write the wrapper header file needed by the schedule file
-            cls.write_to_disk(tiramisu_program.wrappers["h"], output_path + "_wrapper", ".h")
+            cls.write_to_disk(
+                tiramisu_program.wrappers["h"], output_path + "_wrapper", ".h"
+            )
             # give it execution rights to be able to run it
             subprocess.check_output(["chmod", "+x", output_path + "_wrapper"])
         else:
             # write the wrappers
-            cls.write_to_disk(tiramisu_program.wrappers["cpp"], output_path + "_wrapper")
-            cls.write_to_disk(tiramisu_program.wrappers["h"], output_path + "_wrapper", ".h")
+            cls.write_to_disk(
+                tiramisu_program.wrappers["cpp"], output_path + "_wrapper"
+            )
+            cls.write_to_disk(
+                tiramisu_program.wrappers["h"], output_path + "_wrapper", ".h"
+            )
 
         env_vars = CompilingService.get_env_vars()
 
@@ -482,6 +495,7 @@ class CompilingService:
                     text=True,
                     shell=True,
                     check=True,
+                    timeout=execution_timeout,
                 )
 
                 if compiler.stdout:
@@ -510,6 +524,7 @@ class CompilingService:
                 text=True,
                 shell=True,
                 check=True,
+                timeout=execution_timeout,
             )
 
             # Extract the execution times from the output and return the min
@@ -531,8 +546,6 @@ class CompilingService:
             raise ScheduleExecutionError(
                 f"Schedule execution crashed: function: {tiramisu_program.name}, schedule: {optims_list}"  # noqa: E501
             )
-        except Exception as e:
-            raise e
 
     @classmethod
     def get_n_runs_script(
@@ -567,7 +580,8 @@ class CompilingService:
             raise ValueError("BaseConfig not initialized")
 
         env_vars = [
-            f"export {key}={value}" for key, value in BaseConfig.base_config.env_vars.items()
+            f"export {key}={value}"
+            for key, value in BaseConfig.base_config.env_vars.items()
         ]
 
         libs = ":".join(BaseConfig.base_config.dependencies.libs)
