@@ -10,3 +10,4 @@ htmlcov
 dist
 main.py
 .env
+poetry.lock
