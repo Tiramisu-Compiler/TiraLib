@@ -29,7 +29,10 @@ def test_set_string_representations():
     matrix = MatrixTransform([1, 0, 0, 0, 0, 1, 0, 1, 0], ["comp00"])
     schedule = Schedule(sample)
     schedule.add_optimizations([matrix])
-    assert matrix.tiramisu_optim_str == "comp00.matrix_transform({{1,0,0},{0,0,1},{0,1,0}});"
+    assert (
+        matrix.tiramisu_optim_str
+        == "comp00.matrix_transform({{1,0,0},{0,0,1},{0,1,0}});"
+    )
 
 
 def test_legality_check():

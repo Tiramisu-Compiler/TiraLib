@@ -117,7 +117,9 @@ def test_from_sched_str():
 
     schedule.add_optimizations(
         [
-            tiramisu_actions.Tiling3D([("comp00", 0), ("comp00", 1), ("comp00", 2), 4, 4, 4]),
+            tiramisu_actions.Tiling3D(
+                [("comp00", 0), ("comp00", 1), ("comp00", 2), 4, 4, 4]
+            ),
         ]
     )
 

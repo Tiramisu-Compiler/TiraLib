@@ -89,7 +89,9 @@ class TiramisuProgram:
         tiramisu_prog.wrappers = {"cpp": wrapper_cpp, "h": wrapper_header}
 
         if load_tree:
-            tiramisu_prog.tree = TiramisuTree.from_annotations(tiramisu_prog.annotations)
+            tiramisu_prog.tree = TiramisuTree.from_annotations(
+                tiramisu_prog.annotations
+            )
         return tiramisu_prog
 
     @classmethod
@@ -130,12 +132,16 @@ class TiramisuProgram:
                 CompilingService.compile_annotations(tiramisu_prog)
             )
         elif load_isl_ast:
-            tiramisu_prog.isl_ast_string = CompilingService.compile_isl_ast_tree(tiramisu_prog)
+            tiramisu_prog.isl_ast_string = CompilingService.compile_isl_ast_tree(
+                tiramisu_prog
+            )
 
         if load_tree:
             if tiramisu_prog.annotations:
                 assert tiramisu_prog.annotations is not None
-                tiramisu_prog.tree = TiramisuTree.from_annotations(tiramisu_prog.annotations)
+                tiramisu_prog.tree = TiramisuTree.from_annotations(
+                    tiramisu_prog.annotations
+                )
             elif tiramisu_prog.isl_ast_string:
                 tiramisu_prog.tree = TiramisuTree.from_isl_ast_string_list(
                     tiramisu_prog.isl_ast_string.split("\n")
@@ -183,7 +189,9 @@ class TiramisuProgram:
         if load_tree:
             if tiramisu_prog.annotations:
                 assert tiramisu_prog.annotations is not None
-                tiramisu_prog.tree = TiramisuTree.from_annotations(tiramisu_prog.annotations)
+                tiramisu_prog.tree = TiramisuTree.from_annotations(
+                    tiramisu_prog.annotations
+                )
             elif tiramisu_prog.isl_ast_string:
                 tiramisu_prog.tree = TiramisuTree.from_isl_ast_string_list(
                     tiramisu_prog.isl_ast_string.split("\n")
@@ -219,14 +227,20 @@ class TiramisuProgram:
         self.name = re.findall(r"tiramisu::init\(\"(\w+)\"\);", self.original_str)[0]
         # Remove the wrapper include from the original string
         self.wrapper_str = f'#include "{self.name}_wrapper.h"'
-        self.original_str = self.original_str.replace(self.wrapper_str, f"// {self.wrapper_str}")
+        self.original_str = self.original_str.replace(
+            self.wrapper_str, f"// {self.wrapper_str}"
+        )
         self.comps = re.findall(r"computation (\w+)\(", self.original_str)
-        self.code_gen_line = re.findall(r"tiramisu::codegen\({.+;", self.original_str)[0]
+        self.code_gen_line = re.findall(r"tiramisu::codegen\({.+;", self.original_str)[
+            0
+        ]
         buffers_vect = re.findall(r"{(.+)}", self.code_gen_line)[0]
         self.IO_buffer_names = re.findall(r"\w+", buffers_vect)
         self.buffer_sizes = []
         for buf_name in self.IO_buffer_names:
-            sizes_vect = re.findall(r"buffer " + buf_name + ".*{(.*)}", self.original_str)[0]
+            sizes_vect = re.findall(
+                r"buffer " + buf_name + ".*{(.*)}", self.original_str
+            )[0]
             self.buffer_sizes.append(re.findall(r"\d+", sizes_vect))
         self.wrapper_is_compiled = False
 
@@ -244,8 +258,12 @@ class TiramisuProgram:
             raise Exception("TiramisuProgram.name is None")
 
         wrapper_cpp_code = wrapper_cpp_template.replace("$func_name$", self.name)
-        wrapper_cpp_code = wrapper_cpp_code.replace("$buffers_init$", buffers_init_lines)
-        wrapper_cpp_code = wrapper_cpp_code.replace("$func_folder_path$", self.func_folder)
+        wrapper_cpp_code = wrapper_cpp_code.replace(
+            "$buffers_init$", buffers_init_lines
+        )
+        wrapper_cpp_code = wrapper_cpp_code.replace(
+            "$func_folder_path$", self.func_folder
+        )
         wrapper_cpp_code = wrapper_cpp_code.replace(
             "$func_params$",
             ",".join([name + ".raw_buffer()" for name in self.IO_buffer_names]),

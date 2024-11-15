@@ -219,10 +219,10 @@ class TiramisuTree:
 
                 # Add the computation to its iterator's computations list
                 # (the last iterator we added in the previous level)
-                # After making sure that the computation is in an actual loop. 
+                # After making sure that the computation is in an actual loop.
                 # Some computations might occur in a single iteration loop which
                 # would be romved by ISL
-                if level!=0: 
+                if level != 0:
                     tiramisu_tree.iterators[
                         level_iterator_map[level - 1][-1]
                     ].computations_list.append(comp_name)

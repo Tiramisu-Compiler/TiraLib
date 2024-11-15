@@ -95,7 +95,9 @@ def test_get_skewing_factors():
 
     schedule = Schedule(tiramisu_func)
 
-    schedule.add_optimizations([tiramisu_actions.Skewing([("comp00", 0), ("comp00", 1), 0, 0])])
+    schedule.add_optimizations(
+        [tiramisu_actions.Skewing([("comp00", 0), ("comp00", 1), 0, 0])]
+    )
 
     assert schedule.is_legal()
 
