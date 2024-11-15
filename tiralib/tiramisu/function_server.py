@@ -10,7 +10,7 @@ from tiralib.config import BaseConfig
 if TYPE_CHECKING:
     from tiralib.tiramisu.schedule import Schedule
     from tiralib.tiramisu.tiramisu_program import TiramisuProgram
-    
+
 logger = logging.getLogger(__name__)
 
 templateWithEverythinginUtils = """
@@ -110,30 +110,37 @@ class FunctionServer:
         self.tiramisu_program = tiramisu_program
 
         server_path_cpp = (
-            Path(BaseConfig.base_config.workspace) / f"{tiramisu_program.name}_server.cpp"
+            Path(BaseConfig.base_config.workspace)
+            / f"{tiramisu_program.name}_server.cpp"
         )
 
-        server_path = Path(BaseConfig.base_config.workspace) / f"{tiramisu_program.name}_server"
+        server_path = (
+            Path(BaseConfig.base_config.workspace) / f"{tiramisu_program.name}_server"
+        )
 
         if reuse_server and server_path.exists():
             logger.info("Server code already exists. Skipping generation")
             return
 
         # Generate the server code
-        server_code = FunctionServer._generate_server_code_from_original_string(tiramisu_program)
+        server_code = FunctionServer._generate_server_code_from_original_string(
+            tiramisu_program
+        )
 
         # Write the server code to a file
         server_path_cpp.write_text(server_code)
 
         # Write the wrapper code to a file
         wrapper_path = (
-            Path(BaseConfig.base_config.workspace) / f"{tiramisu_program.name}_wrapper.cpp"
+            Path(BaseConfig.base_config.workspace)
+            / f"{tiramisu_program.name}_wrapper.cpp"
         )
         wrapper_path.write_text(tiramisu_program.wrappers["cpp"])
 
         # Write the wrapper header to a file
         wrapper_header_path = (
-            Path(BaseConfig.base_config.workspace) / f"{tiramisu_program.name}_wrapper.h"
+            Path(BaseConfig.base_config.workspace)
+            / f"{tiramisu_program.name}_wrapper.h"
         )
 
         wrapper_header_path.write_text(tiramisu_program.wrappers["h"])
@@ -142,7 +149,9 @@ class FunctionServer:
         self._compile_server_code()
 
     @classmethod
-    def _generate_server_code_from_original_string(self, tiramisu_program: "TiramisuProgram"):
+    def _generate_server_code_from_original_string(
+        self, tiramisu_program: "TiramisuProgram"
+    ):
         original_str = tiramisu_program.original_str
         if original_str is None:
             raise ValueError("Original string not initialized")
@@ -155,7 +164,9 @@ class FunctionServer:
         # Remove the wrapper include from the original string
         wrapper_str = f'#include "{name}_wrapper.h"'
         original_str = original_str.replace(wrapper_str, f"// {wrapper_str}")
-        buffers_vector = re.findall(r"(?<=tiramisu::codegen\()\{[&\w,\s]+\}", original_str)[0]
+        buffers_vector = re.findall(
+            r"(?<=tiramisu::codegen\()\{[&\w,\s]+\}", original_str
+        )[0]
 
         # fill the template
         function_str = templateWithEverythinginUtils.format(
@@ -172,12 +183,17 @@ class FunctionServer:
 
         libs = ":".join(BaseConfig.base_config.dependencies.libs)
         env_vars = " && ".join(
-            [f"export {key}={value}" for key, value in BaseConfig.base_config.env_vars.items()]
+            [
+                f"export {key}={value}"
+                for key, value in BaseConfig.base_config.env_vars.items()
+            ]
         )
 
         env_vars += f" && export LD_LIBRARY_PATH={libs}:$LD_LIBRARY_PATH"
         env_vars += f" && export LIBRARY_PATH={libs}:$LIBRARY_PATH"
-        env_vars += f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
+        env_vars += (
+            f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
+        )
 
         libs = ":".join(BaseConfig.base_config.dependencies.libs)
 
@@ -202,19 +218,27 @@ class FunctionServer:
         """Run the server code."""
         if not BaseConfig.base_config:
             raise ValueError("BaseConfig not initialized")
-        assert operation in [
-            "execution",
-            "legality",
-        ], f"Invalid operation {operation}. Valid operations are: execution, legality, annotations"  # noqa: E501
+        assert (
+            operation
+            in [
+                "execution",
+                "legality",
+            ]
+        ), f"Invalid operation {operation}. Valid operations are: execution, legality, annotations"  # noqa: E501
 
         env_vars = " && ".join(
-            [f"export {key}={value}" for key, value in BaseConfig.base_config.env_vars.items()]
+            [
+                f"export {key}={value}"
+                for key, value in BaseConfig.base_config.env_vars.items()
+            ]
         )
 
         libs = ":".join(BaseConfig.base_config.dependencies.libs)
         env_vars += f" && export LD_LIBRARY_PATH={libs}:$LD_LIBRARY_PATH"
         env_vars += f" && export LIBRARY_PATH={libs}:$LIBRARY_PATH"
-        env_vars += f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
+        env_vars += (
+            f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
+        )
 
         command = f'{env_vars} && cd {BaseConfig.base_config.workspace} && NB_EXEC={nbr_executions} ./{self.tiramisu_program.name}_server {operation} "{schedule or ""}"'  # noqa: E501
 
@@ -234,12 +258,17 @@ class FunctionServer:
         if not BaseConfig.base_config:
             raise ValueError("BaseConfig not initialized")
         env_vars = " && ".join(
-            [f"export {key}={value}" for key, value in BaseConfig.base_config.env_vars.items()]
+            [
+                f"export {key}={value}"
+                for key, value in BaseConfig.base_config.env_vars.items()
+            ]
         )
         libs = ":".join(BaseConfig.base_config.dependencies.libs)
         env_vars += f" && export LD_LIBRARY_PATH={libs}:$LD_LIBRARY_PATH"
         env_vars += f" && export LIBRARY_PATH={libs}:$LIBRARY_PATH"
-        env_vars += f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
+        env_vars += (
+            f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
+        )
 
         command = f"{env_vars} && cd {BaseConfig.base_config.workspace} && ./{self.tiramisu_program.name}_server annotations"  # noqa: E501
 

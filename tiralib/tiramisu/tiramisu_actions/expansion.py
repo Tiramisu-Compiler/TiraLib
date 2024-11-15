@@ -55,7 +55,9 @@ class Expansion(TiramisuAction):
             candidates_code += "    " + optim.tiramisu_optim_str
 
         for comp in schedule.tree.computations:
-            candidates_code += f'    std::cout << "{comp}|" << {comp}.expandable() << std::endl;\n'  # noqa
+            candidates_code += (
+                f'    std::cout << "{comp}|" << {comp}.expandable() << std::endl;\n'  # noqa
+            )
 
         cpp_code = schedule.tiramisu_program.original_str.replace(
             schedule.tiramisu_program.code_gen_line, candidates_code
