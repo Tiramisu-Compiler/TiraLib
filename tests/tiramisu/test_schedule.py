@@ -24,9 +24,9 @@ def test_min_runs_execution():
     BaseConfig.init()
     test_program = benchmark_program_test_sample()
     schedule = Schedule(test_program)
-    
+
     exec_time = schedule.execute(1)[0]
-    results = schedule.execute(min_runs=10, max_runs=20, time_budget=2*exec_time)
+    results = schedule.execute(min_runs=10, max_runs=20, time_budget=2 * exec_time)
     assert results is not None
     assert len(results) >= 10
 
@@ -36,9 +36,9 @@ def test_time_budget_enforcement():
     BaseConfig.init()
     test_program = benchmark_program_test_sample()
     schedule = Schedule(test_program)
-    
+
     exec_time = schedule.execute(1)[0]
-    time_budget = 5*exec_time
+    time_budget = 5 * exec_time
     results = schedule.execute(min_runs=0, max_runs=20, time_budget=time_budget)
 
     assert results is not None
@@ -51,9 +51,9 @@ def test_max_runs_limitation():
     BaseConfig.init()
     test_program = benchmark_program_test_sample()
     schedule = Schedule(test_program)
-    
+
     exec_time = schedule.execute(1)[0]
-    time_budget = 50*exec_time
+    time_budget = 50 * exec_time
     results = schedule.execute(min_runs=2, max_runs=5, time_budget=time_budget)
 
     assert results is not None
@@ -66,9 +66,9 @@ def test_zero_min_runs():
     BaseConfig.init()
     test_program = benchmark_program_test_sample()
     schedule = Schedule(test_program)
-    
+
     exec_time = schedule.execute(1)[0]
-    time_budget = 0.1*exec_time
+    time_budget = 0.1 * exec_time
     results = schedule.execute(min_runs=0, max_runs=5, time_budget=time_budget)
 
     assert results is not None
@@ -80,14 +80,14 @@ def test_unlimited_max_runs():
     BaseConfig.init()
     test_program = benchmark_program_test_sample()
     schedule = Schedule(test_program)
-    
+
     exec_time = schedule.execute(1)[0]
-    time_budget = 10*exec_time
+    time_budget = 10 * exec_time
     results = schedule.execute(min_runs=0, time_budget=time_budget)
 
     assert results is not None
     assert len(results) > 1
-    assert sum(results) < time_budget 
+    assert sum(results) < time_budget
 
 
 def test_is_legal():
