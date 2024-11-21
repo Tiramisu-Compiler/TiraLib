@@ -27,7 +27,6 @@ class Dependencies:
 class TiraLibConfig:
     """Config for TiraLib."""
 
-    max_runs: int = 30
     workspace: str = "workspace"
     env_vars: Dict[str, str] = field(default_factory=dict)
     tiralib_cpp: TiraLibCppConfig = field(default_factory=TiraLibCppConfig)
@@ -59,7 +58,6 @@ def dict_to_config(parsed_yaml: Dict[Any, Any]) -> TiraLibConfig:
         else Dependencies()
     )
     return TiraLibConfig(
-        max_runs=parsed_yaml["max_runs"] if "max_runs" in parsed_yaml else 30,
         workspace=parsed_yaml["workspace"]
         if "workspace" in parsed_yaml
         else "workspace",

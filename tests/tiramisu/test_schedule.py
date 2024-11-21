@@ -13,10 +13,81 @@ def test_execute():
     schedule = Schedule(test_program)
     assert schedule.tree
     schedule.add_optimizations([Parallelization(params=[("comp02", 0)])])
-    results = schedule.execute(nb_exec_times=10)
+    results = schedule.execute(min_runs=10)
 
     assert results is not None
     assert len(results) == 10
+
+
+def test_min_runs_execution():
+    """Test to ensure the schedule executes at least 'min_runs' times even if the 'time_budget' is insufficient"""
+    BaseConfig.init()
+    test_program = benchmark_program_test_sample()
+    schedule = Schedule(test_program)
+
+    exec_time = schedule.execute(1)[0]
+    results = schedule.execute(min_runs=10, max_runs=20, time_budget=2 * exec_time)
+    assert results is not None
+    assert len(results) >= 10
+
+
+def test_time_budget_enforcement():
+    """Test to verify that execution stops once the 'time_budget' is exhausted, with partial measurements saved."""
+    BaseConfig.init()
+    test_program = benchmark_program_test_sample()
+    schedule = Schedule(test_program)
+
+    exec_time = schedule.execute(1)[0]
+    time_budget = 5 * exec_time
+    results = schedule.execute(min_runs=0, max_runs=20, time_budget=time_budget)
+
+    assert results is not None
+    assert 0 < len(results) < 20
+    assert 0 < sum(results) <= time_budget
+
+
+def test_max_runs_limitation():
+    """Test to ensure the schedule stops executing after 'max_runs' even if the time budget allows more."""
+    BaseConfig.init()
+    test_program = benchmark_program_test_sample()
+    schedule = Schedule(test_program)
+
+    exec_time = schedule.execute(1)[0]
+    time_budget = 50 * exec_time
+    results = schedule.execute(min_runs=2, max_runs=5, time_budget=time_budget)
+
+    assert results is not None
+    assert len(results) == 5
+    assert sum(results) < time_budget
+
+
+def test_zero_min_runs():
+    """Test to ensure proper behavior when 'min_runs' is set to 0, expecting no compulsory runs."""
+    BaseConfig.init()
+    test_program = benchmark_program_test_sample()
+    schedule = Schedule(test_program)
+
+    exec_time = schedule.execute(1)[0]
+    time_budget = 0.1 * exec_time
+    results = schedule.execute(min_runs=0, max_runs=5, time_budget=time_budget)
+
+    assert results is not None
+    assert len(results) == 0
+
+
+def test_unlimited_max_runs():
+    """Test to ensure that, when 'max_runs' is not set, we get as many runs as possible within the time budget."""
+    BaseConfig.init()
+    test_program = benchmark_program_test_sample()
+    schedule = Schedule(test_program)
+
+    exec_time = schedule.execute(1)[0]
+    time_budget = 10 * exec_time
+    results = schedule.execute(min_runs=0, time_budget=time_budget)
+
+    assert results is not None
+    assert len(results) > 1
+    assert sum(results) < time_budget
 
 
 def test_is_legal():
