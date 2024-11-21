@@ -505,7 +505,7 @@ class CompilingService:
                     results = [exec_time]
                     if exec_time > max_millis_per_run / max_runs:
                         max_runs = int(max_millis_per_run / exec_time)
-                        max_runs = min(0, max_runs - 1)
+                        max_runs = max(0, max_runs - 1)
                 else:
                     raise ScheduleExecutionError("No output from schedule execution")
 
