@@ -84,10 +84,10 @@ class Schedule:
         min_runs: int = 1,
         max_runs: int | None = None,
         time_budget: float | None = None,
-        delete_files: bool = True
+        delete_files: bool = True,
     ) -> List[float]:
         """
-        Applies the schedule to the Tiramisu program and performs a sequence 
+        Applies the schedule to the Tiramisu program and performs a sequence
         of execution time measurements.
 
         Parameters
@@ -97,18 +97,18 @@ class Schedule:
             The parameter guarantees that the execution time will be measured
             at least min_run times regardless of the set time budget.
         `time_budget` : float or None
-            Defines the duration (in milliseconds) allocated for execution 
-            time measurements. 
-            Once the time_budget is consumed, no more runs will be performed 
+            Defines the duration (in milliseconds) allocated for execution
+            time measurements.
+            Once the time_budget is consumed, no more runs will be performed
             and ongoing execution will be aborted.
             Measurements completed within the time_budget (if any) will be saved.
-            The min_runs first measurements are not abortable and will execute 
-            till completion even if time_budget is fully consumed. 
+            The min_runs first measurements are not abortable and will execute
+            till completion even if time_budget is fully consumed.
         `max_runs` : int or None
-            Defines the maximal number of times the schedule will be executed. 
-            This allows to stop taking measurements before time_budget is 
-            fully consumed. max_runs is only taken into consideration if 
-            time_budget is defined. If time_budget is defined and max_runs is 
+            Defines the maximal number of times the schedule will be executed.
+            This allows to stop taking measurements before time_budget is
+            fully consumed. max_runs is only taken into consideration if
+            time_budget is defined. If time_budget is defined and max_runs is
             None, max_run will be set to infinity.
         `delete_files` : bool
             Defines whether to delete the temporary generated files or not.

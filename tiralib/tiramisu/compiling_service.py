@@ -513,7 +513,7 @@ class CompilingService:
                     capture_output=True,
                     text=True,
                     shell=True,
-                    check=True
+                    check=True,
                 )
 
                 if compiler.stdout:
@@ -527,11 +527,13 @@ class CompilingService:
                         f"The following schedule execution crashed: {tiramisu_program.name}, schedule: {optims_list} \n\n {cpp_code}\n\n"  # noqa: E501
                     )
                     raise ScheduleExecutionError("No output from schedule execution")
-                    
+
             if time_budget is not None:
                 consumed_time = sum(results)
                 if consumed_time >= time_budget:
-                    logger.debug(f'No time budget left to perform extra runs. Consumed time:{consumed_time} >= time budget:{time_budget}. Completed {len(results)} out of {min_runs} min_runs and 0 out of {max_runs-min_runs if max_runs else 'inf'} extra runs.')
+                    logger.debug(
+                        f'No time budget left to perform extra runs. Consumed time:{consumed_time} >= time budget:{time_budget}. Completed {len(results)} out of {min_runs} min_runs and 0 out of {max_runs-min_runs if max_runs else 'inf'} extra runs.'
+                    )
                 # if a time_budget is set and hasn't been consumed by the min_runs
                 else:
                     # if max_runs not defined, run indefinitely until time_budget reached
@@ -547,7 +549,7 @@ class CompilingService:
                                 + CompilingService.get_n_runs_script(
                                     nb_exec=nb_exec_left,
                                     tiramisu_program=tiramisu_program,
-                                    timeout = time_budget-consumed_time
+                                    timeout=time_budget - consumed_time,
                                 )
                             )
                         ],
@@ -558,29 +560,39 @@ class CompilingService:
                     )
 
                     if delete_files:
-                        CompilingService.delete_temporary_files(tiramisu_program=tiramisu_program)
-                    
-                    # if the command has to quit properly, that is either on timeout or (noraml completion and non-empty stdout) 
-                    if not (compiler.returncode == 124 or (compiler.returncode == 0 and compiler.stdout)):
-                        logger.error("Timed-out wrapper execution did not terminate properly")
+                        CompilingService.delete_temporary_files(
+                            tiramisu_program=tiramisu_program
+                        )
+
+                    # if the command has to quit properly, that is either on timeout or (noraml completion and non-empty stdout)
+                    if not (
+                        compiler.returncode == 124
+                        or (compiler.returncode == 0 and compiler.stdout)
+                    ):
+                        logger.error(
+                            "Timed-out wrapper execution did not terminate properly"
+                        )
                         logger.error(f"return code {compiler.returncode}")
                         logger.error(compiler.stderr)
                         logger.error(compiler.stdout)
                         logger.error(
                             f"The following schedule execution crashed: {tiramisu_program.name}, schedule: {optims_list} \n\n {cpp_code}\n\n"  # noqa: E501
                         )
-                        raise ScheduleExecutionError("Timed-out wrapper execution did not terminate properly")
-        
+                        raise ScheduleExecutionError(
+                            "Timed-out wrapper execution did not terminate properly"
+                        )
+
                     # Extract the execution times from the output and return the min
                     else:
-                        # if the command timed out 
+                        # if the command timed out
                         if compiler.returncode == 124:
-                            logger.debug(f'Execution of wrapper timed-out. Completed {len(results)} out of {min_runs} min_runs and {len(compiler.stdout.split())} out of {nb_exec_left} extra runs. Collected measurements are [{' '.join(list(map(str, results)))}]+[{compiler.stdout}].')
+                            logger.debug(
+                                f'Execution of wrapper timed-out. Completed {len(results)} out of {min_runs} min_runs and {len(compiler.stdout.split())} out of {nb_exec_left} extra runs. Collected measurements are [{' '.join(list(map(str, results)))}]+[{compiler.stdout}].'
+                            )
                         results += [float(x) for x in compiler.stdout.split()]
-                        
+
             return results
-                        
-                        
+
         except subprocess.CalledProcessError as e:
             logger.error(f"Process terminated with error code: {e.returncode}")
             logger.error(f"Error output: {e.stderr}")
@@ -594,7 +606,7 @@ class CompilingService:
         cls,
         tiramisu_program: TiramisuProgram,
         nb_exec: int = 1,
-        timeout : float | None = None,
+        timeout: float | None = None,
     ):
         """Get the script to run the program n times."""
         if not BaseConfig.base_config:
@@ -608,14 +620,13 @@ class CompilingService:
             #  set the env variables
             f"export NB_EXEC={nb_exec}",
             # run the wrapper
-            f"./{tiramisu_program.name}_wrapper" if timeout is None else f"timeout {timeout/1000} ./{tiramisu_program.name}_wrapper"
+            f"./{tiramisu_program.name}_wrapper"
+            if timeout is None
+            else f"timeout {timeout/1000} ./{tiramisu_program.name}_wrapper",
         ]
 
     @classmethod
-    def delete_temporary_files(
-        cls,
-        tiramisu_program: TiramisuProgram
-    ):
+    def delete_temporary_files(cls, tiramisu_program: TiramisuProgram):
         """Delete files temporary and intermediate files"""
         subprocess.run(
             [
