@@ -395,21 +395,41 @@ class CompilingService:
         cls,
         tiramisu_program: TiramisuProgram,
         optims_list: List[TiramisuAction],
-        max_runs: int = 0,
-        max_mins_per_schedule: float | None = None,
+        min_runs: int = 1,
+        max_runs: int | None = None,
+        time_budget: float | None = None,
         delete_files: bool = True,
-        execution_timeout: float | None = None,
     ) -> List[float]:
         """Return the execution times of the program.
+        Parameters
+        ----------
+        `tiramisu_program` : TiramisuProgram
+            The program to get the execution times for
+        `optims_list` : List[TiramisuAction]
+             The optimizations to apply
+        `min_runs` : int
+            Defines the minimal number of times the schedule will be executed.
+            The parameter guarantees that the execution time will be measured
+            at least min_run times regardless of the set time budget.
+        `time_budget` : float or None
+            Defines the duration (in milliseconds) allocated for execution
+            time measurements.
+            Once the time_budget is consumed, no more runs will be performed
+            and ongoing execution will be aborted.
+            Measurements completed within the time_budget (if any) will be saved.
+            The min_runs first measurements are not abortable and will execute
+            till completion even if time_budget is fully consumed.
+        `max_runs` : int or None
+            Defines the maximal number of times the schedule will be executed.
+            This allows to stop taking measurements before time_budget is
+            fully consumed. max_runs is only taken into consideration if
+            time_budget is defined. If time_budget is defined and max_runs is
+            None, max_run will be set to infinity.
+        `delete_files` : bool
+            Defines whether to delete the temporary generated files or not.
 
-        Args:
-            tiramisu_program (TiramisuProgram): The program to get the execution times for
-            optims_list (List[TiramisuAction]): The optimizations to apply
-            max_runs (int, optional): The maximum number of runs. Defaults to 0.
-            max_mins_per_schedule (float, optional): The maximum number of minutes per schedule. Defaults to None.
-            delete_files (bool, optional): If true, the generated files will be deleted. Defaults to True.
-
-        Returns:
+        Returns
+        -------
             List[float]: The execution times of the program
         """
         if not BaseConfig.base_config:
@@ -420,9 +440,6 @@ class CompilingService:
             or not tiramisu_program.wrappers
         ):
             raise ValueError("The program is not loaded yet")
-        if max_runs is None:
-            max_runs = BaseConfig.base_config.tiramisu.max_runs
-        # Get the code of the schedule
         cpp_code = cls.get_schedule_code(tiramisu_program, optims_list)
         # Write the code to a file
         output_path = os.path.join(
@@ -481,65 +498,89 @@ class CompilingService:
             halide_repr = compiler.stdout
             logger.debug(f"Generated Halide code:\n{halide_repr}")
 
-            if max_mins_per_schedule:
+            # if a minimal number if executions is set, perform them without a timeout
+            if min_runs > 0:
                 # run the wrapper and get the execution time
                 compiler = subprocess.run(
                     [
                         " && ".join(
                             env_vars
                             + CompilingService.get_n_runs_script(
-                                max_runs=1, tiramisu_program=tiramisu_program
+                                nb_exec=min_runs, tiramisu_program=tiramisu_program
                             )
                         )
                     ],
                     capture_output=True,
                     text=True,
                     shell=True,
-                    check=True,
-                    timeout=execution_timeout,
+                    check=True
                 )
 
                 if compiler.stdout:
-                    max_millis_per_run = max_mins_per_schedule * 60 * 1000
-                    exec_time = float(compiler.stdout)
-                    results = [exec_time]
-                    if exec_time > max_millis_per_run / max_runs:
-                        max_runs = int(max_millis_per_run / exec_time)
-                        max_runs = min(0, max_runs - 1)
+                    results += [float(x) for x in compiler.stdout.split()]
+
                 else:
-                    raise ScheduleExecutionError("No output from schedule execution")
-
-            # run the wrapper and get the execution time
-            compiler = subprocess.run(
-                [
-                    " && ".join(
-                        env_vars
-                        + CompilingService.get_n_runs_script(
-                            max_runs=max_runs,
-                            tiramisu_program=tiramisu_program,
-                            delete_files=delete_files,
-                        )
+                    logger.error("No output from schedule execution")
+                    logger.error(compiler.stderr)
+                    logger.error(compiler.stdout)
+                    logger.error(
+                        f"The following schedule execution crashed: {tiramisu_program.name}, schedule: {optims_list} \n\n {cpp_code}\n\n"  # noqa: E501
                     )
-                ],
-                capture_output=True,
-                text=True,
-                shell=True,
-                check=True,
-                timeout=execution_timeout,
-            )
+                    raise ScheduleExecutionError("No output from schedule execution")
+                    
+            if time_budget is not None:
+                consumed_time = sum(results)
+                if consumed_time >= time_budget:
+                    logger.debug(f'No time budget left to perform extra runs. Consumed time:{consumed_time} >= time budget:{time_budget}. Completed {len(results)} out of {min_runs} min_runs and 0 out of {max_runs-min_runs if max_runs else 'inf'} extra runs.')
+                # if a time_budget is set and hasn't been consumed by the min_runs
+                else:
+                    # if max_runs not defined, run indefinitely until time_budget reached
+                    if max_runs is None:
+                        nb_exec_left = "inf"
+                    else:
+                        nb_exec_left = max_runs - min_runs
+                    # run the wrapper and get the execution time
+                    compiler = subprocess.run(
+                        [
+                            " && ".join(
+                                env_vars
+                                + CompilingService.get_n_runs_script(
+                                    nb_exec=nb_exec_left,
+                                    tiramisu_program=tiramisu_program,
+                                    timeout = time_budget-consumed_time
+                                )
+                            )
+                        ],
+                        capture_output=True,
+                        text=True,
+                        shell=True,
+                        check=False,
+                    )
 
-            # Extract the execution times from the output and return the min
-            if compiler.stdout:
-                results += [float(x) for x in compiler.stdout.split()]
-                return results
-            else:
-                logger.error("No output from schedule execution")
-                logger.error(compiler.stderr)
-                logger.error(compiler.stdout)
-                logger.error(
-                    f"The following schedule execution crashed: {tiramisu_program.name}, schedule: {optims_list} \n\n {cpp_code}\n\n"  # noqa: E501
-                )
-                raise ScheduleExecutionError("No output from schedule execution")
+                    if delete_files:
+                        CompilingService.delete_temporary_files(tiramisu_program=tiramisu_program)
+                    
+                    # if the command has to quit properly, that is either on timeout or (noraml completion and non-empty stdout) 
+                    if not (compiler.returncode == 124 or (compiler.returncode == 0 and compiler.stdout)):
+                        logger.error("Timed-out wrapper execution did not terminate properly")
+                        logger.error(f"return code {compiler.returncode}")
+                        logger.error(compiler.stderr)
+                        logger.error(compiler.stdout)
+                        logger.error(
+                            f"The following schedule execution crashed: {tiramisu_program.name}, schedule: {optims_list} \n\n {cpp_code}\n\n"  # noqa: E501
+                        )
+                        raise ScheduleExecutionError("Timed-out wrapper execution did not terminate properly")
+        
+                    # Extract the execution times from the output and return the min
+                    else:
+                        # if the command timed out 
+                        if compiler.returncode == 124:
+                            logger.debug(f'Execution of wrapper timed-out. Completed {len(results)} out of {min_runs} min_runs and {len(compiler.stdout.split())} out of {nb_exec_left} extra runs. Collected measurements are [{' '.join(list(map(str, results)))}]+[{compiler.stdout}].')
+                        results += [float(x) for x in compiler.stdout.split()]
+                        
+            return results
+                        
+                        
         except subprocess.CalledProcessError as e:
             logger.error(f"Process terminated with error code: {e.returncode}")
             logger.error(f"Error output: {e.stderr}")
@@ -552,8 +593,8 @@ class CompilingService:
     def get_n_runs_script(
         cls,
         tiramisu_program: TiramisuProgram,
-        max_runs: int = 1,
-        delete_files=False,
+        nb_exec: int = 1,
+        timeout : float | None = None,
     ):
         """Get the script to run the program n times."""
         if not BaseConfig.base_config:
@@ -565,14 +606,27 @@ class CompilingService:
             # cd to the workspace
             f"cd {BaseConfig.base_config.workspace}",
             #  set the env variables
-            "export DYNAMIC_RUNS=0",
-            f"export MAX_RUNS={max_runs}",
-            f"export NB_EXEC={max_runs}",
+            f"export NB_EXEC={nb_exec}",
             # run the wrapper
-            f"./{tiramisu_program.name}_wrapper",
-            # Clean generated files
-            f"rm {tiramisu_program.name}*" if delete_files else "",
+            f"./{tiramisu_program.name}_wrapper" if timeout is None else f"timeout {timeout/1000} ./{tiramisu_program.name}_wrapper"
         ]
+
+    @classmethod
+    def delete_temporary_files(
+        cls,
+        tiramisu_program: TiramisuProgram
+    ):
+        """Delete files temporary and intermediate files"""
+        subprocess.run(
+            [
+                # cd to the workspace and clean generated files
+                f"cd {BaseConfig.base_config.workspace} && rm {tiramisu_program.name}*"
+            ],
+            capture_output=True,
+            text=True,
+            shell=True,
+            check=False,
+        )
 
     @classmethod
     def get_env_vars(cls):

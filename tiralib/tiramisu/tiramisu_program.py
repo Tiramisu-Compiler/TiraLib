@@ -311,7 +311,7 @@ $buffers_init$
         auto end = std::chrono::high_resolution_clock::now();
 
         duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count() / (double)1000000;
-        std::cout << duration << " ";
+        std::cout << duration << " " << std::flush;
 
     }
     std::cout << std::endl;
@@ -322,6 +322,8 @@ wrapper_h_template = """#include <tiramisu/utils.h>
 #include <cstdlib>
 #include <algorithm>
 #include <vector>
+#include <string>
+#include <limits>
 
 #define NB_THREAD_INIT 48
 struct args {
@@ -387,11 +389,17 @@ void declare_memory_usage(){
     setenv("MEM_SIZE", std::to_string((double)(256*192+320*256+320*192)*8/1024/1024).c_str(), true); // This value was set by the Code Generator
 }
 
-int get_nb_exec(){
-    if (std::getenv("NB_EXEC")!=NULL)
-        return std::stoi(std::getenv("NB_EXEC"));
-    else{
-        return 30;
+int get_nb_exec() {
+    const char* env_var = std::getenv("NB_EXEC");
+    if (env_var != nullptr) {
+        std::string env_value(env_var);
+        if (env_value == "inf") {
+            return std::numeric_limits<int>::max(); // Use maximum int value to represent +infinity
+        } else {
+            return std::stoi(env_value);
+        }
+    } else {
+        return 30; // Default value
     }
 }
 """  # noqa: E501
