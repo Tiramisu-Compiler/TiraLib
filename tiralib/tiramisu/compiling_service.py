@@ -397,7 +397,7 @@ class CompilingService:
         optims_list: List[TiramisuAction],
         max_runs: int = 0,
         max_mins_per_schedule: float | None = None,
-        delete_fiels: bool = True,
+        delete_files: bool = True,
         execution_timeout: float | None = None,
     ) -> List[float]:
         """Return the execution times of the program.
@@ -407,7 +407,7 @@ class CompilingService:
             optims_list (List[TiramisuAction]): The optimizations to apply
             max_runs (int, optional): The maximum number of runs. Defaults to 0.
             max_mins_per_schedule (float, optional): The maximum number of minutes per schedule. Defaults to None.
-            delete_fiels (bool, optional): If true, the generated files will be deleted. Defaults to True.
+            delete_files (bool, optional): If true, the generated files will be deleted. Defaults to True.
 
         Returns:
             List[float]: The execution times of the program
@@ -517,7 +517,7 @@ class CompilingService:
                         + CompilingService.get_n_runs_script(
                             max_runs=max_runs,
                             tiramisu_program=tiramisu_program,
-                            delete_files=delete_fiels,
+                            delete_files=delete_files,
                         )
                     )
                 ],
