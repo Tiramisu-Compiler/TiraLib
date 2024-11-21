@@ -13,7 +13,7 @@ def test_execute():
     schedule = Schedule(test_program)
     assert schedule.tree
     schedule.add_optimizations([Parallelization(params=[("comp02", 0)])])
-    results = schedule.execute(nb_exec_times=10)
+    results = schedule.execute(min_runs=10)
 
     assert results is not None
     assert len(results) == 10
