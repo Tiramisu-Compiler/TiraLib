@@ -518,7 +518,6 @@ class CompilingService:
 
                 if compiler.stdout:
                     results += [float(x) for x in compiler.stdout.split()]
-
                 else:
                     logger.error("No output from schedule execution")
                     logger.error(compiler.stderr)
