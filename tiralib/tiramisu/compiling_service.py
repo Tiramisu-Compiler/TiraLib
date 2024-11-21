@@ -471,7 +471,7 @@ class CompilingService:
         try:
             # run the compilation of the generator and wrapper
             compiler = subprocess.run(
-                [" ; ".join(env_vars + shell_script)],
+                [" && ".join(env_vars + shell_script)],
                 capture_output=True,
                 text=True,
                 shell=True,
@@ -485,7 +485,7 @@ class CompilingService:
                 # run the wrapper and get the execution time
                 compiler = subprocess.run(
                     [
-                        " ; ".join(
+                        " && ".join(
                             env_vars
                             + CompilingService.get_n_runs_script(
                                 max_runs=1, tiramisu_program=tiramisu_program
@@ -512,7 +512,7 @@ class CompilingService:
             # run the wrapper and get the execution time
             compiler = subprocess.run(
                 [
-                    " ; ".join(
+                    " && ".join(
                         env_vars
                         + CompilingService.get_n_runs_script(
                             max_runs=max_runs,
