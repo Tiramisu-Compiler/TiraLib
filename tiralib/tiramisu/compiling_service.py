@@ -586,7 +586,7 @@ class CompilingService:
                         # if the command timed out
                         if compiler.returncode == 124:
                             logger.debug(
-                                f'Execution of wrapper timed-out. Completed {len(results)} out of {min_runs} min_runs and {len(compiler.stdout.split())} out of {nb_exec_left} extra runs. Collected measurements are [{' '.join(list(map(str, results)))}]+[{compiler.stdout}].'
+                                f"Execution of wrapper timed-out. Completed {len(results)} out of {min_runs} min_runs and {len(compiler.stdout.split())} out of {nb_exec_left} extra runs. Collected measurements are [{' '.join(list(map(str, results)))}]+[{compiler.stdout}]."
                             )
                         results += [float(x) for x in compiler.stdout.split()]
 
