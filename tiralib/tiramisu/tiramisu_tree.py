@@ -294,11 +294,11 @@ class TiramisuTree:
                 candidate_section, new_nodes_to_visit = self._get_section_of_node(node)
                 list_candidate_sections.append(candidate_section)
                 nodes_to_visit.extend(new_nodes_to_visit)
-            candidate_sections[root] = list_candidate_sections
+            candidate_sections[self.iterators[root].id] = list_candidate_sections
         return candidate_sections
 
     def _get_section_of_node(self, node_name: str) -> Tuple[List[str], List[str]]:
-        candidate_section = [node_name]
+        candidate_section = [self.iterators[node_name].id]
         current_node = self.iterators[node_name]
 
         while (
@@ -306,8 +306,8 @@ class TiramisuTree:
             and len(current_node.computations_list) == 0
         ):
             next_node_name = current_node.child_iterators[0]
-            candidate_section.append(next_node_name)
             current_node = self.iterators[next_node_name]
+            candidate_section.append(current_node.id)
 
         if current_node.child_iterators:
             return candidate_section, current_node.child_iterators

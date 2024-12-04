@@ -429,3 +429,9 @@ class Schedule:
         new_schedule = Schedule(self.tiramisu_program)
         new_schedule.add_optimizations(self.optims_list)
         return new_schedule
+
+    def __len__(self) -> int:
+        return len(self.optims_list)
+
+    def __bool__(self) -> bool:
+        return bool(self.optims_list)
