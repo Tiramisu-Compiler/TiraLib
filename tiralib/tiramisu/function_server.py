@@ -66,7 +66,7 @@ class ResultInterface:
             if match is None:
                 raise ValueError(f"Could not parse the result string: {decoded}")
             self.halide_ir = match.group(1)
-            print(self.halide_ir.replace("\\n", "\n"))
+            logger.info(self.halide_ir.replace("\\n", "\n"))
             decoded = match.group(2)
         result_dict = json.loads(decoded)
 
@@ -205,8 +205,7 @@ class FunctionServer:
         except subprocess.CalledProcessError as e:
             logger.error(f"Error while compiling server code: {e}")
             logger.error(e.output)
-            print(e.output)
-            print(e.stderr)
+            logger.error(e.stderr)
             raise e
 
     def run(
@@ -248,8 +247,7 @@ class FunctionServer:
         except subprocess.CalledProcessError as e:
             logger.error(f"Error while running server code: {e}")
             logger.error(e.output)
-            print(e.output)
-            print(e.stderr)
+            logger.error(e.stderr)
             raise e
         return ResultInterface(output)
 
@@ -278,8 +276,7 @@ class FunctionServer:
         except subprocess.CalledProcessError as e:
             logger.error(f"Error while running server code: {e}")
             logger.error(e.output)
-            print(e.output)
-            print(e.stderr)
+            logger.error(e.stderr)
             raise e
 
         return output.decode("utf-8").strip()
