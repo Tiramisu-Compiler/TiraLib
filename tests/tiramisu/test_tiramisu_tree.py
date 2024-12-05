@@ -31,12 +31,16 @@ def test_get_candidate_sections():
     candidate_sections = t_tree.get_candidate_sections()
 
     assert len(candidate_sections) == 1
-    assert len(candidate_sections["root"]) == 5
-    assert candidate_sections["root"][0] == ["root"]
-    assert candidate_sections["root"][1] == ["i"]
-    assert candidate_sections["root"][2] == ["j", "k"]
-    assert candidate_sections["root"][3] == ["l"]
-    assert candidate_sections["root"][4] == ["m"]
+    root_id = t_tree.iterators["root"].id
+    assert len(candidate_sections[root_id]) == 5
+    assert candidate_sections[root_id][0] == [root_id]
+    assert candidate_sections[root_id][1] == [t_tree.iterators["i"].id]
+    assert candidate_sections[root_id][2] == [
+        t_tree.iterators["j"].id,
+        t_tree.iterators["k"].id,
+    ]
+    assert candidate_sections[root_id][3] == [t_tree.iterators["l"].id]
+    assert candidate_sections[root_id][4] == [t_tree.iterators["m"].id]
 
 
 def test_get_candidate_computations():
