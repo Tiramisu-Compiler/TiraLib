@@ -91,9 +91,9 @@ def test_get_iterator_levels():
 def test_get_iterator_of_computation():
     t_tree = test_utils.tree_test_sample()
 
-    assert t_tree.get_iterator_of_computation("comp01").name == ("comp01", 3)
-    assert t_tree.get_iterator_of_computation("comp03").name == ("comp03", 3)
-    assert t_tree.get_iterator_of_computation("comp04").name == ("comp04", 3)
+    assert t_tree.get_iterator_of_computation("comp01").name == "i"
+    assert t_tree.get_iterator_of_computation("comp03").name == "l"
+    assert t_tree.get_iterator_of_computation("comp04").name == "m"
 
-    assert t_tree.get_iterator_of_computation("comp01", level=0).name == ("comp01", 0)
-    assert t_tree.get_iterator_of_computation("comp03", level=1).name == ("comp03", 1)
+    assert t_tree.get_iterator_of_computation("comp01", level=0).name == "root"
+    assert t_tree.get_iterator_of_computation("comp03", level=1).name == "j"
