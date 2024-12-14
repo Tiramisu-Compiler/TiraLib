@@ -26,6 +26,7 @@ class Interchange(TiramisuAction):
 
         self.params = params
         self.comps = comps
+        self.iterators: list[IteratorIdentifier] = [params[0], params[1]]
 
         super().__init__(
             type=TiramisuActionType.INTERCHANGE, params=params, comps=comps
@@ -46,7 +47,7 @@ class Interchange(TiramisuAction):
             )
 
             self.comps = self.tree.get_iterator_subtree_computations(
-                innermost_iterator.name
+                innermost_iterator.id
             )
 
         self.set_string_representations(self.tree)

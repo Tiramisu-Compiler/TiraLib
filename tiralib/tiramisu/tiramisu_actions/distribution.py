@@ -1,5 +1,4 @@
 from __future__ import annotations
-from ast import List
 
 import copy
 import itertools
@@ -22,8 +21,8 @@ class Distribution(TiramisuAction):
 
     def __init__(
         self,
-        params: List[IteratorIdentifier],
-        children: List[List[IteratorIdentifier | str]] | None = None,
+        params: list[IteratorIdentifier],
+        children: list[list[IteratorIdentifier | str]] | None = None,
     ):
         # Distribution takes 1 parameters the iterator to be distributed
         assert len(params) == 1
@@ -39,10 +38,11 @@ class Distribution(TiramisuAction):
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
         self.tree = copy.deepcopy(tiramisu_tree)
+        self.iterator_id = self.tree.get_iterator_of_computation(*self.iterator_id).id
 
         if self.children is None:
             self.children = []
-            iterator = tiramisu_tree.get_iterator_of_computation(*self.iterator_id)
+            iterator = tiramisu_tree.iterators[self.iterator_id]
             # For each iterator get its comps and add them
             for child_iterator in iterator.child_iterators:
                 child_iterator_comps = tiramisu_tree.get_iterator_subtree_computations(
@@ -57,10 +57,10 @@ class Distribution(TiramisuAction):
                 for index, child in enumerate(child_list):
                     # convert an iterator into its comps
                     if isinstance(child, tuple):
-                        tmp_iterator = tiramisu_tree.get_iterator_of_computation(*child)
+                        tmp_iterator = tiramisu_tree.iterators[child]
                         tmp_iterator_comps = (
                             tiramisu_tree.get_iterator_subtree_computations(
-                                tmp_iterator.name
+                                tmp_iterator.id
                             )
                         )
                         child_list.pop(index)
@@ -88,10 +88,10 @@ class Distribution(TiramisuAction):
         self.legality_check_string = self.tiramisu_optim_str
 
     @classmethod
-    def get_candidates(cls, program_tree: TiramisuTree) -> List[str]:
+    def get_candidates(cls, program_tree: TiramisuTree) -> list[IteratorIdentifier]:
         # We will try to distribute all the iterators with
         # more than one computation
-        candidates: List[str] = []
+        candidates: list[str] = []
 
         for iterator in program_tree.iterators.values():
             if len(iterator.computations_list) + len(iterator.child_iterators) > 1:
@@ -101,16 +101,14 @@ class Distribution(TiramisuAction):
 
     def get_fusion_levels(
         self,
-        ordered_computations: List[str],
+        ordered_computations: list[str],
         tiramisu_tree: TiramisuTree,
     ):
         assert self.children is not None
 
-        distributed_iterator = tiramisu_tree.get_iterator_of_computation(
-            *self.iterator_id
-        )
+        distributed_iterator = tiramisu_tree.iterators[self.iterator_id]
 
-        fusion_levels: List[int] = []
+        fusion_levels: list[int] = []
         # for every pair of successive computations
         # get the shared iterator level
         for comp1, comp2 in itertools.pairwise(ordered_computations):

@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Tuple
 
 IteratorIdentifier = Tuple[str, int]
 
@@ -7,11 +7,11 @@ class IteratorNode:
     def __init__(
         self,
         name: str,
-        parent_iterator: str | None,
+        parent_iterator: IteratorIdentifier | None,
         lower_bound: int | str,
         upper_bound: int | str,
-        child_iterators: List[str],
-        computations_list: List[str],
+        child_iterators: list[IteratorIdentifier],
+        computations_list: list[str],
         level: int,
         id: IteratorIdentifier = None,
     ):
@@ -47,6 +47,7 @@ class IteratorNode:
 
         return IteratorNode(
             name=self.name + suffix,
+            id=self.id,
             parent_iterator=(
                 self.parent_iterator + suffix if self.parent_iterator else None
             ),

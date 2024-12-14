@@ -39,10 +39,10 @@ def test_get_candidates():
     sample = interchange_example()
     candidates = Interchange.get_candidates(sample.tree)
     assert candidates == {
-        sample.tree.iterators["i0"].id: [
-            (sample.tree.iterators["i0"].id, sample.tree.iterators["i1"].id),
-            (sample.tree.iterators["i0"].id, sample.tree.iterators["i2"].id),
-            (sample.tree.iterators["i1"].id, sample.tree.iterators["i2"].id),
+        ("comp00", 0): [
+            (("comp00", 0), ("comp00", 1)),
+            (("comp00", 0), ("comp00", 2)),
+            (("comp00", 1), ("comp00", 2)),
         ]
     }
 

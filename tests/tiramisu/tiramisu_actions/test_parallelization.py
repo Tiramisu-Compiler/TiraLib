@@ -38,10 +38,10 @@ def test_get_candidates():
     sample = test_utils.benchmark_program_test_sample()
     candidates = Parallelization.get_candidates(sample.tree)
     assert candidates == {
-        sample.tree.iterators["c1"].id: [
-            [sample.tree.iterators["c1"].id],
-            [sample.tree.iterators["c3"].id],
-            [sample.tree.iterators["c5"].id],
+        ("comp02", 0): [
+            [("comp02", 0)],
+            [("comp02", 1)],
+            [("comp02", 2)],
         ]
     }
 

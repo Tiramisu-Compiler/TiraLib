@@ -66,8 +66,8 @@ def test_get_candidates():
     sample = test_utils.gramschmidt_sample()
     candidates = Distribution.get_candidates(sample.tree)
     assert candidates == [
-        sample.tree.iterators["c1"].id,
-        sample.tree.iterators["c3_2"].id,
+        ("nrm_init", 0),
+        ("R_up_init", 1),
     ]
 
 

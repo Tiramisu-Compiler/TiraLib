@@ -29,12 +29,11 @@ def test_initialize_action_for_tree():
         ("A_out", 2),
     ]
     assert tiling_general.tile_sizes_dict == {
-        "c3_2": 10,
-        "c5": 10,
-        "c5_1": 10,
+        ("R_up_init", 1): 10,
+        ("R_up", 2): 10,
+        ("A_out", 2): 10,
     }
     assert tiling_general.comps == ["R_up_init", "R_up", "A_out"]
-    assert tiling_general.tiled_iterator_names == ["c3_2", "c5", "c5_1"]
 
 
 def test_set_string_representations():
@@ -66,19 +65,19 @@ def test_get_candidates():
     sample = test_utils.gramschmidt_sample()
     candidates = TilingGeneral.get_candidates(sample.tree)
     assert candidates == {
-        sample.tree.iterators["c1"].id: [
+        ("nrm_init", 0): [
             [
-                sample.tree.iterators["c1"].id,
-                sample.tree.iterators["c3"].id,
-                sample.tree.iterators["c3_1"].id,
-                sample.tree.iterators["c3_2"].id,
-                sample.tree.iterators["c5"].id,
-                sample.tree.iterators["c5_1"].id,
+                ("nrm_init", 0),
+                ("nrm_comp", 1),
+                ("Q_out", 1),
+                ("R_up_init", 1),
+                ("R_up", 2),
+                ("A_out", 2),
             ],
             [
-                sample.tree.iterators["c3_2"].id,
-                sample.tree.iterators["c5"].id,
-                sample.tree.iterators["c5_1"].id,
+                ("R_up_init", 1),
+                ("R_up", 2),
+                ("A_out", 2),
             ],
         ]
     }
@@ -86,14 +85,14 @@ def test_get_candidates():
     tree = test_utils.tree_test_sample()
     candidates = TilingGeneral.get_candidates(tree)
     assert candidates == {
-        tree.iterators["root"].id: [
+        ("comp01", 0): [
             [
-                tree.iterators["root"].id,
-                tree.iterators["i"].id,
-                tree.iterators["j"].id,
-                tree.iterators["k"].id,
-                tree.iterators["l"].id,
-                tree.iterators["m"].id,
+                ("comp01", 0),
+                ("comp01", 1),
+                ("comp03", 1),
+                ("comp03", 2),
+                ("comp03", 3),
+                ("comp04", 3),
             ]
         ]
     }
@@ -101,22 +100,22 @@ def test_get_candidates():
     t_tree = test_utils.tree_test_sample_imperfect_loops()
     candidates = TilingGeneral.get_candidates(t_tree)
     assert candidates == {
-        t_tree.iterators["root"].id: [
+        ("comp01", 0): [
             [
-                t_tree.iterators["root"].id,
-                t_tree.iterators["i"].id,
-                t_tree.iterators["i_1"].id,
-                t_tree.iterators["j"].id,
-                t_tree.iterators["j_1"].id,
-                t_tree.iterators["k"].id,
+                ("comp01", 0),
+                ("comp01", 1),
+                ("comp04", 1),
+                ("comp02", 2),
+                ("comp05", 2),
+                ("comp03", 3),
             ],
-            [t_tree.iterators["i"].id, t_tree.iterators["j"].id],
-            [t_tree.iterators["j"].id, t_tree.iterators["k"].id],
+            [("comp01", 1), ("comp02", 2)],
+            [("comp02", 2), ("comp03", 3)],
             [
-                t_tree.iterators["i"].id,
-                t_tree.iterators["j"].id,
-                t_tree.iterators["k"].id,
+                ("comp01", 1),
+                ("comp02", 2),
+                ("comp03", 3),
             ],
-            [t_tree.iterators["i_1"].id, t_tree.iterators["j_1"].id],
+            [("comp04", 1), ("comp05", 2)],
         ]
     }

@@ -34,8 +34,8 @@ def test_get_candidates():
     sample = test_utils.fusion_sample()
     candidates = Fusion.get_candidates(sample.tree)
     assert candidates == [
-        (sample.tree.iterators["i"].id, sample.tree.iterators["j"].id),
-        (sample.tree.iterators["l"].id, sample.tree.iterators["m"].id),
+        (("comp01", 1), ("comp03", 1)),
+        (("comp03", 3), ("comp04", 3)),
     ]
 
 

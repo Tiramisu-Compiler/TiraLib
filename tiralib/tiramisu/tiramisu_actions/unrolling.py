@@ -39,12 +39,16 @@ class Unrolling(TiramisuAction):
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
         self.tree = copy.deepcopy(tiramisu_tree)
+        if self.iterator_id not in tiramisu_tree.iterators:
+            self.iterator_id = self.tree.get_iterator_of_computation(
+                *self.iterator_id
+            ).id
 
         if self.comps is None:
-            iterator = tiramisu_tree.get_iterator_of_computation(*self.iterator_id)
+            iterator = tiramisu_tree.iterators[self.iterator_id]
 
             # Get the computations that are in the loop to be unrolled
-            self.comps = tiramisu_tree.get_iterator_subtree_computations(iterator.name)
+            self.comps = tiramisu_tree.get_iterator_subtree_computations(iterator.id)
             # order the computations by their absolute order
             self.comps.sort(
                 key=lambda comp: tiramisu_tree.computations_absolute_order[comp]

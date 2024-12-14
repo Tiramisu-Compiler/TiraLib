@@ -80,11 +80,11 @@ def test_get_candidates():
     sample = test_utils.tiling_3d_sample()
     candidates = Tiling3D.get_candidates(sample.tree)
     assert candidates == {
-        sample.tree.iterators["i0"].id: [
+        ("comp00", 0): [
             (
-                sample.tree.iterators["i0"].id,
-                sample.tree.iterators["i1"].id,
-                sample.tree.iterators["i2"].id,
+                ("comp00", 0),
+                ("comp00", 1),
+                ("comp00", 2),
             )
         ]
     }
@@ -92,16 +92,16 @@ def test_get_candidates():
     tree = test_utils.tiling_3d_tree_sample()
     candidates = Tiling3D.get_candidates(tree)
     assert candidates == {
-        tree.iterators["root"].id: [
+        ("comp03", 0): [
             (
-                tree.iterators["root"].id,
-                tree.iterators["j"].id,
-                tree.iterators["k"].id,
+                ("comp03", 0),
+                ("comp03", 1),
+                ("comp03", 2),
             ),
             (
-                tree.iterators["j"].id,
-                tree.iterators["k"].id,
-                tree.iterators["l"].id,
+                ("comp03", 1),
+                ("comp03", 2),
+                ("comp03", 3),
             ),
         ]
     }

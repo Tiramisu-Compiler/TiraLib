@@ -66,7 +66,7 @@ class ResultInterface:
             if match is None:
                 raise ValueError(f"Could not parse the result string: {decoded}")
             self.halide_ir = match.group(1)
-            logger.info(self.halide_ir.replace("\\n", "\n"))
+            logger.debug(self.halide_ir.replace("\\n", "\n"))
             decoded = match.group(2)
         result_dict = json.loads(decoded)
 
