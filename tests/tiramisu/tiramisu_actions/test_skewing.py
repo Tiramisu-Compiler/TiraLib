@@ -40,27 +40,25 @@ def test_get_candidates():
     sample = test_utils.skewing_example()
     candidates = Skewing.get_candidates(sample.tree)
     assert candidates == {
-        sample.tree.iterators["i0"].id: [
-            (sample.tree.iterators["i0"].id, sample.tree.iterators["i1"].id),
-            (sample.tree.iterators["i1"].id, sample.tree.iterators["i2"].id),
+        ("comp00", 0): [
+            (("comp00", 0), ("comp00", 1)),
+            (("comp00", 1), ("comp00", 2)),
         ]
     }
 
     tree = test_utils.tree_test_sample()
     candidates = Skewing.get_candidates(tree)
-    assert candidates == {
-        tree.iterators["root"].id: [(tree.iterators["j"].id, tree.iterators["k"].id)]
-    }
+    assert candidates == {("comp01", 0): [(("comp03", 1), ("comp03", 2))]}
 
 
 def test_get_factors():
     BaseConfig.init()
     sample = test_utils.skewing_example()
-    loop_levels = sample.tree.get_iterator_levels(["i0", "i1"])
+    loop_levels = sample.tree.get_iterator_levels([("comp00", 0), ("comp00", 1)])
     schedule = Schedule(sample)
     factors = Skewing.get_factors(
         schedule=schedule,
         loop_levels=loop_levels,
-        comps_skewed_loops=sample.tree.get_iterator_subtree_computations("i0"),
+        comps_skewed_loops=sample.tree.get_iterator_subtree_computations(("comp00", 0)),
     )
     assert factors == (1, 1)

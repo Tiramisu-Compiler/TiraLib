@@ -16,56 +16,56 @@ def load_test_data() -> Tuple[dict, dict]:
 
 def tree_test_sample():
     tiramisu_tree = TiramisuTree()
-    tiramisu_tree.add_root("root")
+    tiramisu_tree.add_root(("comp01", 0))
     tiramisu_tree.iterators = {
-        "root": IteratorNode(
+        ("comp01", 0): IteratorNode(
             name="root",
             parent_iterator=None,
             lower_bound=0,
             upper_bound=256,
-            child_iterators=["i", "j"],
+            child_iterators=[("comp01", 1), ("comp03", 1)],
             computations_list=[],
             level=0,
         ),
-        "i": IteratorNode(
+        ("comp01", 1): IteratorNode(
             name="i",
-            parent_iterator="root",
+            parent_iterator=("comp01", 0),
             lower_bound=0,
             upper_bound=256,
             child_iterators=[],
             computations_list=["comp01"],
             level=1,
         ),
-        "j": IteratorNode(
+        ("comp03", 1): IteratorNode(
             name="j",
-            parent_iterator="root",
+            parent_iterator=("comp01", 0),
             lower_bound=0,
             upper_bound=256,
-            child_iterators=["k"],
+            child_iterators=[("comp03", 2)],
             computations_list=[],
             level=1,
         ),
-        "k": IteratorNode(
+        ("comp03", 2): IteratorNode(
             name="k",
-            parent_iterator="j",
+            parent_iterator=("comp03", 1),
             lower_bound=0,
             upper_bound=10,
-            child_iterators=["l", "m"],
+            child_iterators=[("comp03", 3), ("comp04", 3)],
             computations_list=[],
             level=2,
         ),
-        "l": IteratorNode(
+        ("comp03", 3): IteratorNode(
             name="l",
-            parent_iterator="k",
+            parent_iterator=("comp03", 2),
             lower_bound=0,
             upper_bound=256,
             child_iterators=[],
             computations_list=["comp03"],
             level=3,
         ),
-        "m": IteratorNode(
+        ("comp04", 3): IteratorNode(
             name="m",
-            parent_iterator="k",
+            parent_iterator=("comp03", 2),
             lower_bound=0,
             upper_bound=256,
             child_iterators=[],
@@ -90,56 +90,56 @@ def tree_test_sample():
 
 def tree_test_sample_2():
     tiramisu_tree = TiramisuTree()
-    tiramisu_tree.add_root("root")
+    tiramisu_tree.add_root(("comp01", 0))
     tiramisu_tree.iterators = {
-        "root": IteratorNode(
+        ("comp01", 0): IteratorNode(
             name="root",
             parent_iterator=None,
             lower_bound=0,
             upper_bound=256,
-            child_iterators=["i", "j"],
+            child_iterators=[("comp01", 1), ("comp05", 1)],
             computations_list=[],
             level=0,
         ),
-        "i": IteratorNode(
+        ("comp01", 1): IteratorNode(
             name="i",
-            parent_iterator="root",
+            parent_iterator=("comp01", 0),
             lower_bound=0,
             upper_bound=256,
             child_iterators=[],
             computations_list=["comp01"],
             level=1,
         ),
-        "j": IteratorNode(
+        ("comp05", 1): IteratorNode(
             name="j",
-            parent_iterator="root",
+            parent_iterator=("comp01", 0),
             lower_bound=0,
             upper_bound=256,
-            child_iterators=["k"],
+            child_iterators=[("comp03", 2)],
             computations_list=["comp05", "comp06", "comp07"],
             level=1,
         ),
-        "k": IteratorNode(
+        ("comp03", 2): IteratorNode(
             name="k",
-            parent_iterator="j",
+            parent_iterator=("comp05", 1),
             lower_bound=0,
             upper_bound=10,
-            child_iterators=["l", "m"],
+            child_iterators=[("comp03", 3), ("comp04", 3)],
             computations_list=[],
             level=2,
         ),
-        "l": IteratorNode(
+        ("comp03", 3): IteratorNode(
             name="l",
-            parent_iterator="k",
+            parent_iterator=("comp03", 2),
             lower_bound=0,
             upper_bound=256,
             child_iterators=[],
             computations_list=["comp03"],
             level=3,
         ),
-        "m": IteratorNode(
+        ("comp04", 3): IteratorNode(
             name="m",
-            parent_iterator="k",
+            parent_iterator=("comp03", 2),
             lower_bound=0,
             upper_bound=256,
             child_iterators=[],
@@ -159,66 +159,67 @@ def tree_test_sample_2():
     tiramisu_tree.computations_absolute_order = {
         "comp01": 1,
         "comp05": 2,
-        "comp03": 5,
-        "comp04": 6,
         "comp06": 3,
         "comp07": 4,
+        "comp03": 5,
+        "comp04": 6,
     }
+    tiramisu_tree.set_iterator_ids()
     return tiramisu_tree
 
 
 def tree_test_sample_3():
     tiramisu_tree = TiramisuTree()
-    tiramisu_tree.add_root("root")
+    tiramisu_tree.add_root(("comp01", 0))
     tiramisu_tree.iterators = {
-        "root": IteratorNode(
+        ("comp01", 0): IteratorNode(
             name="root",
             parent_iterator=None,
             lower_bound=0,
             upper_bound=256,
-            child_iterators=["i", "j"],
+            child_iterators=[("comp01", 1), ("comp05", 1)],
             computations_list=[],
             level=0,
         ),
-        "i": IteratorNode(
+        ("comp01", 1): IteratorNode(
             name="i",
-            parent_iterator="root",
+            parent_iterator=("comp01", 0),
             lower_bound=0,
             upper_bound=256,
             child_iterators=[],
             computations_list=["comp01"],
             level=1,
         ),
-        "j": IteratorNode(
+        ("comp05", 1): IteratorNode(
             name="j",
-            parent_iterator="root",
+            parent_iterator=("comp01", 0),
             lower_bound=0,
             upper_bound=256,
-            child_iterators=["k"],
+            child_iterators=[("comp03", 2)],
             computations_list=["comp05", "comp06", "comp07"],
             level=1,
         ),
-        "k": IteratorNode(
+        ("comp03", 2): IteratorNode(
             name="k",
-            parent_iterator="j",
+            parent_iterator=("comp05", 1),
             lower_bound=0,
             upper_bound=10,
-            child_iterators=["l"],
+            child_iterators=[("comp03", 3)],
             computations_list=[],
             level=2,
         ),
-        "l": IteratorNode(
+        ("comp03", 3): IteratorNode(
             name="l",
-            parent_iterator="k",
+            parent_iterator=("comp03", 2),
             lower_bound=0,
             upper_bound=256,
-            child_iterators=["m"],
+            child_iterators=[("comp03", 4)],
             computations_list=[],
             level=3,
         ),
-        "m": IteratorNode(
+        ("comp03", 4): IteratorNode(
             name="m",
-            parent_iterator="l",
+            parent_iterator=("comp03", 3),
             lower_bound=0,
             upper_bound=256,
             child_iterators=[],
@@ -243,61 +244,62 @@ def tree_test_sample_3():
         "comp06": 3,
         "comp07": 4,
     }
+    tiramisu_tree.set_iterator_ids()
     return tiramisu_tree
 
 
 def tree_test_sample_imperfect_loops():
     tiramisu_tree = TiramisuTree()
-    tiramisu_tree.add_root("root")
+    tiramisu_tree.add_root(("comp01", 0))
     tiramisu_tree.iterators = {
-        "root": IteratorNode(
+        ("comp01", 0): IteratorNode(
             name="root",
             parent_iterator=None,
             lower_bound=0,
             upper_bound=256,
-            child_iterators=["i", "i_1"],
+            child_iterators=[("comp01", 1), ("comp04", 1)],
             computations_list=[],
             level=0,
         ),
-        "i": IteratorNode(
+        ("comp01", 1): IteratorNode(
             name="i",
-            parent_iterator="root",
+            parent_iterator=("comp01", 0),
             lower_bound=0,
             upper_bound=256,
-            child_iterators=["j"],
+            child_iterators=[("comp02", 2)],
             computations_list=["comp01"],
             level=1,
         ),
-        "j": IteratorNode(
+        ("comp02", 2): IteratorNode(
             name="j",
-            parent_iterator="i",
+            parent_iterator=("comp01", 1),
             lower_bound=0,
             upper_bound=256,
-            child_iterators=["k"],
+            child_iterators=[("comp03", 3)],
             computations_list=["comp02"],
-            level=1,
+            level=2,
         ),
-        "k": IteratorNode(
+        ("comp03", 3): IteratorNode(
             name="k",
-            parent_iterator="j",
+            parent_iterator=("comp02", 1),
             lower_bound=0,
             upper_bound=10,
             child_iterators=[],
             computations_list=["comp03"],
-            level=2,
+            level=3,
         ),
-        "i_1": IteratorNode(
+        ("comp04", 1): IteratorNode(
             name="i_1",
-            parent_iterator="root",
+            parent_iterator=("comp01", 0),
             lower_bound=0,
             upper_bound=256,
-            child_iterators=["j_1"],
+            child_iterators=[("comp05", 2)],
             computations_list=["comp04"],
             level=1,
         ),
-        "j_1": IteratorNode(
+        ("comp05", 2): IteratorNode(
             name="j_1",
-            parent_iterator="i_1",
+            parent_iterator=("comp04", 1),
             lower_bound=0,
             upper_bound=256,
             child_iterators=[],
@@ -438,38 +440,38 @@ def tiling_3d_sample() -> TiramisuProgram:
 
 def tiling_3d_tree_sample() -> TiramisuTree:
     tiramisu_tree = TiramisuTree()
-    tiramisu_tree.add_root("root")
+    tiramisu_tree.add_root(("comp03", 0))
     tiramisu_tree.iterators = {
-        "root": IteratorNode(
+        ("comp03", 0): IteratorNode(
             name="root",
             parent_iterator=None,
             lower_bound=0,
             upper_bound=10,
-            child_iterators=["j"],
+            child_iterators=[("comp03", 1)],
             computations_list=[],
             level=0,
         ),
-        "j": IteratorNode(
+        ("comp03", 1): IteratorNode(
             name="j",
-            parent_iterator="root",
+            parent_iterator=("comp03", 0),
             lower_bound=0,
             upper_bound=10,
-            child_iterators=["k"],
+            child_iterators=[("comp03", 2)],
             computations_list=[],
             level=1,
         ),
-        "k": IteratorNode(
+        ("comp03", 2): IteratorNode(
             name="k",
-            parent_iterator="j",
+            parent_iterator=("comp03", 1),
             lower_bound=0,
             upper_bound=10,
-            child_iterators=["l"],
+            child_iterators=[("comp03", 3)],
             computations_list=[],
             level=2,
         ),
-        "l": IteratorNode(
+        ("comp03", 3): IteratorNode(
             name="l",
-            parent_iterator="k",
+            parent_iterator=("comp03", 2),
             lower_bound=0,
             upper_bound=10,
             child_iterators=[],
@@ -492,56 +494,56 @@ def fusion_sample():
     tiramisu_prog = TiramisuProgram()
 
     tiramisu_tree = TiramisuTree()
-    tiramisu_tree.add_root("root")
+    tiramisu_tree.add_root(("comp01", 0))
     tiramisu_tree.iterators = {
-        "root": IteratorNode(
+        ("comp01", 0): IteratorNode(
             name="root",
             parent_iterator=None,
             lower_bound=0,
             upper_bound=10,
-            child_iterators=["i", "j"],
+            child_iterators=[("comp01", 1), ("comp03", 1)],
             computations_list=[],
             level=0,
         ),
-        "i": IteratorNode(
+        ("comp01", 1): IteratorNode(
             name="i",
-            parent_iterator="root",
+            parent_iterator=("comp01", 0),
             lower_bound=0,
             upper_bound=10,
             child_iterators=[],
             computations_list=["comp01"],
             level=1,
         ),
-        "j": IteratorNode(
+        ("comp03", 1): IteratorNode(
             name="j",
-            parent_iterator="root",
+            parent_iterator=("comp01", 0),
             lower_bound=0,
             upper_bound=10,
-            child_iterators=["k"],
+            child_iterators=[("comp03", 2)],
             computations_list=[],
             level=1,
         ),
-        "k": IteratorNode(
+        ("comp03", 2): IteratorNode(
             name="k",
-            parent_iterator="j",
+            parent_iterator=("comp03", 1),
             lower_bound=0,
             upper_bound=10,
-            child_iterators=["l", "m"],
+            child_iterators=[("comp03", 3), ("comp04", 3)],
             computations_list=[],
             level=2,
         ),
-        "l": IteratorNode(
+        ("comp03", 3): IteratorNode(
             name="l",
-            parent_iterator="k",
+            parent_iterator=("comp03", 2),
             lower_bound=0,
             upper_bound=10,
             child_iterators=[],
             computations_list=["comp03"],
             level=3,
         ),
-        "m": IteratorNode(
+        ("comp04", 3): IteratorNode(
             name="m",
-            parent_iterator="k",
+            parent_iterator=("comp03", 2),
             lower_bound=0,
             upper_bound=10,
             child_iterators=[],
@@ -560,7 +562,7 @@ def fusion_sample():
         "comp03": 2,
         "comp04": 3,
     }
-
+    tiramisu_tree.set_iterator_ids()
     tiramisu_prog.tree = tiramisu_tree
     return tiramisu_prog
 

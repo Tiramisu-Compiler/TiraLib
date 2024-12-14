@@ -55,6 +55,11 @@ class Tiling3D(TiramisuAction):
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
         self.tree = copy.deepcopy(tiramisu_tree)
+        for idx, iterator in enumerate(self.iterators):
+            if iterator not in tiramisu_tree.iterators:
+                self.iterators[idx] = self.tree.get_iterator_of_computation(
+                    *iterator
+                ).id
 
         if self.comps is None:
             outermost_iterator_id = self.iterators[0]
@@ -62,13 +67,11 @@ class Tiling3D(TiramisuAction):
                 if iterator[1] < outermost_iterator_id[1]:
                     outermost_iterator_id = iterator
 
-            outermost_iterator = self.tree.get_iterator_of_computation(
-                *outermost_iterator_id
-            )
+            outermost_iterator = self.tree.iterators[outermost_iterator_id]
             # get the computations of the outermost iterator to tile
             # which include the computations of the other iterators
             self.comps = self.tree.get_iterator_subtree_computations(
-                outermost_iterator.name
+                outermost_iterator.id
             )
 
             # sort the computations according to the absolute order

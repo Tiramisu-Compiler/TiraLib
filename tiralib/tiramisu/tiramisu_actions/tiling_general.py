@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import itertools
 import random
-from typing import Dict, List, Tuple
+from typing import Tuple
 
 from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
@@ -22,8 +22,8 @@ class TilingGeneral(TiramisuAction):
 
     def __init__(
         self,
-        params: List[IteratorIdentifier | int],
-        comps: List[str] | None = None,
+        params: list[IteratorIdentifier | int],
+        comps: list[str] | None = None,
     ):
         # General Tiling takes the iterator to tile and the tile size as
         # parameters: [iterator1, iterator2, ..., iteratorN,
@@ -39,8 +39,8 @@ class TilingGeneral(TiramisuAction):
         self.params = params
         self.comps = comps
 
-        self.iterators = params[0 : self.nbr_iterators]
-        self.tile_sizes = params[self.nbr_iterators :]
+        self.iterators: list[IteratorIdentifier] = params[0 : self.nbr_iterators]
+        self.tile_sizes: list[int] = params[self.nbr_iterators :]
 
         super().__init__(
             type=TiramisuActionType.TILING_GENERAL,
@@ -51,20 +51,20 @@ class TilingGeneral(TiramisuAction):
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
         self.tree = copy.deepcopy(tiramisu_tree)
-
-        self.tiled_iterator_names = [
-            tiramisu_tree.get_iterator_of_computation(iterator[0], iterator[1]).name
-            for iterator in self.iterators
-        ]
+        for idx, iterator in enumerate(self.iterators):
+            if iterator not in tiramisu_tree.iterators:
+                self.iterators[idx] = self.tree.get_iterator_of_computation(
+                    *iterator
+                ).id
 
         self.tile_sizes_dict = {
             iterator: self.params[self.nbr_iterators + i]
-            for i, iterator in enumerate(self.tiled_iterator_names)
+            for i, iterator in enumerate(self.iterators)
         }
 
         if self.comps is None:
             self.comps = []
-            for iterator in self.tiled_iterator_names:
+            for iterator in self.iterators:
                 self.comps.extend(tiramisu_tree.iterators[iterator].computations_list)
 
         self.set_string_representations(self.tree)
@@ -73,7 +73,7 @@ class TilingGeneral(TiramisuAction):
         assert self.comps is not None
         assert self.iterators is not None
         assert self.tile_sizes_dict is not None
-        assert self.tiled_iterator_names is not None
+        assert self.iterators is not None
 
         all_comps = tiramisu_tree.computations
         if len(all_comps) > 1:
@@ -87,12 +87,9 @@ class TilingGeneral(TiramisuAction):
             loop_levels = []
             tile_sizes = []
             comp_iterator = tiramisu_tree.get_iterator_of_computation(comp)
-            while (
-                comp_iterator is not None
-                and comp_iterator.name in self.tiled_iterator_names
-            ):
+            while comp_iterator is not None and comp_iterator.id in self.iterators:
                 loop_levels.append(comp_iterator.level)
-                tile_sizes.append(self.tile_sizes_dict[comp_iterator.name])
+                tile_sizes.append(self.tile_sizes_dict[comp_iterator.id])
                 if comp_iterator.parent_iterator is None:
                     comp_iterator = None
                 else:
@@ -124,8 +121,8 @@ class TilingGeneral(TiramisuAction):
     @classmethod
     def get_candidates(
         cls, program_tree: TiramisuTree
-    ) -> Dict[str, List[Tuple[str, str]]]:
-        candidates: Dict[str, List[Tuple[str, str]]] = {}
+    ) -> dict[str, list[Tuple[str, str]]]:
+        candidates: dict[str, list[Tuple[str, str]]] = {}
 
         candidate_sections = cls.get_imperfect_candidate_sections(program_tree)
 
@@ -173,10 +170,10 @@ class TilingGeneral(TiramisuAction):
 
     def get_fusion_levels(
         self,
-        ordered_computations: List[str],
+        ordered_computations: list[str],
         tiramisu_tree: TiramisuTree,
     ):
-        fusion_levels: List[int] = []
+        fusion_levels: list[int] = []
         # for every pair of successive computations
         # get the shared iterator level
         for comp1, comp2 in itertools.pairwise(ordered_computations):
@@ -214,7 +211,7 @@ class TilingGeneral(TiramisuAction):
                 nbr_addition = 0
                 tmp_iterator = iter_comp_1
                 while tmp_iterator is not None:
-                    if tmp_iterator.name in self.tiled_iterator_names:
+                    if tmp_iterator.id in self.iterators:
                         nbr_addition += 1
                     if tmp_iterator.parent_iterator is None:
                         tmp_iterator = None
@@ -232,7 +229,7 @@ class TilingGeneral(TiramisuAction):
     def get_imperfect_candidate_sections(
         cls,
         tiramisu_tree: TiramisuTree,
-    ) -> Dict[str, List[List[str]]]:
+    ) -> dict[IteratorIdentifier, list[list[IteratorIdentifier]]]:
         """
         Returns a dictionary with lists of candidate sections for
         each root iterator.
@@ -240,7 +237,7 @@ class TilingGeneral(TiramisuAction):
         Returns:
         -------
 
-        `candidate_sections`: `Dict[str, List[List[str]]]`
+        `candidate_sections`: `dict[str, list[list[str]]]`
             Dictionary with lists of candidate sections for each root iterator.
         """
 
@@ -261,7 +258,7 @@ class TilingGeneral(TiramisuAction):
     @classmethod
     def _get_imperfect_section_of_node(
         cls, tiramisu_tree: TiramisuTree, node_name: str
-    ) -> Tuple[List[str], List[str]]:
+    ) -> Tuple[list[str], list[str]]:
         candidate_section = [node_name]
         current_node = tiramisu_tree.iterators[node_name]
 
@@ -286,9 +283,9 @@ class TilingGeneral(TiramisuAction):
     @classmethod
     def from_candidate(
         cls,
-        candidate: List[str],
+        candidate: list[str],
         tiramisu_tree: TiramisuTree,
-        random_tile_sizes: List[int] = [2, 4, 8, 10, 16, 32, 64],
+        random_tile_sizes: list[int] = [2, 4, 8, 10, 16, 32, 64],
     ):
         iterators = [
             tiramisu_tree.get_iterator_id_from_name(iterator_name)

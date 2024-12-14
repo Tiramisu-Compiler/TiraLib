@@ -31,28 +31,28 @@ def test_get_candidate_sections():
     candidate_sections = t_tree.get_candidate_sections()
 
     assert len(candidate_sections) == 1
-    root_id = t_tree.iterators["root"].id
+    root_id = ("comp01", 0)
     assert len(candidate_sections[root_id]) == 5
     assert candidate_sections[root_id][0] == [root_id]
-    assert candidate_sections[root_id][1] == [t_tree.iterators["i"].id]
+    assert candidate_sections[root_id][1] == [("comp01", 1)]
     assert candidate_sections[root_id][2] == [
-        t_tree.iterators["j"].id,
-        t_tree.iterators["k"].id,
+        ("comp03", 1),
+        ("comp03", 2),
     ]
-    assert candidate_sections[root_id][3] == [t_tree.iterators["l"].id]
-    assert candidate_sections[root_id][4] == [t_tree.iterators["m"].id]
+    assert candidate_sections[root_id][3] == [("comp03", 3)]
+    assert candidate_sections[root_id][4] == [("comp04", 3)]
 
 
 def test_get_candidate_computations():
     t_tree = test_utils.tree_test_sample()
 
-    assert t_tree.get_iterator_subtree_computations("root") == [
+    assert t_tree.get_iterator_subtree_computations(("comp01", 0)) == [
         "comp01",
         "comp03",
         "comp04",
     ]
-    assert t_tree.get_iterator_subtree_computations("i") == ["comp01"]
-    assert t_tree.get_iterator_subtree_computations("j") == [
+    assert t_tree.get_iterator_subtree_computations(("comp01", 1)) == ["comp01"]
+    assert t_tree.get_iterator_subtree_computations(("comp03", 1)) == [
         "comp03",
         "comp04",
     ]
@@ -61,15 +61,24 @@ def test_get_candidate_computations():
 def test_get_root_of_node():
     t_tree = test_utils.tree_test_sample()
 
-    assert t_tree.get_root_of_node("i") == "root"
-    assert t_tree.get_root_of_node("j") == "root"
-    assert t_tree.get_root_of_node("m") == "root"
+    assert t_tree.get_root_of_node(("comp01", 1)) == ("comp01", 0)
+    assert t_tree.get_root_of_node(("comp03", 1)) == ("comp01", 0)
+    assert t_tree.get_root_of_node(("comp04", 3)) == ("comp01", 0)
 
 
 def test_get_iterator_levels():
     t_tree = test_utils.tree_test_sample()
 
-    assert t_tree.get_iterator_levels(["root", "i", "j", "k", "l", "m"]) == [
+    assert t_tree.get_iterator_levels(
+        [
+            ("comp01", 0),
+            ("comp01", 1),
+            ("comp03", 1),
+            ("comp03", 2),
+            ("comp03", 3),
+            ("comp04", 3),
+        ]
+    ) == [
         0,
         1,
         1,
@@ -82,9 +91,9 @@ def test_get_iterator_levels():
 def test_get_iterator_of_computation():
     t_tree = test_utils.tree_test_sample()
 
-    assert t_tree.get_iterator_of_computation("comp01").name == "i"
-    assert t_tree.get_iterator_of_computation("comp03").name == "l"
-    assert t_tree.get_iterator_of_computation("comp04").name == "m"
+    assert t_tree.get_iterator_of_computation("comp01").name == ("comp01", 3)
+    assert t_tree.get_iterator_of_computation("comp03").name == ("comp03", 3)
+    assert t_tree.get_iterator_of_computation("comp04").name == ("comp04", 3)
 
-    assert t_tree.get_iterator_of_computation("comp01", level=0).name == "root"
-    assert t_tree.get_iterator_of_computation("comp03", level=1).name == "j"
+    assert t_tree.get_iterator_of_computation("comp01", level=0).name == ("comp01", 0)
+    assert t_tree.get_iterator_of_computation("comp03", level=1).name == ("comp03", 1)
