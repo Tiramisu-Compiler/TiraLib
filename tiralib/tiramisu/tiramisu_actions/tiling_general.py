@@ -63,9 +63,19 @@ class TilingGeneral(TiramisuAction):
         }
 
         if self.comps is None:
-            self.comps = []
-            for iterator in self.iterators:
-                self.comps.extend(tiramisu_tree.iterators[iterator].computations_list)
+            outermost_iterator_id = min(self.iterators, key=lambda x: x[1])
+
+            outermost_iterator = self.tree.iterators[outermost_iterator_id]
+            # get the computations of the outermost iterator to tile
+            # which include the computations of the other iterators
+            self.comps = self.tree.get_iterator_subtree_computations(
+                outermost_iterator.id
+            )
+
+            # sort the computations according to the absolute order
+            self.comps.sort(
+                key=lambda comp: self.tree.computations_absolute_order[comp]
+            )
 
         self.set_string_representations(self.tree)
 
@@ -86,21 +96,26 @@ class TilingGeneral(TiramisuAction):
         for comp in self.comps:
             loop_levels = []
             tile_sizes = []
-            comp_iterator = tiramisu_tree.get_iterator_of_computation(comp)
-            while comp_iterator is not None and comp_iterator.id in self.iterators:
-                loop_levels.append(comp_iterator.level)
-                tile_sizes.append(self.tile_sizes_dict[comp_iterator.id])
-                if comp_iterator.parent_iterator is None:
-                    comp_iterator = None
-                else:
-                    comp_iterator = tiramisu_tree.iterators[
-                        comp_iterator.parent_iterator
-                    ]
+            comp_depth = tiramisu_tree.get_iterator_of_computation(comp).level
 
-            # reverse loop_levels and tile_sizes to have the innermost
-            # loop first
-            loop_levels.reverse()
-            tile_sizes.reverse()
+            # assuming that self.iterators are consecutive and sorted by level
+            for iterator_to_tile in self.iterators:
+                # if the comp is not that deep, no need for further checks
+                if comp_depth < iterator_to_tile[1]:
+                    break
+                # get the canonical iterator id at the tiling level an check if it matches the
+                # iterators that need to be tiled
+                comp_iterator_id = tiramisu_tree.get_iterator_of_computation(
+                    comp, iterator_to_tile[1]
+                ).id
+                if comp_iterator_id == iterator_to_tile:
+                    loop_levels.append(iterator_to_tile[1])
+                    tile_sizes.append(self.tile_sizes_dict[iterator_to_tile])
+                else:
+                    # if the comp's branch diverges at this level, no need to check the upcomming levels
+                    break
+            assert len(loop_levels) >= 1
+
             loop_levels_and_factors = [str(loop_level) for loop_level in loop_levels]
             loop_levels_and_factors.extend([str(tile_size) for tile_size in tile_sizes])
 
