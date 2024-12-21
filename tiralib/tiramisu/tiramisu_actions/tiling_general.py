@@ -90,6 +90,7 @@ class TilingGeneral(TiramisuAction):
             all_comps.sort(
                 key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
             )
+            fusion_levels = self.get_fusion_levels(all_comps, tiramisu_tree)
 
         self.tiramisu_optim_str = ""
 
@@ -122,6 +123,9 @@ class TilingGeneral(TiramisuAction):
             self.tiramisu_optim_str += (
                 f"{comp}.tile({', '.join(loop_levels_and_factors)});\n"
             )
+
+        if len(all_comps) > 1:
+            self.tiramisu_optim_str += f"clear_implicit_function_sched_graph();\n    {all_comps[0]}{''.join([f'.then({comp},{fusion_level})' for comp, fusion_level in zip(all_comps[1:], fusion_levels)])};\n"  # noqa: E501
 
         str_levels_and_sizes = [
             f"L{iterator[1]}" if isinstance(iterator, tuple) else str(iterator)
@@ -223,18 +227,17 @@ class TilingGeneral(TiramisuAction):
                 fusion_level = iter_comp_1.level
 
             if comp1 in self.comps and comp2 in self.comps:
-                nbr_addition = 0
-                tmp_iterator = iter_comp_1
-                while tmp_iterator is not None:
-                    if tmp_iterator.id in self.iterators:
-                        nbr_addition += 1
-                    if tmp_iterator.parent_iterator is None:
-                        tmp_iterator = None
-                    else:
-                        tmp_iterator = tiramisu_tree.iterators[
-                            tmp_iterator.parent_iterator
-                        ]
-                fusion_level += nbr_addition
+                shared_iterator_ids = [iter_comp_1.id]
+                tmp_iter = iter_comp_1
+                while tmp_iter.parent_iterator is not None:
+                    tmp_iter = tiramisu_tree.iterators[tmp_iter.parent_iterator]
+                    shared_iterator_ids.append(tmp_iter.id)
+
+                # if all tiled loops (suffice to test the innermost one) are shared between comp1 and
+                # comp2, then the move the fusion level by the dimension of the tiling, otherwise
+                # keep it as it is.
+                if self.iterators[-1] in shared_iterator_ids:
+                    fusion_level += self.nbr_iterators
 
             fusion_levels.append(fusion_level)
 
