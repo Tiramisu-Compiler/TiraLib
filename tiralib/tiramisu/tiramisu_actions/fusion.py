@@ -42,12 +42,12 @@ class Fusion(TiramisuAction):
         self.iterators: List[IteratorNode] = []
         self.itertors_computations: List[List[str]] = []
         for iterator_id in self.params:
-            iterator = tiramisu_tree.get_iterator_of_computation(
-                iterator_id[0], iterator_id[1]
-            )
+            if iterator_id not in tiramisu_tree.iterators:
+                iterator_id = self.tree.get_iterator_of_computation(*iterator_id).id
+            iterator = tiramisu_tree.iterators[iterator_id]
             self.iterators.append(iterator)
             iterator_computations = tiramisu_tree.get_iterator_subtree_computations(
-                iterator.name
+                iterator.id
             )
             self.itertors_computations.append(iterator_computations)
             self.comps.extend(iterator_computations)
@@ -135,8 +135,8 @@ perform_full_dependency_analysis();
             for root in program_tree.roots:
                 iterators_dict[root] = []
             for iterator in iterators:
-                iterators_dict[program_tree.get_root_of_node(iterator.name)].append(
-                    iterator.name
+                iterators_dict[program_tree.get_root_of_node(iterator.id)].append(
+                    iterator.id
                 )
             for root in iterators_dict:
                 candidates.extend(
@@ -168,7 +168,7 @@ perform_full_dependency_analysis();
             fused_computations[0], self.main_fusion_level
         )
         comps_in_fused_iterator = tiramisu_tree.get_iterator_subtree_computations(
-            fused_in_iterator.name
+            fused_in_iterator.id
         )
         max_order = max(
             [
@@ -207,7 +207,7 @@ perform_full_dependency_analysis();
             fusion_level: int | None = None
 
             # get the shared iterator level
-            while iter_comp_1.name != iter_comp_2.name:
+            while iter_comp_1.id != iter_comp_2.id:
                 if iter_comp_1.level > iter_comp_2.level:
                     # if parent is None
                     # then the iterators don't have a common parent

@@ -37,8 +37,8 @@ def test_get_candidates():
     sample = test_utils.reversal_sample()
     candidates = Reversal.get_candidates(sample.tree)
     assert candidates == {
-        sample.tree.iterators["i0"].id: [
-            sample.tree.iterators["i0"].id,
-            sample.tree.iterators["i1"].id,
+        ("comp00", 0): [
+            ("comp00", 0),
+            ("comp00", 1),
         ]
     }

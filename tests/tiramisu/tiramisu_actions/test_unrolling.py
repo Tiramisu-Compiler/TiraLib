@@ -43,12 +43,12 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.unrolling_sample()
     candidates = Unrolling.get_candidates(sample.tree)
-    assert candidates == [sample.tree.iterators["i1"].id]
+    assert candidates == [("comp00", 1)]
 
     tree = test_utils.tree_test_sample()
     candidates = Unrolling.get_candidates(tree)
     assert candidates == [
-        tree.iterators["i"].id,
-        tree.iterators["l"].id,
-        tree.iterators["m"].id,
+        ("comp01", 1),
+        ("comp03", 3),
+        ("comp04", 3),
     ]
