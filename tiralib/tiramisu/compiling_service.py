@@ -531,7 +531,7 @@ class CompilingService:
                 consumed_time = sum(results)
                 if consumed_time >= time_budget:
                     logger.debug(
-                        f"No time budget left to perform extra runs. Consumed time:{consumed_time} >= time budget:{time_budget}. Completed {len(results)} out of {min_runs} min_runs and 0 out of {max_runs-min_runs if max_runs else 'inf'} extra runs."
+                        f"No time budget left to perform extra runs. Consumed time:{consumed_time} >= time budget:{time_budget}. Completed {len(results)} out of {min_runs} min_runs and 0 out of {max_runs - min_runs if max_runs else 'inf'} extra runs."
                     )
                 # if a time_budget is set and hasn't been consumed by the min_runs
                 else:
@@ -621,7 +621,7 @@ class CompilingService:
             # run the wrapper
             f"./{tiramisu_program.name}_wrapper"
             if timeout is None
-            else f"timeout {timeout/1000} ./{tiramisu_program.name}_wrapper",
+            else f"timeout {timeout / 1000} ./{tiramisu_program.name}_wrapper",
         ]
 
     @classmethod
