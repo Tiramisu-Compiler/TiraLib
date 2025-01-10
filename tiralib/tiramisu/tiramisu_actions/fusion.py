@@ -86,7 +86,7 @@ class Fusion(TiramisuAction):
         self.tiramisu_optim_str += f"""
 perform_full_dependency_analysis();
     clear_implicit_function_sched_graph();
-    {ordered_computations[0]}{''.join([f'.then({comp},{fusion_level})' for comp, fusion_level in zip(ordered_computations[1:], fusion_levels)])};
+    {ordered_computations[0]}{"".join([f".then({comp},{fusion_level})" for comp, fusion_level in zip(ordered_computations[1:], fusion_levels)])};
     prepare_schedules_for_legality_checks(true);
     std::vector<std::tuple<tiramisu::var, int>> factors = tiramisu::global::get_implicit_function()->correcting_loop_fusion_with_shifting({{{", ".join([f"&{comp}" for comp in computations_of_first_iterator])}}}, {computation_to_fuse}, {{{", ".join([str(i) for i in range(computation_to_fuse_iterator.level + 1)])}}});
     for (const auto &tuple : factors)

@@ -25,9 +25,9 @@ class Unrolling(TiramisuAction):
         # Unrolling takes 2 parameters: the iterator to unroll and the
         # unrolling factor
         assert len(params) == 2
-        assert isinstance(params[0], tuple) and isinstance(
-            params[1], int
-        ), f"Invalid unrolling parameters: {params}"
+        assert isinstance(params[0], tuple) and isinstance(params[1], int), (
+            f"Invalid unrolling parameters: {params}"
+        )
         self.iterator_id = params[0]
         self.unrolling_factor = params[1]
 

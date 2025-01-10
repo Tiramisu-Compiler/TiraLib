@@ -250,9 +250,9 @@ class TiramisuProgram:
         buffers_init_lines = ""
         for i, buffer_name in enumerate(self.IO_buffer_names):
             buffers_init_lines += f"""
-    double *c_{buffer_name} = (double*)malloc({'*'.join(self.buffer_sizes[i][::-1])}* sizeof(double));
-    parallel_init_buffer(c_{buffer_name}, {'*'.join(self.buffer_sizes[i][::-1])}, (double){str(random.randint(1,10))});
-    Halide::Buffer<double> {buffer_name}(c_{buffer_name}, {','.join(self.buffer_sizes[i][::-1])});
+    double *c_{buffer_name} = (double*)malloc({"*".join(self.buffer_sizes[i][::-1])}* sizeof(double));
+    parallel_init_buffer(c_{buffer_name}, {"*".join(self.buffer_sizes[i][::-1])}, (double){str(random.randint(1, 10))});
+    Halide::Buffer<double> {buffer_name}(c_{buffer_name}, {",".join(self.buffer_sizes[i][::-1])});
     """  # noqa: E501
         if self.name is None:
             raise Exception("TiramisuProgram.name is None")

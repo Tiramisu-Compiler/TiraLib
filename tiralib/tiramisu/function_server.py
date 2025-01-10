@@ -217,13 +217,12 @@ class FunctionServer:
         """Run the server code."""
         if not BaseConfig.base_config:
             raise ValueError("BaseConfig not initialized")
-        assert (
-            operation
-            in [
-                "execution",
-                "legality",
-            ]
-        ), f"Invalid operation {operation}. Valid operations are: execution, legality, annotations"  # noqa: E501
+        assert operation in [
+            "execution",
+            "legality",
+        ], (
+            f"Invalid operation {operation}. Valid operations are: execution, legality, annotations"
+        )  # noqa: E501
 
         env_vars = " && ".join(
             [
