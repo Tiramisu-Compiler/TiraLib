@@ -424,3 +424,7 @@ class TiramisuTree:
             representation += self._get_subtree_representation(root)
 
         return representation
+
+    @property
+    def depth(self) -> int:
+        return max([iterator.level for iterator in self.iterators.values()]) + 1

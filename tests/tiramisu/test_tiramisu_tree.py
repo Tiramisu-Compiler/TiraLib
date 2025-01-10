@@ -97,3 +97,21 @@ def test_get_iterator_of_computation():
 
     assert t_tree.get_iterator_of_computation("comp01", level=0).name == "root"
     assert t_tree.get_iterator_of_computation("comp03", level=1).name == "j"
+
+
+def test_depth():
+    t_tree = test_utils.tree_test_sample()
+
+    assert t_tree.depth == 4
+
+    t_tree = test_utils.interchange_example().tree
+
+    assert t_tree.depth == 3
+
+    t_tree = test_utils.skewing_example().tree
+
+    assert t_tree.depth == 3
+
+    t_tree = test_utils.tiling_3d_sample().tree
+
+    assert t_tree.depth == 3
