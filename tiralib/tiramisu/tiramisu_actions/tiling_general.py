@@ -115,7 +115,7 @@ class TilingGeneral(TiramisuAction):
                 else:
                     # if the comp's branch diverges at this level, no need to check the upcomming levels
                     break
-            if len(loop_levels) >= 1:
+            if len(loop_levels) < 1:
                 raise ValueError("No tiling loop levels found")
 
             loop_levels_and_factors = [str(loop_level) for loop_level in loop_levels]
