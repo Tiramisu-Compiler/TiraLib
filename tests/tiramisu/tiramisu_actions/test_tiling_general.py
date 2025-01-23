@@ -40,23 +40,22 @@ def test_set_string_representations():
     BaseConfig.init()
     sample = test_utils.gramschmidt_sample()
     tiling_general = TilingGeneral(
-        [("R_up_init", 1), ("R_up", 2), ("A_out", 2), 10, 5, 2]
+        [("R_up_init", 1), ("R_up", 2), 10, 5]
     )
     tiling_general.initialize_action_for_tree(sample.tree)
     assert tiling_general.iterators == [
         ("R_up_init", 1),
-        ("R_up", 2),
-        ("A_out", 2),
+        ("R_up", 2)
     ]
 
     assert (
         tiling_general.tiramisu_optim_str
-        == "R_up_init.tile(1, 10);\nR_up.tile(1, 2, 10, 5);\nA_out.tile(1, 2, 10, 2);\n"  # noqa: E501
+        == "R_up_init.tile(1, 10);\nR_up.tile(1, 2, 10, 5);\nA_out.tile(1, 10);\nclear_implicit_function_sched_graph();\n    nrm_init.then(nrm_comp,0).then(R_diag,0).then(Q_out,0).then(R_up_init,0).then(R_up,1).then(A_out,1);\n"  # noqa: E501
     )
 
     assert (
         tiling_general.str_representation
-        == "TG(L1,L2,L2,10,5,2,comps=['R_up_init', 'R_up', 'A_out'])"
+        == "TG(L1,L2,10,5,comps=['R_up_init', 'R_up', 'A_out'])"
     )
 
 
