@@ -63,9 +63,19 @@ class TilingGeneral(TiramisuAction):
         }
 
         if self.comps is None:
-            self.comps = []
-            for iterator in self.iterators:
-                self.comps.extend(tiramisu_tree.iterators[iterator].computations_list)
+            outermost_iterator_id = min(self.iterators, key=lambda x: x[1])
+
+            outermost_iterator = self.tree.iterators[outermost_iterator_id]
+            # get the computations of the outermost iterator to tile
+            # which include the computations of the other iterators
+            self.comps = self.tree.get_iterator_subtree_computations(
+                outermost_iterator.id
+            )
+
+            # sort the computations according to the absolute order
+            self.comps.sort(
+                key=lambda comp: self.tree.computations_absolute_order[comp]
+            )
 
         self.set_string_representations(self.tree)
 
@@ -80,33 +90,43 @@ class TilingGeneral(TiramisuAction):
             all_comps.sort(
                 key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
             )
+            fusion_levels = self.get_fusion_levels(all_comps, tiramisu_tree)
 
         self.tiramisu_optim_str = ""
 
         for comp in self.comps:
             loop_levels = []
             tile_sizes = []
-            comp_iterator = tiramisu_tree.get_iterator_of_computation(comp)
-            while comp_iterator is not None and comp_iterator.id in self.iterators:
-                loop_levels.append(comp_iterator.level)
-                tile_sizes.append(self.tile_sizes_dict[comp_iterator.id])
-                if comp_iterator.parent_iterator is None:
-                    comp_iterator = None
-                else:
-                    comp_iterator = tiramisu_tree.iterators[
-                        comp_iterator.parent_iterator
-                    ]
+            comp_depth = tiramisu_tree.get_iterator_of_computation(comp).level
 
-            # reverse loop_levels and tile_sizes to have the innermost
-            # loop first
-            loop_levels.reverse()
-            tile_sizes.reverse()
+            # assuming that self.iterators are consecutive and sorted by level
+            for iterator_to_tile in self.iterators:
+                # if the comp is not that deep, no need for further checks
+                if comp_depth < iterator_to_tile[1]:
+                    break
+                # get the canonical iterator id at the tiling level an check if it matches the
+                # iterators that need to be tiled
+                comp_iterator_id = tiramisu_tree.get_iterator_of_computation(
+                    comp, iterator_to_tile[1]
+                ).id
+                if comp_iterator_id == iterator_to_tile:
+                    loop_levels.append(iterator_to_tile[1])
+                    tile_sizes.append(self.tile_sizes_dict[iterator_to_tile])
+                else:
+                    # if the comp's branch diverges at this level, no need to check the upcomming levels
+                    break
+            if len(loop_levels) < 1:
+                raise ValueError("No tiling loop levels found")
+
             loop_levels_and_factors = [str(loop_level) for loop_level in loop_levels]
             loop_levels_and_factors.extend([str(tile_size) for tile_size in tile_sizes])
 
             self.tiramisu_optim_str += (
                 f"{comp}.tile({', '.join(loop_levels_and_factors)});\n"
             )
+
+        if len(all_comps) > 1:
+            self.tiramisu_optim_str += f"clear_implicit_function_sched_graph();\n    {all_comps[0]}{''.join([f'.then({comp},{fusion_level})' for comp, fusion_level in zip(all_comps[1:], fusion_levels)])};\n"  # noqa: E501
 
         str_levels_and_sizes = [
             f"L{iterator[1]}" if isinstance(iterator, tuple) else str(iterator)
@@ -208,18 +228,17 @@ class TilingGeneral(TiramisuAction):
                 fusion_level = iter_comp_1.level
 
             if comp1 in self.comps and comp2 in self.comps:
-                nbr_addition = 0
-                tmp_iterator = iter_comp_1
-                while tmp_iterator is not None:
-                    if tmp_iterator.id in self.iterators:
-                        nbr_addition += 1
-                    if tmp_iterator.parent_iterator is None:
-                        tmp_iterator = None
-                    else:
-                        tmp_iterator = tiramisu_tree.iterators[
-                            tmp_iterator.parent_iterator
-                        ]
-                fusion_level += nbr_addition
+                shared_iterator_ids = [iter_comp_1.id]
+                tmp_iter = iter_comp_1
+                while tmp_iter.parent_iterator is not None:
+                    tmp_iter = tiramisu_tree.iterators[tmp_iter.parent_iterator]
+                    shared_iterator_ids.append(tmp_iter.id)
+
+                # if all tiled loops (suffice to test the innermost one) are shared between comp1 and
+                # comp2, then the move the fusion level by the dimension of the tiling, otherwise
+                # keep it as it is.
+                if self.iterators[-1] in shared_iterator_ids:
+                    fusion_level += self.nbr_iterators
 
             fusion_levels.append(fusion_level)
 
