@@ -78,7 +78,7 @@ class CompilingService:
             str: The code to check legality of the schedule
         """
         assert schedule.tiramisu_program
-        assert schedule.tiramisu_program.original_str
+        assert schedule.tiramisu_program.cpp_code
         assert schedule.tree
 
         # Add code to the original file to get legality result
@@ -106,7 +106,7 @@ class CompilingService:
     fct->print_isl_ast_representation();
 """
 
-        cpp_code = schedule.tiramisu_program.original_str.replace(
+        cpp_code = schedule.tiramisu_program.cpp_code.replace(
             schedule.tiramisu_program.code_gen_line, legality_check_lines
         )
         return cpp_code
@@ -124,7 +124,7 @@ class CompilingService:
         if not BaseConfig.base_config:
             raise ValueError("BaseConfig not initialized")
 
-        if not tiramisu_program.original_str:
+        if not tiramisu_program.cpp_code:
             raise ValueError("Tiramisu program not initialized")
 
         output_path = os.path.join(
@@ -139,7 +139,7 @@ class CompilingService:
             std::cout << program_json;
             """  # noqa: E501
 
-        cpp_code = tiramisu_program.original_str.replace(
+        cpp_code = tiramisu_program.cpp_code.replace(
             tiramisu_program.code_gen_line, get_json_lines
         )
         return cls.run_cpp_code(cpp_code=cpp_code, output_path=output_path)
@@ -162,7 +162,7 @@ class CompilingService:
         if not BaseConfig.base_config:
             raise ValueError("BaseConfig not initialized")
 
-        if not tiramisu_program.original_str:
+        if not tiramisu_program.cpp_code:
             raise ValueError("Tiramisu program not initialized")
 
         output_path = os.path.join(
@@ -183,7 +183,7 @@ class CompilingService:
     fct->print_isl_ast_representation();
 """
 
-        cpp_code = tiramisu_program.original_str.replace(
+        cpp_code = tiramisu_program.cpp_code.replace(
             tiramisu_program.code_gen_line, get_isl_ast_lines
         )
         return cls.run_cpp_code(cpp_code=cpp_code, output_path=output_path)
@@ -259,7 +259,6 @@ class CompilingService:
             Tuple[int, int]: The factors to skew the loops by
         """
         assert schedule.tiramisu_program
-        assert schedule.tiramisu_program.comps
 
         if BaseConfig.base_config is None:
             raise Exception("The base config is not loaded yet")
@@ -361,7 +360,7 @@ class CompilingService:
         Returns:
             str: The code to apply the optimizations on the program
         """
-        if not tiramisu_program.original_str:
+        if not tiramisu_program.cpp_code:
             raise ValueError("The program is not loaded yet")
         # Add code to the original file to get the schedule code
         schedule_code = ""
@@ -370,7 +369,7 @@ class CompilingService:
 
         # Add code gen line to the schedule code
         schedule_code += "\n    " + tiramisu_program.code_gen_line + "\n"
-        cpp_code = tiramisu_program.original_str.replace(
+        cpp_code = tiramisu_program.cpp_code.replace(
             tiramisu_program.code_gen_line, schedule_code
         )
         cpp_code = cpp_code.replace(
@@ -436,7 +435,7 @@ class CompilingService:
             raise ValueError("BaseConfig not initialized")
         if (
             not tiramisu_program.name
-            or not tiramisu_program.original_str
+            or not tiramisu_program.cpp_code
             or not tiramisu_program.wrappers
         ):
             raise ValueError("The program is not loaded yet")

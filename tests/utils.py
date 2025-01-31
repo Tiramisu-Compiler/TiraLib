@@ -345,10 +345,9 @@ def benchmark_program_test_sample():
 def interchange_example() -> TiramisuProgram:
     test_data, test_cpps = load_test_data()
 
-    tiramisu_func = TiramisuProgram.from_dict(
-        name="function837782",
-        data=test_data["function837782"],
-        original_str=test_cpps["function837782"],
+    tiramisu_func = TiramisuProgram.from_annotations(
+        annotations=test_data["function837782"]["program_annotation"],
+        cpp_code=test_cpps["function837782"],
     )
     if tiramisu_func.annotations is None:
         raise ValueError("Annotations not found")
@@ -361,10 +360,9 @@ def interchange_example() -> TiramisuProgram:
 def skewing_example() -> TiramisuProgram:
     test_data, test_cpps = load_test_data()
 
-    tiramisu_func = TiramisuProgram.from_dict(
-        name="function550013",
-        data=test_data["function550013"],
-        original_str=test_cpps["function550013"],
+    tiramisu_func = TiramisuProgram.from_annotations(
+        annotations=test_data["function550013"]["program_annotation"],
+        cpp_code=test_cpps["function550013"],
     )
     if tiramisu_func.annotations is None:
         raise ValueError("Annotations not found")
@@ -377,10 +375,9 @@ def skewing_example() -> TiramisuProgram:
 def reversal_sample() -> TiramisuProgram:
     test_data, test_cpps = load_test_data()
 
-    tiramisu_func = TiramisuProgram.from_dict(
-        name="function824914",
-        data=test_data["function824914"],
-        original_str=test_cpps["function824914"],
+    tiramisu_func = TiramisuProgram.from_annotations(
+        annotations=test_data["function824914"]["program_annotation"],
+        cpp_code=test_cpps["function824914"],
     )
     if tiramisu_func.annotations is None:
         raise ValueError("Annotations not found")
@@ -393,10 +390,9 @@ def reversal_sample() -> TiramisuProgram:
 def unrolling_sample() -> TiramisuProgram:
     test_data, test_cpps = load_test_data()
 
-    tiramisu_func = TiramisuProgram.from_dict(
-        name="function552581",
-        data=test_data["function552581"],
-        original_str=test_cpps["function552581"],
+    tiramisu_func = TiramisuProgram.from_annotations(
+        annotations=test_data["function552581"]["program_annotation"],
+        cpp_code=test_cpps["function552581"],
     )
     if tiramisu_func.annotations is None:
         raise ValueError("Annotations not found")
@@ -409,10 +405,9 @@ def unrolling_sample() -> TiramisuProgram:
 def tiling_2d_sample() -> TiramisuProgram:
     test_data, test_cpps = load_test_data()
 
-    tiramisu_func = TiramisuProgram.from_dict(
-        name="function554520",
-        data=test_data["function554520"],
-        original_str=test_cpps["function554520"],
+    tiramisu_func = TiramisuProgram.from_annotations(
+        annotations=test_data["function554520"]["program_annotation"],
+        cpp_code=test_cpps["function554520"],
     )
     if tiramisu_func.annotations is None:
         raise ValueError("Annotations not found")
@@ -425,10 +420,9 @@ def tiling_2d_sample() -> TiramisuProgram:
 def tiling_3d_sample() -> TiramisuProgram:
     test_data, test_cpps = load_test_data()
 
-    tiramisu_func = TiramisuProgram.from_dict(
-        name="function608722",
-        data=test_data["function608722"],
-        original_str=test_cpps["function608722"],
+    tiramisu_func = TiramisuProgram.from_annotations(
+        annotations=test_data["function608722"]["program_annotation"],
+        cpp_code=test_cpps["function608722"],
     )
     if tiramisu_func.annotations is None:
         raise ValueError("Annotations not found")

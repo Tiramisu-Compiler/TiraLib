@@ -1,4 +1,5 @@
 # import the tiralib library
+from pathlib import Path
 from tiralib.config import BaseConfig
 from tiralib.tiramisu import Schedule, TiramisuProgram, tiramisu_actions
 
@@ -7,9 +8,9 @@ BaseConfig.init()
 
 # Load the Tiramisu Program from the file and create a TiraLibCPP server
 # IMPORTANT! This needs a working path to the TiraLibCPP library set in the config file of TiraLib
+cpp_code = Path("./examples/function_blur_MINI_generator.cpp").read_text()
 tiramisu_program = TiramisuProgram.init_server(
-    "./examples/function_blur_MINI_generator.cpp",
-    from_file=True,
+    cpp_code=cpp_code,
     load_annotations=True,
     load_tree=True,
     reuse_server=True,

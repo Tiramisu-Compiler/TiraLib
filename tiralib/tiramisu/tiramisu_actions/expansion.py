@@ -59,7 +59,7 @@ class Expansion(TiramisuAction):
                 f'    std::cout << "{comp}|" << {comp}.expandable() << std::endl;\n'  # noqa
             )
 
-        cpp_code = schedule.tiramisu_program.original_str.replace(
+        cpp_code = schedule.tiramisu_program.cpp_code.replace(
             schedule.tiramisu_program.code_gen_line, candidates_code
         )
 

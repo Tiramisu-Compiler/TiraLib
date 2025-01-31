@@ -1,3 +1,4 @@
+from pathlib import Path
 import tests.utils as test_utils
 from tiralib.config import BaseConfig
 from tiralib.tiramisu import tiramisu_actions
@@ -8,27 +9,27 @@ from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 def test_init_server():
     BaseConfig.init()
 
+    cpp_code = Path("examples/function_gemver_MINI_generator.cpp").read_text()
     sample = TiramisuProgram.init_server(
-        "examples/function_gemver_MINI_generator.cpp",
+        cpp_code=cpp_code,
         load_isl_ast=True,
         load_tree=True,
-        from_file=True,
     )
 
     assert sample.name == "function_gemver_MINI"
     assert sample.isl_ast_string is not None
-    assert sample.original_str is not None
-    assert sample.comps is not None and len(sample.comps) > 0
+    assert sample.cpp_code is not None
+    assert len(sample.tree.computations) > 0
 
 
 def test_init_server_annotations():
     BaseConfig.init()
 
+    cpp_code = Path("examples/function_gemver_MINI_generator.cpp").read_text()
     sample = TiramisuProgram.init_server(
-        "examples/function_gemver_MINI_generator.cpp",
+        cpp_code=cpp_code,
         load_annotations=True,
         load_tree=True,
-        from_file=True,
         reuse_server=True,
     )
 
@@ -39,11 +40,11 @@ def test_init_server_annotations():
 def test_get_legality():
     BaseConfig.init()
 
+    cpp_code = Path("examples/function_gemver_MINI_generator.cpp").read_text()
     sample = TiramisuProgram.init_server(
-        "examples/function_gemver_MINI_generator.cpp",
+        cpp_code=cpp_code,
         load_isl_ast=True,
         load_tree=True,
-        from_file=True,
         reuse_server=True,
     )
 
@@ -61,11 +62,11 @@ def test_get_legality():
 def test_get_exec_times():
     BaseConfig.init()
 
+    cpp_code = Path("examples/function_gemver_MINI_generator.cpp").read_text()
     sample = TiramisuProgram.init_server(
-        "examples/function_gemver_MINI_generator.cpp",
+        cpp_code=cpp_code,
         load_isl_ast=True,
         load_tree=True,
-        from_file=True,
         reuse_server=True,
     )
 
@@ -86,8 +87,7 @@ def test_get_skewing_factors():
     test_data, test_cpps = test_utils.load_test_data()
 
     tiramisu_func = TiramisuProgram.init_server(
-        # data=test_data["function550013"],
-        original_code=test_cpps["function550013"],
+        cpp_code=test_cpps["function550013"],
         load_annotations=True,
         load_tree=True,
         reuse_server=True,

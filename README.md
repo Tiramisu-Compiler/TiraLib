@@ -183,7 +183,7 @@ poetry shell
 Then, you can run the tests using the following command:
 
 ```bash
-coverage run -m pytest
+pytest --cov
 ```
 
 Finally, you can generate the coverage report using the following command:

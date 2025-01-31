@@ -102,10 +102,8 @@ class FunctionServer:
         if not BaseConfig.base_config:
             raise ValueError("BaseConfig not initialized")
 
-        if not tiramisu_program.original_str:
+        if not tiramisu_program.cpp_code:
             raise ValueError("Tiramisu program not initialized")
-        if not tiramisu_program.wrappers:
-            raise ValueError("Tiramisu program wrappers not initialized")
 
         self.tiramisu_program = tiramisu_program
 
@@ -123,7 +121,7 @@ class FunctionServer:
             return
 
         # Generate the server code
-        server_code = FunctionServer._generate_server_code_from_original_string(
+        server_code = FunctionServer._generate_server_code_from_cpp_code(
             tiramisu_program
         )
 
@@ -149,10 +147,8 @@ class FunctionServer:
         self._compile_server_code()
 
     @classmethod
-    def _generate_server_code_from_original_string(
-        self, tiramisu_program: "TiramisuProgram"
-    ):
-        original_str = tiramisu_program.original_str
+    def _generate_server_code_from_cpp_code(self, tiramisu_program: "TiramisuProgram"):
+        original_str = tiramisu_program.cpp_code
         if original_str is None:
             raise ValueError("Original string not initialized")
         # Generate function
@@ -217,12 +213,13 @@ class FunctionServer:
         """Run the server code."""
         if not BaseConfig.base_config:
             raise ValueError("BaseConfig not initialized")
-        assert operation in [
-            "execution",
-            "legality",
-        ], (
-            f"Invalid operation {operation}. Valid operations are: execution, legality, annotations"
-        )  # noqa: E501
+        assert (
+            operation
+            in [
+                "execution",
+                "legality",
+            ]
+        ), f"Invalid operation {operation}. Valid operations are: execution, legality, annotations"  # noqa: E501
 
         env_vars = " && ".join(
             [
