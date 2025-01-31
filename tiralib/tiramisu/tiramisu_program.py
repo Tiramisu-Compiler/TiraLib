@@ -1,7 +1,6 @@
 import json
 import random
 import re
-from pathlib import Path
 from typing import Dict
 
 from tiralib.tiramisu.compiling_service import CompilingService
@@ -15,78 +14,85 @@ class TiramisuProgram:
 
     Attributes
     ----------
-    `file_path`: str
-        The path to the cpp file of the tiramisu function
-    `annotations`: dict
-        The tiramisu annotations of the function
-    `comps`: list[str]
-        The list of computations in the function
     `name`: str
         The name of the function
-    `schedules_legality`: dict
-        The legality of the schedules of the function
-    `schedules_solver`: dict
-        The solver results of the schedules of the function
-    `original_str`: str
-        The original code string of the function
-    `initial_execution_times`: dict
-        The initial execution times of the function
-    `current_machine_initial_execution_time`: float
-        The initial execution time of the function on the current machine
+    `cpp_code`: str
+        The code of the function
     `tree`: TiramisuTree
         The tree of the function
+    `IO_buffer_names`: list[str]
+        The names of the input/output buffers
+    `buffer_sizes`: list[list[str]]
+        The sizes of the input/output buffers
+    `annotations`: Dict
+        The annotations of the function
+    `isl_ast_string`: str
+        The isl ast of the function
+    `wrapper_obj`: bytes
+        The wrapper object of the function
+    `server`: FunctionServer
+        TiralibCpp server object
     """
 
     def __init__(self: "TiramisuProgram"):
-        self.file_path = ""
+        self.name: str
+        self.cpp_code: str
+        self.tree: TiramisuTree
+        self.IO_buffer_names: list[str]
+        self.buffer_sizes: list[list[str]]
         self.annotations: Dict | None = None
         self.isl_ast_string: str | None = None
-        self.comps: list[str] | None = None
-        self.name: str | None = None
-        # self.schedules_legality = {}
-        # self.schedules_solver = {}
-        self.schedules_dict: Dict = {}
-        self.original_str: str | None = None
-        self.wrappers: Dict | None = None
-        self.initial_execution_times = {}
-        # self.current_machine_initial_execution_time: float | None = None
-        self.tree: TiramisuTree = None
         self.wrapper_obj: bytes | None = None
         self.server: FunctionServer | None = None
 
+    @property
+    def wrappers(self):
+        buffers_init_lines = ""
+        for i, buffer_name in enumerate(self.IO_buffer_names):
+            buffers_init_lines += f"""
+    double *c_{buffer_name} = (double*)malloc({"*".join(self.buffer_sizes[i][::-1])}* sizeof(double));
+    parallel_init_buffer(c_{buffer_name}, {"*".join(self.buffer_sizes[i][::-1])}, (double){str(random.randint(1, 10))});
+    Halide::Buffer<double> {buffer_name}(c_{buffer_name}, {",".join(self.buffer_sizes[i][::-1])});
+    """  # noqa: E501
+        if self.name is None:
+            raise Exception("TiramisuProgram.name is None")
+
+        wrapper_cpp_code = wrapper_cpp_template.replace("$func_name$", self.name)
+        wrapper_cpp_code = wrapper_cpp_code.replace(
+            "$buffers_init$", buffers_init_lines
+        )
+        wrapper_cpp_code = wrapper_cpp_code.replace(
+            "$func_params$",
+            ",".join([name + ".raw_buffer()" for name in self.IO_buffer_names]),
+        )
+
+        wrapper_h_code = wrapper_h_template.replace("$func_name$", self.name)
+        wrapper_h_code = wrapper_h_code.replace(
+            "$func_params$",
+            ",".join(["halide_buffer_t *" + name for name in self.IO_buffer_names]),
+        )
+
+        return {
+            "cpp": wrapper_cpp_code,
+            "h": wrapper_h_code,
+        }
+
     @classmethod
-    def from_dict(
+    def from_annotations(
         cls,
-        name: str,
-        data: dict,
-        original_str: str | None = None,
-        load_code_lines: bool = True,
+        annotations: dict,
+        cpp_code: str | None = None,
         load_tree: bool = True,
         wrapper_obj: bytes | None = None,
     ) -> "TiramisuProgram":
         # Initiate an instante of the TiramisuProgram class
         tiramisu_prog = cls()
-        tiramisu_prog.name = name
-        tiramisu_prog.annotations = data["program_annotation"]
-        if tiramisu_prog.annotations:
-            tiramisu_prog.comps = list(tiramisu_prog.annotations["computations"].keys())
-        if "schedules_dict" in data:
-            tiramisu_prog.schedules_dict = data["schedules_dict"]
-
-            # Initialize the initial_execution_times attribute and
-            # the current_machine_initial_execution_time attribute
-            if "initial_execution_times" in data:
-                tiramisu_prog.initial_execution_times = data["initial_execution_times"]
-        if load_code_lines:
-            tiramisu_prog.load_code_lines(original_str)
+        tiramisu_prog.cpp_code = cpp_code
+        tiramisu_prog.annotations = annotations
+        tiramisu_prog.load_code_lines()
 
         if wrapper_obj:
             tiramisu_prog.wrapper_obj = wrapper_obj
-
-        # construct the wrapper code
-        wrapper_cpp, wrapper_header = tiramisu_prog.construct_wrapper_code()
-
-        tiramisu_prog.wrappers = {"cpp": wrapper_cpp, "h": wrapper_header}
 
         if load_tree:
             tiramisu_prog.tree = TiramisuTree.from_annotations(
@@ -111,6 +117,10 @@ class TiramisuProgram:
             The path to the cpp file of the tiramisu function
         `load_annotations`: bool
             A flag to indicate if the annotations should be loaded or not
+        `load_isl_ast`: bool
+            A flag to indicate if the isl ast should be loaded or not
+        `load_tree`: bool
+            A flag to indicate if the tree should be constructed or not
 
         Returns
         -------
@@ -118,14 +128,11 @@ class TiramisuProgram:
             An instance of the TiramisuProgram class
         """
         # Initiate an instante of the TiramisuProgram class
+
         tiramisu_prog = cls()
-        tiramisu_prog.file_path = file_path
+        with open(file_path, "r") as f:
+            tiramisu_prog.cpp_code = f.read()
         tiramisu_prog.load_code_lines()
-
-        # load the wrapper code
-        wrapper_cpp, wrapper_header = tiramisu_prog.construct_wrapper_code()
-
-        tiramisu_prog.wrappers = {"cpp": wrapper_cpp, "h": wrapper_header}
 
         if load_annotations:
             tiramisu_prog.annotations = json.loads(
@@ -158,8 +165,7 @@ class TiramisuProgram:
     @classmethod
     def init_server(
         cls,
-        original_code: str,
-        from_file: bool = False,
+        cpp_code: str,
         load_annotations=False,
         load_isl_ast=False,
         load_tree=False,
@@ -167,16 +173,8 @@ class TiramisuProgram:
     ):
         # Initiate an instante of the TiramisuProgram class
         tiramisu_prog = cls()
-        if from_file:
-            tiramisu_prog.file_path = original_code
-            tiramisu_prog.load_code_lines()
-        else:
-            tiramisu_prog.load_code_lines(original_code)
-        # load the wrapper code
-        wrapper_cpp, wrapper_header = tiramisu_prog.construct_wrapper_code()
-
-        tiramisu_prog.wrappers = {"cpp": wrapper_cpp, "h": wrapper_header}
-
+        tiramisu_prog.cpp_code = cpp_code
+        tiramisu_prog.load_code_lines()
         tiramisu_prog.server = FunctionServer(tiramisu_prog, reuse_server=reuse_server)
 
         if load_annotations:
@@ -205,77 +203,25 @@ class TiramisuProgram:
         # After taking the neccessary fields return the instance
         return tiramisu_prog
 
-    def load_code_lines(self, original_str: str | None = None):
+    def load_code_lines(self):
         """This function loads the file code , it is necessary to generate
         legality check code and annotations
         """
-        if original_str:
-            self.original_str = original_str
-        else:
-            with open(self.file_path, "r") as f:
-                self.original_str = f.read()
-
-        self.func_folder = (
-            "/".join(Path(self.file_path).parts[:-1])
-            if len(Path(self.file_path).parts) > 1
-            else "."
-        ) + "/"
-        self.body = re.findall(
-            r"int main\([\w\s,*]+\)\s*\{([\W\w\s]*)tiramisu::codegen",
-            self.original_str,
-        )[0]
-        self.name = re.findall(r"tiramisu::init\(\"(\w+)\"\);", self.original_str)[0]
+        self.name = re.findall(r"tiramisu::init\(\"(\w+)\"\);", self.cpp_code)[0]
         # Remove the wrapper include from the original string
         self.wrapper_str = f'#include "{self.name}_wrapper.h"'
-        self.original_str = self.original_str.replace(
+        self.cpp_code = self.cpp_code.replace(
             self.wrapper_str, f"// {self.wrapper_str}"
         )
-        self.comps = re.findall(r"computation (\w+)\(", self.original_str)
-        self.code_gen_line = re.findall(r"tiramisu::codegen\({.+;", self.original_str)[
-            0
-        ]
+        self.code_gen_line = re.findall(r"tiramisu::codegen\({.+;", self.cpp_code)[0]
         buffers_vect = re.findall(r"{(.+)}", self.code_gen_line)[0]
         self.IO_buffer_names = re.findall(r"\w+", buffers_vect)
         self.buffer_sizes = []
         for buf_name in self.IO_buffer_names:
-            sizes_vect = re.findall(
-                r"buffer " + buf_name + ".*{(.*)}", self.original_str
-            )[0]
+            sizes_vect = re.findall(r"buffer " + buf_name + ".*{(.*)}", self.cpp_code)[
+                0
+            ]
             self.buffer_sizes.append(re.findall(r"\d+", sizes_vect))
-        self.wrapper_is_compiled = False
-
-    def construct_wrapper_code(
-        self,
-    ):  # construct the wrapper.cpp and wrapper.h from the program
-        buffers_init_lines = ""
-        for i, buffer_name in enumerate(self.IO_buffer_names):
-            buffers_init_lines += f"""
-    double *c_{buffer_name} = (double*)malloc({"*".join(self.buffer_sizes[i][::-1])}* sizeof(double));
-    parallel_init_buffer(c_{buffer_name}, {"*".join(self.buffer_sizes[i][::-1])}, (double){str(random.randint(1, 10))});
-    Halide::Buffer<double> {buffer_name}(c_{buffer_name}, {",".join(self.buffer_sizes[i][::-1])});
-    """  # noqa: E501
-        if self.name is None:
-            raise Exception("TiramisuProgram.name is None")
-
-        wrapper_cpp_code = wrapper_cpp_template.replace("$func_name$", self.name)
-        wrapper_cpp_code = wrapper_cpp_code.replace(
-            "$buffers_init$", buffers_init_lines
-        )
-        wrapper_cpp_code = wrapper_cpp_code.replace(
-            "$func_folder_path$", self.func_folder
-        )
-        wrapper_cpp_code = wrapper_cpp_code.replace(
-            "$func_params$",
-            ",".join([name + ".raw_buffer()" for name in self.IO_buffer_names]),
-        )
-
-        wrapper_h_code = wrapper_h_template.replace("$func_name$", self.name)
-        wrapper_h_code = wrapper_h_code.replace(
-            "$func_params$",
-            ",".join(["halide_buffer_t *" + name for name in self.IO_buffer_names]),
-        )
-
-        return wrapper_cpp_code, wrapper_h_code
 
     def __str__(self) -> str:
         return f"TiramisuProgram(name={self.name})"
