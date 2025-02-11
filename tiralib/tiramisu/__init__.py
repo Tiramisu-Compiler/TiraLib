@@ -7,6 +7,7 @@ from .schedule import Schedule
 from .tiramisu_iterator_node import IteratorIdentifier, IteratorNode
 from .tiramisu_program import TiramisuProgram
 from .tiramisu_tree import TiramisuTree
+from .function_server import FunctionServer
 
 __all__ = [
     "CompilingService",
@@ -16,4 +17,5 @@ __all__ = [
     "IteratorNode",
     "tiramisu_actions",
     "IteratorIdentifier",
+    "FunctionServer",
 ]

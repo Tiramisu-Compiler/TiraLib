@@ -170,7 +170,7 @@ class TiramisuProgram:
         load_isl_ast=False,
         load_tree=False,
         reuse_server=False,
-    ):
+    ) -> "TiramisuProgram":
         # Initiate an instante of the TiramisuProgram class
         tiramisu_prog = cls()
         tiramisu_prog.cpp_code = cpp_code
