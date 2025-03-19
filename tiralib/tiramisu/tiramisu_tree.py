@@ -183,7 +183,8 @@ class TiramisuTree:
                 else:
                     upper_bound = loop_condition
                 try:
-                    upper_bound = int(upper_bound)
+                    # isl has <= so we add 1 to the upper bound
+                    upper_bound = int(upper_bound) + 1
                 except ValueError:
                     # Upper bound is not an integer so we keep it string
                     pass
@@ -428,3 +429,48 @@ class TiramisuTree:
     @property
     def depth(self) -> int:
         return max([iterator.level for iterator in self.iterators.values()]) + 1
+
+    def get_isl_ast_string(self) -> str:
+        representation = ""
+        for root in self.roots:
+            representation += self._get_isl_ast_string_of_node(root)
+        return representation
+
+    def _get_isl_ast_string_of_node(self, node_id: IteratorIdentifier) -> str:
+        representation = ""
+        iterator = self.iterators[node_id]
+        upper_bound_str = (
+            f"{iterator.name} <= {iterator.upper_bound - 1}"
+            if isinstance(iterator.upper_bound, int)
+            else iterator.upper_bound
+        )
+        representation += (
+            f"{iterator.name}|iterator|{iterator.lower_bound}|{upper_bound_str}|1\n"
+        )
+        comps_and_iterators = [
+            (comp, "comp") for comp in self.iterators[node_id].computations_list
+        ]
+        comps_and_iterators += [
+            (iterator, "iterator")
+            for iterator in self.iterators[node_id].child_iterators
+        ]
+
+        # sort them by computations_absolute_order
+        comps_and_iterators = sorted(
+            comps_and_iterators,
+            key=lambda item: (
+                self.computations_absolute_order[item[0]]
+                if item[1] == "comp"
+                else self.computations_absolute_order[item[0][0]]
+            ),
+        )
+
+        for comp_or_iterator, type in comps_and_iterators:
+            if type == "comp":
+                representation += (
+                    f"{iterator.level + 1}|computation|{comp_or_iterator}\n"
+                )
+
+            else:
+                representation += self._get_isl_ast_string_of_node(comp_or_iterator)
+        return representation
