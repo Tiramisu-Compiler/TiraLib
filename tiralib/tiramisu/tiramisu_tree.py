@@ -440,7 +440,7 @@ class TiramisuTree:
         representation = ""
         iterator = self.iterators[node_id]
         upper_bound_str = (
-            f"{iterator.name} <= {iterator.upper_bound-1}"
+            f"{iterator.name} <= {iterator.upper_bound - 1}"
             if isinstance(iterator.upper_bound, int)
             else iterator.upper_bound
         )
@@ -467,7 +467,9 @@ class TiramisuTree:
 
         for comp_or_iterator, type in comps_and_iterators:
             if type == "comp":
-                representation += f"{iterator.level+1}|computation|{comp_or_iterator}\n"
+                representation += (
+                    f"{iterator.level + 1}|computation|{comp_or_iterator}\n"
+                )
 
             else:
                 representation += self._get_isl_ast_string_of_node(comp_or_iterator)
