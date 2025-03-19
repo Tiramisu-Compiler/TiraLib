@@ -439,7 +439,14 @@ class TiramisuTree:
     def _get_isl_ast_string_of_node(self, node_id: IteratorIdentifier) -> str:
         representation = ""
         iterator = self.iterators[node_id]
-        representation += f"{iterator.name}|iterator|{iterator.lower_bound}|{iterator.name} <= {iterator.upper_bound}|1\n"
+        upper_bound_str = (
+            f"{iterator.name} <= {iterator.upper_bound-1}"
+            if isinstance(iterator.upper_bound, int)
+            else iterator.upper_bound
+        )
+        representation += (
+            f"{iterator.name}|iterator|{iterator.lower_bound}|{upper_bound_str}|1\n"
+        )
         comps_and_iterators = [
             (comp, "comp") for comp in self.iterators[node_id].computations_list
         ]
