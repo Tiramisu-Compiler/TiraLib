@@ -13,6 +13,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
+class ServerExecutionFailedError(Exception):
+    """Exception raised when the server execution fails."""
+
+
 templateWithEverythinginUtils = """
 #include <tiramisu/tiramisu.h>
 #include <TiraLibCPP/actions.h>
@@ -70,10 +75,10 @@ class ResultInterface:
             decoded = match.group(2)
         result_dict = json.loads(decoded)
 
-        self.name = result_dict["name"]
-        self.legality = result_dict["legality"] == 1
-        self.isl_ast = result_dict["isl_ast"]
-        self.success = result_dict["success"]
+        self.name: str = result_dict["name"]
+        self.legality: bool = result_dict["legality"] == 1
+        self.isl_ast: str = result_dict["isl_ast"]
+        self.success: bool = bool(result_dict["success"])
 
         # convert exec_times to list of floats
         self.exec_times = (
