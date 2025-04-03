@@ -130,7 +130,9 @@ class Schedule:
                 raise Exception("Schedule is not legal")
 
             if not result.success:
-                raise ServerExecutionFailedError()
+                raise ServerExecutionFailedError(
+                    "Server execution failed during the execution operation."
+                )
 
             return result.exec_times
 
