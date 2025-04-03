@@ -6,6 +6,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, List
 
 from tiralib.tiramisu.compiling_service import CompilingService
+from tiralib.tiramisu.function_server import ServerExecutionFailedError
 from tiralib.tiramisu.tiramisu_actions.tiramisu_action import TiramisuActionType
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
@@ -127,6 +128,9 @@ class Schedule:
             )
             if result.legality is False:
                 raise Exception("Schedule is not legal")
+
+            if not result.success:
+                raise ServerExecutionFailedError()
 
             return result.exec_times
 
