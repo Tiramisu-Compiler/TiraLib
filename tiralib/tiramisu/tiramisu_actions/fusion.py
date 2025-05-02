@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import Dict, List, Tuple
 
 from tiralib.tiramisu.tiramisu_iterator_node import (
     IteratorIdentifier,
@@ -21,7 +20,7 @@ class Fusion(TiramisuAction):
     Fusion optimization command.
     """
 
-    def __init__(self, params: List[IteratorIdentifier]):
+    def __init__(self, params: list[IteratorIdentifier]):
         # Fusion takes 2 parameters the iterators to be fused
         assert len(params) == 2
         assert isinstance(params[0], tuple) and isinstance(params[1], tuple)
@@ -29,18 +28,18 @@ class Fusion(TiramisuAction):
         assert params[0][1] == params[1][1]
 
         self.params = params
-        self.comps: List[str] | None = None
+        self.comps: list[str] = []
         self.main_fusion_level = params[0][1]
 
-        super().__init__(type=TiramisuActionType.FUSION, params=params, comps=None)
+        super().__init__(type=TiramisuActionType.FUSION, params=params, comps=[])
 
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
         self.tree = copy.deepcopy(tiramisu_tree)
 
         self.comps = []
-        self.iterators: List[IteratorNode] = []
-        self.itertors_computations: List[List[str]] = []
+        self.iterators: list[IteratorNode] = []
+        self.itertors_computations: list[list[str]] = []
         for iterator_id in self.params:
             if iterator_id not in tiramisu_tree.iterators:
                 iterator_id = self.tree.get_iterator_of_computation(*iterator_id).id
@@ -108,9 +107,11 @@ perform_full_dependency_analysis();
         )
 
     @classmethod
-    def get_candidates(cls, program_tree: TiramisuTree) -> List[Tuple[str, str]]:
+    def get_candidates(
+        cls, program_tree: TiramisuTree
+    ) -> list[tuple[IteratorIdentifier, IteratorIdentifier]]:
         # We will try to fuse all possible nodes that have the same level
-        candidates: List[Tuple[str, str]] = []
+        candidates: list[tuple[IteratorIdentifier, IteratorIdentifier]] = []
 
         #  Check if roots are fusionable
         if len(program_tree.roots) > 1:
@@ -131,7 +132,7 @@ perform_full_dependency_analysis();
             ]
 
             # filter the iterators that have the same root into dict
-            iterators_dict: Dict[str, List[str]] = {}
+            iterators_dict: dict[IteratorIdentifier, list[IteratorIdentifier]] = {}
             for root in program_tree.roots:
                 iterators_dict[root] = []
             for iterator in iterators:
@@ -197,7 +198,7 @@ perform_full_dependency_analysis();
         computations = tiramisu_tree.computations
         computations.sort(key=lambda x: new_absolute_order[x])
 
-        fusion_levels: List[int] = []
+        fusion_levels: list[int] = []
         # for every pair of successive computations
         # get the shared iterator level
         for comp1, comp2 in itertools.pairwise(computations):

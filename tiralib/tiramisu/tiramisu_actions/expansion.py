@@ -28,7 +28,7 @@ class Expansion(TiramisuAction):
         assert isinstance(params[0], str)
         self.computation = params[0]
 
-        super().__init__(type=TiramisuActionType.EXPANSION, params=params, comps=None)
+        super().__init__(type=TiramisuActionType.EXPANSION, params=params, comps=[])
 
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
@@ -47,8 +47,11 @@ class Expansion(TiramisuAction):
         self.legality_check_string = self.tiramisu_optim_str
 
     @classmethod
-    def get_candidates(cls, schedule: Schedule) -> List[str]:
-        candidates = []
+    def get_computation_candidates(cls, schedule: Schedule) -> List[str]:
+        assert schedule.tree, "Tree is not initialized"
+        assert BaseConfig.base_config, "BaseConfig is not initialized"
+
+        candidates: list[str] = []
         candidates_code = ""
 
         for optim in schedule.optims_list:

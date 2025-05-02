@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import Dict, List, Tuple
+from typing import List
 
 from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
@@ -21,7 +21,7 @@ class Tiling2D(TiramisuAction):
     def __init__(
         self,
         params: List[IteratorIdentifier | int],
-        comps: List[str] | None = None,
+        comps: List[str] = [],
     ):
         # 2D Tiling takes four parameters:
         # 1. The first iterator to tile
@@ -54,7 +54,7 @@ class Tiling2D(TiramisuAction):
                     *iterator
                 ).id
 
-        if self.comps is None:
+        if not self.comps:
             outermost_iterator_id = (
                 self.iterators[0]
                 if self.iterators[0][1] < self.iterators[1][1]
@@ -76,11 +76,12 @@ class Tiling2D(TiramisuAction):
         self.set_string_representations(self.tree)
 
     def set_string_representations(self, tiramisu_tree: TiramisuTree):
-        assert self.comps is not None
+        assert self.comps, "Computation list is empty"
         assert self.iterators is not None
         assert self.tile_sizes is not None
 
         all_comps = tiramisu_tree.computations
+        fusion_levels: list[int] = []
         if len(all_comps) > 1:
             all_comps.sort(
                 key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
@@ -111,8 +112,10 @@ class Tiling2D(TiramisuAction):
     @classmethod
     def get_candidates(
         cls, program_tree: TiramisuTree
-    ) -> Dict[str, List[Tuple[str, str]]]:
-        candidates: Dict[str, List[Tuple[str, str]]] = {}
+    ) -> dict[IteratorIdentifier, list[tuple[IteratorIdentifier, IteratorIdentifier]]]:
+        candidates: dict[
+            IteratorIdentifier, list[tuple[IteratorIdentifier, IteratorIdentifier]]
+        ] = {}
 
         candidate_sections = program_tree.get_candidate_sections()
 

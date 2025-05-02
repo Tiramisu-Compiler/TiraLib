@@ -8,7 +8,7 @@ def test_tiling_general_init():
     tiling_general = TilingGeneral([("comp00", 0), ("comp00", 1), 32, 32])
     assert tiling_general.iterators == [("comp00", 0), ("comp00", 1)]
     assert tiling_general.tile_sizes == [32, 32]
-    assert tiling_general.comps is None
+    assert tiling_general.comps == []
 
     tiling_general = TilingGeneral([("comp00", 0), ("comp00", 1), 32, 32], ["comp00"])
     assert tiling_general.iterators == [("comp00", 0), ("comp00", 1)]

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List  # ,TYPE_CHECKING
+from typing import Any, List  # ,TYPE_CHECKING
 
+from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 
@@ -45,8 +46,13 @@ class TiramisuAction:
     def __init__(
         self,
         type: TiramisuActionType,
-        params: list | dict,
-        comps: List[str] | List[List[str]],
+        params: list[str | int]
+        | list[str]
+        | dict[str, Any]
+        | list[IteratorIdentifier | int]
+        | list[IteratorIdentifier]
+        | list[int],
+        comps: list[str] | list[list[str]],
     ):
         self.params = params
         # A list of concerned computations of the actions
@@ -54,17 +60,17 @@ class TiramisuAction:
         # The type of the action
         self.type = type
         # The tiramisu code that represents the action
-        self.tiramisu_optim_str = ""
+        self.tiramisu_optim_str: str = ""
         # The str representation of the action
-        self.str_representation = ""
+        self.str_representation: str = ""
         # The legality string of the action
-        self.legality_check_string = ""
+        self.legality_check_string: str = ""
 
-    def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
+    def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree) -> None:
         """Initialize the optimization command for the Tiramisu program."""
         raise NotImplementedError
 
-    def set_string_representations(self, tiramisu_tree: TiramisuTree) -> str:
+    def set_string_representations(self, tiramisu_tree: TiramisuTree) -> None:
         """Convert the optimization command into Tiramisu code.
         Returns:
             str: The tiramisu snippet that represents the optimization command.
@@ -108,7 +114,13 @@ class TiramisuAction:
         return self.type == TiramisuActionType.MATRIX_TRANSFORM
 
     @classmethod
-    def get_candidates(cls, program_tree: TiramisuTree) -> list:
+    def get_candidates(cls, program_tree: TiramisuTree) -> Any:
+        """Get the candidates for the optimization command.
+        Args:
+            program_tree (TiramisuTree): The Tiramisu program tree.
+        Returns:
+            list[IteratorIdentifier]: The candidates for the optimization command.
+        """
         raise NotImplementedError
 
     @classmethod

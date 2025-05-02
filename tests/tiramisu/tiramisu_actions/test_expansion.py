@@ -15,7 +15,7 @@ def test_initialize_action_for_tree():
     expansion = Expansion(["addition"])
     expansion.initialize_action_for_tree(sample.tree)
     assert expansion.computation == "addition"
-    assert expansion.tree is not None
+    assert expansion.tree, "Tree should not be None"
 
 
 def test_set_string_representation():
@@ -30,7 +30,7 @@ def test_get_candidates():
     BaseConfig.init()
     sample = test_utils.expansion_sample()
     schedule = Schedule(sample)
-    candidates = Expansion.get_candidates(schedule)
+    candidates = Expansion.get_computation_candidates(schedule)
     assert candidates == ["addition"]
 
 

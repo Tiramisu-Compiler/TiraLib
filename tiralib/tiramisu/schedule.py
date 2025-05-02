@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, List
 
 from tiralib.tiramisu.compiling_service import CompilingService
 from tiralib.tiramisu.function_server import ServerExecutionFailedError
-from tiralib.tiramisu.tiramisu_actions.tiramisu_action import TiramisuActionType
+from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 if TYPE_CHECKING:
@@ -29,7 +29,7 @@ class Schedule:
         The list of optimizations to be applied to the Tiramisu program.
     """
 
-    def __init__(self, tiramisu_program: TiramisuProgram | None = None) -> None:
+    def __init__(self, tiramisu_program: TiramisuProgram) -> None:
         self.tiramisu_program = tiramisu_program
         self.optims_list: List[TiramisuAction] = []
         if tiramisu_program:
@@ -117,8 +117,6 @@ class Schedule:
         -------
         The execution time of the Tiramisu program after applying the schedule.
         """
-        if self.tiramisu_program is None:
-            raise Exception("No Tiramisu program to apply the schedule to")
 
         if self.tiramisu_program.server:
             result = self.tiramisu_program.server.run(
@@ -159,10 +157,6 @@ class Schedule:
         -------
         Boolean indicating if the schedule is legal.
         """
-
-        if self.tiramisu_program is None:
-            raise Exception("No Tiramisu program to apply the schedule to")
-
         if self.tiramisu_program.server:
             result = self.tiramisu_program.server.run("legality", self)
             self.tree = TiramisuTree.from_isl_ast_string_list(
@@ -174,7 +168,7 @@ class Schedule:
             if result.additional_info:
                 if "skewing_factors" in result.additional_info:
                     for action in self.optims_list:
-                        if action.type == TiramisuActionType.SKEWING:
+                        if isinstance(action, tiramisu_actions.Skewing):
                             if action.params[2] == 0:
                                 factors = result.additional_info.replace(
                                     "skewing_factors:", ""
@@ -199,9 +193,6 @@ class Schedule:
         """
         Updates the schedule tree from the isl ast.
         """
-        if self.tiramisu_program is None:
-            raise Exception("No Tiramisu program to apply the schedule to")
-
         if self.tiramisu_program.server:
             result = self.tiramisu_program.server.run("legality", self)
             self.tree = TiramisuTree.from_isl_ast_string_list(
@@ -386,7 +377,9 @@ class Schedule:
                     loop_level = int(match.group(1))
                     comps = match.group(2).split(",")
                     comps = [comp.strip("' ").strip() for comp in comps]
-                    distribution = ast.literal_eval(match.group(3))
+                    distribution: list[list[IteratorIdentifier | str]] = (
+                        ast.literal_eval(match.group(3))
+                    )
                     assert isinstance(distribution, list)
                     schedule.add_optimizations(
                         [

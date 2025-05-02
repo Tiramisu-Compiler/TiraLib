@@ -9,7 +9,7 @@ def test_interchange_init():
     BaseConfig.init()
     interchange = Interchange([("comp00", 0), ("comp00", 1)])
     assert interchange.params == [("comp00", 0), ("comp00", 1)]
-    assert interchange.comps is None
+    assert interchange.comps == []
 
     interchange = Interchange([("comp00", 0), ("comp00", 1)], ["comp00"])
     assert interchange.params == [("comp00", 0), ("comp00", 1)]

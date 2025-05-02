@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import Dict, List, Tuple
 
 from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
@@ -18,9 +17,7 @@ class Interchange(TiramisuAction):
     Interchange optimization command.
     """
 
-    def __init__(
-        self, params: List[IteratorIdentifier], comps: List[str] | None = None
-    ):
+    def __init__(self, params: list[IteratorIdentifier], comps: list[str] = []):
         # Interchange takes 2 iterators to interchange as parameters
         assert len(params) == 2
 
@@ -36,7 +33,7 @@ class Interchange(TiramisuAction):
         self.tree = copy.deepcopy(tiramisu_tree)
 
         # if comps are none get them from the tree
-        if self.comps is None:
+        if not self.comps:
             innermost_iterator_id = (
                 self.params[1]
                 if self.params[1][1] > self.params[0][1]
@@ -67,8 +64,10 @@ class Interchange(TiramisuAction):
     @classmethod
     def get_candidates(
         cls, program_tree: TiramisuTree
-    ) -> Dict[str, List[Tuple[str, str]]]:
-        candidates: Dict[str, List[Tuple[str, str]]] = {}
+    ) -> dict[IteratorIdentifier, list[tuple[IteratorIdentifier, IteratorIdentifier]]]:
+        candidates: dict[
+            IteratorIdentifier, list[tuple[IteratorIdentifier, IteratorIdentifier]]
+        ] = {}
 
         candidate_sections = program_tree.get_candidate_sections()
 

@@ -8,7 +8,7 @@ def test_distribution_init():
     distribution = Distribution([("comp05", 1)])
 
     assert distribution.iterator_id == ("comp05", 1)
-    assert distribution.children is None
+    assert distribution.children == []
 
     distribution = Distribution(
         [("comp05", 1)], [["comp05"], ["comp06"], ["comp07"], [("comp03", 2)]]
@@ -36,6 +36,7 @@ def test_initialize_action_for_tree():
         ["comp07"],
         ["comp03", "comp04"],
     ]
+    assert distribution.children, "Children should not be None"
     assert len(distribution.children) == len(expected_children)
     for child_list in distribution.children:
         assert child_list in expected_children

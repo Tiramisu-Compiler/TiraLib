@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import Dict, List, Tuple
 
 from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
@@ -21,8 +20,8 @@ class Tiling3D(TiramisuAction):
 
     def __init__(
         self,
-        params: List[IteratorIdentifier | int],
-        comps: List[str] | None = None,
+        params: list[IteratorIdentifier | int],
+        comps: list[str] = [],
     ):
         # 3D Tiling takes six parameters divided into three tuples:
         # 1. The first iterator to tile
@@ -61,7 +60,7 @@ class Tiling3D(TiramisuAction):
                     *iterator
                 ).id
 
-        if self.comps is None:
+        if not self.comps:
             outermost_iterator_id = self.iterators[0]
             for iterator in self.iterators[1:]:
                 if iterator[1] < outermost_iterator_id[1]:
@@ -87,7 +86,7 @@ class Tiling3D(TiramisuAction):
         assert self.comps is not None
 
         all_comps = tiramisu_tree.computations
-
+        fusion_levels: list[int] = []
         if len(all_comps) > 1:
             all_comps.sort(
                 key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
@@ -119,8 +118,14 @@ class Tiling3D(TiramisuAction):
     @classmethod
     def get_candidates(
         cls, program_tree: TiramisuTree
-    ) -> Dict[str, List[Tuple[str, str, str]]]:
-        candidates: Dict[str, List[Tuple[str, str, str]]] = {}
+    ) -> dict[
+        IteratorIdentifier,
+        list[tuple[IteratorIdentifier, IteratorIdentifier, IteratorIdentifier]],
+    ]:
+        candidates: dict[
+            IteratorIdentifier,
+            list[tuple[IteratorIdentifier, IteratorIdentifier, IteratorIdentifier]],
+        ] = {}
 
         candidate_sections = program_tree.get_candidate_sections()
 
@@ -144,10 +149,10 @@ class Tiling3D(TiramisuAction):
 
     def get_fusion_levels(
         self,
-        ordered_computations: List[str],
+        ordered_computations: list[str],
         tiramisu_tree: TiramisuTree,
     ):
-        fusion_levels: List[int] = []
+        fusion_levels: list[int] = []
         # for every pair of successive computations
         # get the shared iterator level
         for comp1, comp2 in itertools.pairwise(ordered_computations):

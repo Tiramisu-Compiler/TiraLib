@@ -4,7 +4,7 @@ import logging
 import os
 import re
 import subprocess
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Literal
 
 from tiralib.config import BaseConfig
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
@@ -189,7 +189,7 @@ class CompilingService:
         return cls.run_cpp_code(cpp_code=cpp_code, output_path=output_path)
 
     @classmethod
-    def run_cpp_code(cls, cpp_code: str, output_path: str):
+    def run_cpp_code(cls, cpp_code: str, output_path: str) -> str:
         """Compile and run the generated code.
 
         Args:
@@ -468,7 +468,7 @@ class CompilingService:
 
         env_vars = CompilingService.get_env_vars()
 
-        results = []
+        results: list[float] = []
         shell_script = [
             # Compile intermidiate tiramisu file
             f"cd {BaseConfig.base_config.workspace}",
@@ -603,7 +603,7 @@ class CompilingService:
     def get_n_runs_script(
         cls,
         tiramisu_program: TiramisuProgram,
-        nb_exec: int = 1,
+        nb_exec: int | Literal["inf"] = 1,
         timeout: float | None = None,
     ):
         """Get the script to run the program n times."""
@@ -626,6 +626,7 @@ class CompilingService:
     @classmethod
     def delete_temporary_files(cls, tiramisu_program: TiramisuProgram):
         """Delete files temporary and intermediate files"""
+        assert BaseConfig.base_config, "BaseConfig not initialized"
         subprocess.run(
             [
                 # cd to the workspace and clean generated files

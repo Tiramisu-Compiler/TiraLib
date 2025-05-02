@@ -8,7 +8,7 @@ def test_reversal_init():
     reversal = Unrolling([("comp00", 0), 4])
     assert reversal.iterator_id == ("comp00", 0)
     assert reversal.unrolling_factor == 4
-    assert reversal.comps is None
+    assert reversal.comps == []
 
     reversal = Unrolling([("comp00", 0), 4], ["comp00"])
     assert reversal.iterator_id == ("comp00", 0)

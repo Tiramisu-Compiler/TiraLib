@@ -84,7 +84,7 @@ def test_get_exec_times():
 def test_get_skewing_factors():
     BaseConfig.init()
 
-    test_data, test_cpps = test_utils.load_test_data()
+    _, test_cpps = test_utils.load_test_data()
 
     tiramisu_func = TiramisuProgram.init_server(
         cpp_code=test_cpps["function550013"],
@@ -100,5 +100,5 @@ def test_get_skewing_factors():
     )
 
     assert schedule.is_legal()
-
+    assert isinstance(schedule.optims_list[0], tiramisu_actions.Skewing)
     assert schedule.optims_list[0].factors == [1, 1]

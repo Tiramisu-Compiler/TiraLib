@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 import itertools
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import TYPE_CHECKING, List, Tuple
 
 from tiralib.tiramisu.compiling_service import CompilingService
 from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
@@ -25,24 +25,29 @@ class Skewing(TiramisuAction):
     def __init__(
         self,
         params: List[IteratorIdentifier | int],
-        comps: List[str] | None = None,
+        comps: List[str] = [],
     ):
         # Skewing takes four parameters of the form L1, L2, F3, F4
         # 1. L1 and L2 are the levels of the iterators to skew
         # 2. F3 and F4 are the factors of the skewing
 
         assert len(params) == 4
-        self.params = params
-        self.comps = comps
-
-        self.iterators: list[IteratorIdentifier] = params[:2]
-        self.factors: list[int] = params[2:]
-
         super().__init__(
             type=TiramisuActionType.SKEWING,
             params=params,
             comps=comps,
         )
+        self.params = params
+        self.comps = comps
+        assert isinstance(params[0], tuple) and isinstance(params[1], tuple), (
+            "The first two parameters must be tuples"
+        )
+        assert isinstance(params[2], int) and isinstance(params[3], int), (
+            "The last two parameters must be integers"
+        )
+
+        self.iterators: list[IteratorIdentifier] = params[:2]  # type: ignore
+        self.factors: list[int] = params[2:]  # type: ignore
 
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
@@ -53,7 +58,7 @@ class Skewing(TiramisuAction):
                     *iterator
                 ).id
 
-        if self.comps is None:
+        if not self.comps:
             outermost_iterator_id = self.iterators[0]
             outermost_iterator = self.tree.iterators[outermost_iterator_id]
 
@@ -88,8 +93,10 @@ class Skewing(TiramisuAction):
     @classmethod
     def get_candidates(
         cls, program_tree: TiramisuTree
-    ) -> Dict[str, List[Tuple[str, str]]]:
-        candidates: Dict[str, List[Tuple[str, str]]] = {}
+    ) -> dict[IteratorIdentifier, list[Tuple[IteratorIdentifier, IteratorIdentifier]]]:
+        candidates: dict[
+            IteratorIdentifier, list[Tuple[IteratorIdentifier, IteratorIdentifier]]
+        ] = {}
 
         candidate_sections = program_tree.get_candidate_sections()
 
@@ -116,7 +123,18 @@ class Skewing(TiramisuAction):
         schedule: Schedule,
         loop_levels: List[int],
         comps_skewed_loops: List[str],
-    ) -> Tuple[int, int]:
+    ) -> Tuple[int, int] | None:
+        """
+        Get the factors of the skewing optimization.
+        This function calls the CompilingService to get the factors
+        of the skewing optimization.
+        Args:
+            schedule (Schedule): The schedule of the program.
+            loop_levels (List[int]): The levels of the loops to skew.
+            comps_skewed_loops (List[str]): The computations of the loops to skew.
+        Returns:
+            Tuple[int, int] | None: The factors of the skewing optimization.
+        """
         factors = CompilingService.call_skewing_solver(
             schedule, loop_levels, comps_skewed_loops
         )
