@@ -114,11 +114,11 @@ class FunctionServer:
 
         server_path_cpp = (
             Path(BaseConfig.base_config.workspace)
-            / f"{tiramisu_program.name}_server.cpp"
+            / f"{tiramisu_program.temp_files_identifier}_server.cpp"
         )
 
         server_path = (
-            Path(BaseConfig.base_config.workspace) / f"{tiramisu_program.name}_server"
+            Path(BaseConfig.base_config.workspace) / f"{tiramisu_program.temp_files_identifier}_server"
         )
 
         if reuse_server and server_path.exists():
@@ -136,14 +136,14 @@ class FunctionServer:
         # Write the wrapper code to a file
         wrapper_path = (
             Path(BaseConfig.base_config.workspace)
-            / f"{tiramisu_program.name}_wrapper.cpp"
+            / f"{tiramisu_program.temp_files_identifier}_wrapper.cpp"
         )
         wrapper_path.write_text(tiramisu_program.wrappers["cpp"])
 
         # Write the wrapper header to a file
         wrapper_header_path = (
             Path(BaseConfig.base_config.workspace)
-            / f"{tiramisu_program.name}_wrapper.h"
+            / f"{tiramisu_program.temp_files_identifier}_wrapper.h"
         )
 
         wrapper_header_path.write_text(tiramisu_program.wrappers["h"])
@@ -155,7 +155,7 @@ class FunctionServer:
     def _generate_server_code_from_program(cls, tiramisu_program: "TiramisuProgram"):
         # fill the template
         function_str = templateWithEverythinginUtils.format(
-            name = tiramisu_program.name,
+            name = tiramisu_program.temp_files_identifier,
             body = tiramisu_program.body,
             buffers = '{&' + ', &'.join(tiramisu_program.IO_buffer_names) + '}',
         )
@@ -182,7 +182,7 @@ class FunctionServer:
 
         libs = ":".join(BaseConfig.base_config.dependencies.libs)
 
-        compile_command = f"cd {BaseConfig.base_config.workspace} && {env_vars} && export FUNC_NAME={self.tiramisu_program.name} && $CXX -fvisibility-inlines-hidden -ftree-vectorize  -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -ldl -g -fno-rtti -lpthread -std=c++17 -MD -MT ${{FUNC_NAME}}.cpp.o -MF ${{FUNC_NAME}}.cpp.o.d -o ${{FUNC_NAME}}.cpp.o -c ${{FUNC_NAME}}_server.cpp && $CXX -fvisibility-inlines-hidden -ftree-vectorize  -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -ldl -g -fno-rtti -lpthread ${{FUNC_NAME}}.cpp.o -o ${{FUNC_NAME}}_server -ltiramisu -ltiramisu_auto_scheduler -lHalide -lisl -lTiraLibCPP {'-lsqlite3' if BaseConfig.base_config.tiralib_cpp.use_sqlite else ''} -lz"  # noqa: E501
+        compile_command = f"cd {BaseConfig.base_config.workspace} && {env_vars} && export FUNC_NAME={self.tiramisu_program.temp_files_identifier} && $CXX -fvisibility-inlines-hidden -ftree-vectorize  -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -ldl -g -fno-rtti -lpthread -std=c++17 -MD -MT ${{FUNC_NAME}}.cpp.o -MF ${{FUNC_NAME}}.cpp.o.d -o ${{FUNC_NAME}}.cpp.o -c ${{FUNC_NAME}}_server.cpp && $CXX -fvisibility-inlines-hidden -ftree-vectorize  -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -ldl -g -fno-rtti -lpthread ${{FUNC_NAME}}.cpp.o -o ${{FUNC_NAME}}_server -ltiramisu -ltiramisu_auto_scheduler -lHalide -lisl -lTiraLibCPP {'-lsqlite3' if BaseConfig.base_config.tiralib_cpp.use_sqlite else ''} -lz"  # noqa: E501
 
         # run the command and retrieve the execution status
         try:
@@ -223,7 +223,7 @@ class FunctionServer:
             f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
         )
 
-        command = f'{env_vars} && cd {BaseConfig.base_config.workspace} && NB_EXEC={nbr_executions} ./{self.tiramisu_program.name}_server {operation} "{schedule or ""}"'  # noqa: E501
+        command = f'{env_vars} && cd {BaseConfig.base_config.workspace} && NB_EXEC={nbr_executions} ./{self.tiramisu_program.temp_files_identifier}_server {operation} "{schedule or ""}"'  # noqa: E501
 
         # run the command and retrieve the execution status
         try:
@@ -252,7 +252,7 @@ class FunctionServer:
             f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
         )
 
-        command = f"{env_vars} && cd {BaseConfig.base_config.workspace} && ./{self.tiramisu_program.name}_server annotations"  # noqa: E501
+        command = f"{env_vars} && cd {BaseConfig.base_config.workspace} && ./{self.tiramisu_program.temp_files_identifier}_server annotations"  # noqa: E501
 
         # run the command and retrieve the execution status
         try:
