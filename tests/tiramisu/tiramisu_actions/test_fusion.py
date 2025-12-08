@@ -9,7 +9,7 @@ def test_fusion_init():
     fusion = Fusion([("comp03", 3), ("comp04", 3)])
 
     assert fusion.params == [("comp03", 3), ("comp04", 3)]
-    assert fusion.comps is None
+    assert fusion.comps == []
 
 
 def test_initialize_action_for_tree():

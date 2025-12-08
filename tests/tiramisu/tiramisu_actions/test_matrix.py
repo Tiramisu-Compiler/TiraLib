@@ -20,7 +20,7 @@ def test_initialize_action_for_tree():
     matrix.initialize_action_for_tree(sample.tree)
     assert matrix.params == [1, 0, 0, 0, 0, 1, 0, 1, 0]
     assert matrix.comps == ["comp00"]
-    matrix.tree is not None
+    assert matrix.tree is not None
 
 
 def test_set_string_representations():
@@ -62,6 +62,7 @@ def test_matrix_transform_application():
     matrix_schedule.add_optimizations(
         [MatrixTransform([1, 0, 0, 0, 0, 1, 0, 1, 0], ["comp00"])],
     )
+    assert sample.server, "Server should not be None"
 
     matrix_result = sample.server.run("execution", matrix_schedule, 1)
 

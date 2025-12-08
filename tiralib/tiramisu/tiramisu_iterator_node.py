@@ -13,7 +13,7 @@ class IteratorNode:
         child_iterators: list[IteratorIdentifier],
         computations_list: list[str],
         level: int,
-        id: IteratorIdentifier = None,
+        id: IteratorIdentifier,
     ):
         self.name = name
         self.id: IteratorIdentifier = id
@@ -24,7 +24,7 @@ class IteratorNode:
         self.computations_list = computations_list
         self.level = level
 
-    def add_child(self, child: str) -> None:
+    def add_child(self, child: IteratorIdentifier) -> None:
         self.child_iterators.append(child)
 
     def add_computation(self, comp: str) -> None:
@@ -40,23 +40,6 @@ class IteratorNode:
 
     def has_integer_bounds(self) -> bool:
         return isinstance(self.lower_bound, int) and isinstance(self.upper_bound, int)
-
-    def clone(self, suffix: str | None) -> "IteratorNode":
-        if suffix is None:
-            suffix = ""
-
-        return IteratorNode(
-            name=self.name + suffix,
-            id=self.id,
-            parent_iterator=(
-                self.parent_iterator + suffix if self.parent_iterator else None
-            ),
-            lower_bound=self.lower_bound,
-            upper_bound=self.upper_bound,
-            child_iterators=[child + suffix for child in self.child_iterators],
-            computations_list=[comp + suffix for comp in self.computations_list],
-            level=self.level,
-        )
 
     def __str__(self) -> str:
         return f"{self.name}(id={self.id}, lower_bound={self.lower_bound}, upper_bound={self.upper_bound}, child_iterators={self.child_iterators}, computations_list={self.computations_list}, level={self.level})"  # noqa: E501

@@ -9,7 +9,7 @@ def test_tiling_2d_init():
     tiling_2d = Tiling2D([("comp00", 0), ("comp00", 1), 32, 32])
     assert tiling_2d.iterators == [("comp00", 0), ("comp00", 1)]
     assert tiling_2d.tile_sizes == [32, 32]
-    assert tiling_2d.comps is None
+    assert tiling_2d.comps == []
 
     tiling_2d = Tiling2D([("comp00", 0), ("comp00", 1), 32, 32], ["comp00"])
     assert tiling_2d.iterators == [("comp00", 0), ("comp00", 1)]

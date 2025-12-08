@@ -1,7 +1,7 @@
 import json
 import random
 import re
-from typing import Dict
+from typing import Any
 
 from tiralib.tiramisu.compiling_service import CompilingService
 from tiralib.tiramisu.function_server import FunctionServer
@@ -40,7 +40,7 @@ class TiramisuProgram:
         self.tree: TiramisuTree
         self.IO_buffer_names: list[str]
         self.buffer_sizes: list[list[str]]
-        self.annotations: Dict | None = None
+        self.annotations: dict[str, Any] | None = None
         self.isl_ast_string: str | None = None
         self.wrapper_obj: bytes | None = None
         self.server: FunctionServer | None = None
@@ -54,8 +54,6 @@ class TiramisuProgram:
     parallel_init_buffer(c_{buffer_name}, {"*".join(self.buffer_sizes[i][::-1])}, (double){str(random.randint(1, 10))});
     Halide::Buffer<double> {buffer_name}(c_{buffer_name}, {",".join(self.buffer_sizes[i][::-1])});
     """  # noqa: E501
-        if self.name is None:
-            raise Exception("TiramisuProgram.name is None")
 
         wrapper_cpp_code = wrapper_cpp_template.replace("$func_name$", self.name)
         wrapper_cpp_code = wrapper_cpp_code.replace(
@@ -80,8 +78,8 @@ class TiramisuProgram:
     @classmethod
     def from_annotations(
         cls,
-        annotations: dict,
-        cpp_code: str | None = None,
+        annotations: dict[str, Any],
+        cpp_code: str,
         load_tree: bool = True,
         wrapper_obj: bytes | None = None,
     ) -> "TiramisuProgram":
@@ -104,9 +102,9 @@ class TiramisuProgram:
     def from_file(
         cls,
         file_path: str,
-        load_annotations=False,
-        load_isl_ast=False,
-        load_tree=False,
+        load_annotations: bool = False,
+        load_isl_ast: bool = False,
+        load_tree: bool = False,
     ) -> "TiramisuProgram":
         """This function loads a tiramisu function from its cpp file and its
         wrapper files.
@@ -166,10 +164,10 @@ class TiramisuProgram:
     def init_server(
         cls,
         cpp_code: str,
-        load_annotations=False,
-        load_isl_ast=False,
-        load_tree=False,
-        reuse_server=False,
+        load_annotations: bool = False,
+        load_isl_ast: bool = False,
+        load_tree: bool = False,
+        reuse_server: bool = False,
     ) -> "TiramisuProgram":
         # Initiate an instante of the TiramisuProgram class
         tiramisu_prog = cls()
@@ -213,7 +211,9 @@ class TiramisuProgram:
         self.cpp_code = self.cpp_code.replace(
             self.wrapper_str, f"// {self.wrapper_str}"
         )
-        self.code_gen_line = re.findall(r"tiramisu::codegen\({.+;", self.cpp_code)[0]
+        self.code_gen_line: str = re.findall(r"tiramisu::codegen\({.+;", self.cpp_code)[
+            0
+        ]
         buffers_vect = re.findall(r"{(.+)}", self.code_gen_line)[0]
         self.IO_buffer_names = re.findall(r"\w+", buffers_vect)
         self.buffer_sizes = []

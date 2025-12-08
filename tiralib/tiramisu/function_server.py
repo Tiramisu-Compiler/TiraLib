@@ -152,10 +152,8 @@ class FunctionServer:
         self._compile_server_code()
 
     @classmethod
-    def _generate_server_code_from_cpp_code(self, tiramisu_program: "TiramisuProgram"):
+    def _generate_server_code_from_cpp_code(cls, tiramisu_program: "TiramisuProgram"):
         original_str = tiramisu_program.cpp_code
-        if original_str is None:
-            raise ValueError("Original string not initialized")
         # Generate function
         body = re.findall(
             r"int main\([\w\s,*]+\)\s*\{([\W\w\s]*)tiramisu::codegen",

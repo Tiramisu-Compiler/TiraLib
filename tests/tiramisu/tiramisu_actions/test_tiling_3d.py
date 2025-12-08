@@ -19,7 +19,7 @@ def test_tiling_3d_init():
     )
     assert tiling_3d.iterators == [("comp00", 0), ("comp00", 1), ("comp00", 2)]
     assert tiling_3d.tile_sizes == [32, 32, 32]
-    assert tiling_3d.comps is None
+    assert tiling_3d.comps == []
 
     tiling_3d = Tiling3D(
         [

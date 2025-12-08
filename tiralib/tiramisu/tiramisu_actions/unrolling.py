@@ -20,7 +20,7 @@ class Unrolling(TiramisuAction):
     def __init__(
         self,
         params: List[IteratorIdentifier | int],
-        comps: List[str] | None = None,
+        comps: List[str] = [],
     ):
         # Unrolling takes 2 parameters: the iterator to unroll and the
         # unrolling factor
@@ -44,7 +44,7 @@ class Unrolling(TiramisuAction):
                 *self.iterator_id
             ).id
 
-        if self.comps is None:
+        if not self.comps:
             iterator = tiramisu_tree.iterators[self.iterator_id]
 
             # Get the computations that are in the loop to be unrolled
@@ -75,8 +75,8 @@ class Unrolling(TiramisuAction):
         self.legality_check_string = f"prepare_schedules_for_legality_checks(true);\n    is_legal &= loop_unrolling_is_legal({loop_level}, {{{', '.join([f'&{comp}' for comp in self.comps])}}});\n    {self.tiramisu_optim_str}"  # noqa: E501
 
     @classmethod
-    def get_candidates(cls, program_tree: TiramisuTree) -> List[str]:
-        candidates: List[str] = []
+    def get_candidates(cls, program_tree: TiramisuTree) -> List[IteratorIdentifier]:
+        candidates: List[IteratorIdentifier] = []
 
         for iterator in program_tree.iterators:
             iterator_node = program_tree.iterators[iterator]

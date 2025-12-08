@@ -1,12 +1,12 @@
 import pickle
-from typing import Tuple
+from typing import Any, Tuple
 
 from tiralib.tiramisu.tiramisu_iterator_node import IteratorNode
 from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 
-def load_test_data() -> Tuple[dict, dict]:
+def load_test_data() -> Tuple[dict[str, Any], dict[str, str]]:
     with open("examples/test_data.pkl", "rb") as f:
         dataset = pickle.load(f)
     with open("examples/test_data_cpps.pkl", "rb") as f:
@@ -26,6 +26,7 @@ def tree_test_sample():
             child_iterators=[("comp01", 1), ("comp03", 1)],
             computations_list=[],
             level=0,
+            id=("comp01", 0),
         ),
         ("comp01", 1): IteratorNode(
             name="i",
@@ -35,6 +36,7 @@ def tree_test_sample():
             child_iterators=[],
             computations_list=["comp01"],
             level=1,
+            id=("comp01", 1),
         ),
         ("comp03", 1): IteratorNode(
             name="j",
@@ -44,6 +46,7 @@ def tree_test_sample():
             child_iterators=[("comp03", 2)],
             computations_list=[],
             level=1,
+            id=("comp03", 1),
         ),
         ("comp03", 2): IteratorNode(
             name="k",
@@ -53,6 +56,7 @@ def tree_test_sample():
             child_iterators=[("comp03", 3), ("comp04", 3)],
             computations_list=[],
             level=2,
+            id=("comp03", 2),
         ),
         ("comp03", 3): IteratorNode(
             name="l",
@@ -62,6 +66,7 @@ def tree_test_sample():
             child_iterators=[],
             computations_list=["comp03"],
             level=3,
+            id=("comp03", 3),
         ),
         ("comp04", 3): IteratorNode(
             name="m",
@@ -71,6 +76,7 @@ def tree_test_sample():
             child_iterators=[],
             computations_list=["comp04"],
             level=3,
+            id=("comp04", 3),
         ),
     }
     tiramisu_tree.computations = [
@@ -100,6 +106,7 @@ def tree_test_sample_2():
             child_iterators=[("comp01", 1), ("comp05", 1)],
             computations_list=[],
             level=0,
+            id=("comp01", 0),
         ),
         ("comp01", 1): IteratorNode(
             name="i",
@@ -109,6 +116,7 @@ def tree_test_sample_2():
             child_iterators=[],
             computations_list=["comp01"],
             level=1,
+            id=("comp01", 1),
         ),
         ("comp05", 1): IteratorNode(
             name="j",
@@ -118,6 +126,7 @@ def tree_test_sample_2():
             child_iterators=[("comp03", 2)],
             computations_list=["comp05", "comp06", "comp07"],
             level=1,
+            id=("comp05", 1),
         ),
         ("comp03", 2): IteratorNode(
             name="k",
@@ -127,6 +136,7 @@ def tree_test_sample_2():
             child_iterators=[("comp03", 3), ("comp04", 3)],
             computations_list=[],
             level=2,
+            id=("comp03", 2),
         ),
         ("comp03", 3): IteratorNode(
             name="l",
@@ -136,6 +146,7 @@ def tree_test_sample_2():
             child_iterators=[],
             computations_list=["comp03"],
             level=3,
+            id=("comp03", 3),
         ),
         ("comp04", 3): IteratorNode(
             name="m",
@@ -145,6 +156,7 @@ def tree_test_sample_2():
             child_iterators=[],
             computations_list=["comp04"],
             level=3,
+            id=("comp04", 3),
         ),
     }
     tiramisu_tree.computations = [
@@ -180,6 +192,7 @@ def tree_test_sample_3():
             child_iterators=[("comp01", 1), ("comp05", 1)],
             computations_list=[],
             level=0,
+            id=("comp01", 0),
         ),
         ("comp01", 1): IteratorNode(
             name="i",
@@ -189,6 +202,7 @@ def tree_test_sample_3():
             child_iterators=[],
             computations_list=["comp01"],
             level=1,
+            id=("comp01", 1),
         ),
         ("comp05", 1): IteratorNode(
             name="j",
@@ -198,6 +212,7 @@ def tree_test_sample_3():
             child_iterators=[("comp03", 2)],
             computations_list=["comp05", "comp06", "comp07"],
             level=1,
+            id=("comp05", 1),
         ),
         ("comp03", 2): IteratorNode(
             name="k",
@@ -207,6 +222,7 @@ def tree_test_sample_3():
             child_iterators=[("comp03", 3)],
             computations_list=[],
             level=2,
+            id=("comp03", 2),
         ),
         ("comp03", 3): IteratorNode(
             name="l",
@@ -216,6 +232,7 @@ def tree_test_sample_3():
             child_iterators=[("comp03", 4)],
             computations_list=[],
             level=3,
+            id=("comp03", 3),
         ),
         ("comp03", 4): IteratorNode(
             name="m",
@@ -225,6 +242,7 @@ def tree_test_sample_3():
             child_iterators=[],
             computations_list=["comp03", "comp04"],
             level=4,
+            id=("comp03", 4),
         ),
     }
     tiramisu_tree.computations = [
@@ -260,6 +278,7 @@ def tree_test_sample_imperfect_loops():
             child_iterators=[("comp01", 1), ("comp04", 1)],
             computations_list=[],
             level=0,
+            id=("comp01", 0),
         ),
         ("comp01", 1): IteratorNode(
             name="i",
@@ -269,6 +288,7 @@ def tree_test_sample_imperfect_loops():
             child_iterators=[("comp02", 2)],
             computations_list=["comp01"],
             level=1,
+            id=("comp01", 1),
         ),
         ("comp02", 2): IteratorNode(
             name="j",
@@ -278,6 +298,7 @@ def tree_test_sample_imperfect_loops():
             child_iterators=[("comp03", 3)],
             computations_list=["comp02"],
             level=2,
+            id=("comp02", 2),
         ),
         ("comp03", 3): IteratorNode(
             name="k",
@@ -287,6 +308,7 @@ def tree_test_sample_imperfect_loops():
             child_iterators=[],
             computations_list=["comp03"],
             level=3,
+            id=("comp03", 3),
         ),
         ("comp04", 1): IteratorNode(
             name="i_1",
@@ -296,6 +318,7 @@ def tree_test_sample_imperfect_loops():
             child_iterators=[("comp05", 2)],
             computations_list=["comp04"],
             level=1,
+            id=("comp04", 1),
         ),
         ("comp05", 2): IteratorNode(
             name="j_1",
@@ -305,6 +328,7 @@ def tree_test_sample_imperfect_loops():
             child_iterators=[],
             computations_list=["comp05"],
             level=2,
+            id=("comp05", 2),
         ),
     }
     tiramisu_tree.computations = [
@@ -444,6 +468,7 @@ def tiling_3d_tree_sample() -> TiramisuTree:
             child_iterators=[("comp03", 1)],
             computations_list=[],
             level=0,
+            id=("comp03", 0),
         ),
         ("comp03", 1): IteratorNode(
             name="j",
@@ -453,6 +478,7 @@ def tiling_3d_tree_sample() -> TiramisuTree:
             child_iterators=[("comp03", 2)],
             computations_list=[],
             level=1,
+            id=("comp03", 1),
         ),
         ("comp03", 2): IteratorNode(
             name="k",
@@ -462,6 +488,7 @@ def tiling_3d_tree_sample() -> TiramisuTree:
             child_iterators=[("comp03", 3)],
             computations_list=[],
             level=2,
+            id=("comp03", 2),
         ),
         ("comp03", 3): IteratorNode(
             name="l",
@@ -471,6 +498,7 @@ def tiling_3d_tree_sample() -> TiramisuTree:
             child_iterators=[],
             computations_list=["comp03"],
             level=3,
+            id=("comp03", 3),
         ),
     }
     tiramisu_tree.computations = [
@@ -498,6 +526,7 @@ def fusion_sample():
             child_iterators=[("comp01", 1), ("comp03", 1)],
             computations_list=[],
             level=0,
+            id=("comp01", 0),
         ),
         ("comp01", 1): IteratorNode(
             name="i",
@@ -507,6 +536,7 @@ def fusion_sample():
             child_iterators=[],
             computations_list=["comp01"],
             level=1,
+            id=("comp01", 1),
         ),
         ("comp03", 1): IteratorNode(
             name="j",
@@ -516,6 +546,7 @@ def fusion_sample():
             child_iterators=[("comp03", 2)],
             computations_list=[],
             level=1,
+            id=("comp03", 1),
         ),
         ("comp03", 2): IteratorNode(
             name="k",
@@ -525,6 +556,7 @@ def fusion_sample():
             child_iterators=[("comp03", 3), ("comp04", 3)],
             computations_list=[],
             level=2,
+            id=("comp03", 2),
         ),
         ("comp03", 3): IteratorNode(
             name="l",
@@ -534,6 +566,7 @@ def fusion_sample():
             child_iterators=[],
             computations_list=["comp03"],
             level=3,
+            id=("comp03", 3),
         ),
         ("comp04", 3): IteratorNode(
             name="m",
@@ -543,6 +576,7 @@ def fusion_sample():
             child_iterators=[],
             computations_list=["comp04"],
             level=3,
+            id=("comp04", 3),
         ),
     }
     tiramisu_tree.computations = [

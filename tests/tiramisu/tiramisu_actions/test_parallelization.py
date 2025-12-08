@@ -7,7 +7,7 @@ from tiralib.config import BaseConfig
 def test_parallelization_init():
     parallelization = Parallelization([("comp01", 1)])
     assert parallelization.iterator_id == ("comp01", 1)
-    assert parallelization.comps is None
+    assert parallelization.comps == []
 
     parallelization = Parallelization([("comp01", 1)], comps=["comp01"])
     assert parallelization.iterator_id == ("comp01", 1)

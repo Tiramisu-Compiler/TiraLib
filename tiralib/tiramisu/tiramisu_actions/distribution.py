@@ -22,7 +22,7 @@ class Distribution(TiramisuAction):
     def __init__(
         self,
         params: list[IteratorIdentifier],
-        children: list[list[IteratorIdentifier | str]] | None = None,
+        children: list[list[IteratorIdentifier | str]] = [],
     ):
         # Distribution takes 1 parameters the iterator to be distributed
         assert len(params) == 1
@@ -30,17 +30,15 @@ class Distribution(TiramisuAction):
 
         self.iterator_id = params[0]
 
-        self.children = children
-        super().__init__(
-            type=TiramisuActionType.DISTRIBUTION, params=params, comps=children
-        )
+        self.children: list[list[IteratorIdentifier | str]] = children
+        super().__init__(type=TiramisuActionType.DISTRIBUTION, params=params, comps=[])
 
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
         self.tree = copy.deepcopy(tiramisu_tree)
         self.iterator_id = self.tree.get_iterator_of_computation(*self.iterator_id).id
 
-        if self.children is None:
+        if not self.children:
             self.children = []
             iterator = tiramisu_tree.iterators[self.iterator_id]
             # For each iterator get its comps and add them
@@ -48,7 +46,7 @@ class Distribution(TiramisuAction):
                 child_iterator_comps = tiramisu_tree.get_iterator_subtree_computations(
                     child_iterator
                 )
-                self.children.append(child_iterator_comps)
+                self.children.append(child_iterator_comps)  # type: ignore[union-attr]
             # Add the computation of the iterator itself
             for comp in iterator.computations_list:
                 self.children.append([comp])
@@ -91,7 +89,7 @@ class Distribution(TiramisuAction):
     def get_candidates(cls, program_tree: TiramisuTree) -> list[IteratorIdentifier]:
         # We will try to distribute all the iterators with
         # more than one computation
-        candidates: list[str] = []
+        candidates: list[IteratorIdentifier] = []
 
         for iterator in program_tree.iterators.values():
             if len(iterator.computations_list) + len(iterator.child_iterators) > 1:

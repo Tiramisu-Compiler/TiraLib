@@ -7,7 +7,7 @@ from tiralib.config import BaseConfig
 def test_reversal_init():
     reversal = Reversal([("comp00", 0)])
     assert reversal.iterator_id == ("comp00", 0)
-    assert reversal.comps is None
+    assert reversal.comps == []
 
     reversal = Reversal([("comp00", 0)], ["comp00"])
     assert reversal.iterator_id == ("comp00", 0)

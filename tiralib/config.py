@@ -19,8 +19,8 @@ class TiraLibCppConfig:
 class Dependencies:
     """Config for dependencies."""
 
-    includes: list[str] = field(default_factory=list)
-    libs: list[str] = field(default_factory=list)
+    includes: list[str] = field(default_factory=list[str])
+    libs: list[str] = field(default_factory=list[str])
 
 
 @dataclass
@@ -28,12 +28,12 @@ class TiraLibConfig:
     """Config for TiraLib."""
 
     workspace: str = "workspace"
-    env_vars: Dict[str, str] = field(default_factory=dict)
+    env_vars: dict[str, str] = field(default_factory=dict[str, str])
     tiralib_cpp: TiraLibCppConfig = field(default_factory=TiraLibCppConfig)
     dependencies: Dependencies = field(default_factory=Dependencies)
 
 
-def read_yaml_file(path):
+def read_yaml_file(path: str) -> str:
     """Read a yaml file and return its content as a string."""
     with open(path) as yaml_file:
         return yaml_file.read()
@@ -46,7 +46,9 @@ def parse_yaml_file(yaml_string: str) -> Dict[Any, Any]:
 
 def dict_to_config(parsed_yaml: Dict[Any, Any]) -> TiraLibConfig:
     """Convert a dictionary to a TiraLibConfig object."""
-    env_vars = parsed_yaml["env_vars"] if "env_vars" in parsed_yaml else {}
+    env_vars: dict[str, Any] = (
+        parsed_yaml["env_vars"] if "env_vars" in parsed_yaml else {}
+    )
     tiralibcpp = (
         TiraLibCppConfig(**parsed_yaml["tiralib_cpp"])
         if "tiralib_cpp" in parsed_yaml
@@ -73,7 +75,7 @@ class BaseConfig:
     base_config = None
 
     @classmethod
-    def init(cls, config_yaml="config.yaml", logging_level=logging.DEBUG):
+    def init(cls, config_yaml: str = "config.yaml", logging_level: int = logging.DEBUG):
         """Initialize the config."""
         parsed_yaml_dict = parse_yaml_file(read_yaml_file(config_yaml))
         BaseConfig.base_config = dict_to_config(parsed_yaml_dict)
@@ -83,7 +85,7 @@ class BaseConfig:
 
     @classmethod
     def from_tiralib_config(
-        cls, tiralib_config: TiraLibConfig, logging_level=logging.DEBUG
+        cls, tiralib_config: TiraLibConfig, logging_level: int = logging.DEBUG
     ):
         """Initialize the config from a TiraLibConfig object."""
         BaseConfig.base_config = tiralib_config

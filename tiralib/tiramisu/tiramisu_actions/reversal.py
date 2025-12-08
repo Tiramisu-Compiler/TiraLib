@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-from typing import Dict, List
 
 from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
@@ -17,9 +16,7 @@ class Reversal(TiramisuAction):
     Reversal optimization command.
     """
 
-    def __init__(
-        self, params: List[IteratorIdentifier], comps: List[str] | None = None
-    ):
+    def __init__(self, params: list[IteratorIdentifier], comps: list[str] = []):
         # Reversal takes one parameter of the loop to reverse
         assert len(params) == 1
 
@@ -38,7 +35,7 @@ class Reversal(TiramisuAction):
                 *self.iterator_id
             ).id
 
-        if self.comps is None:
+        if not self.comps:
             iterator = tiramisu_tree.iterators[self.iterator_id]
 
             self.comps = tiramisu_tree.get_iterator_subtree_computations(iterator.id)
@@ -63,8 +60,10 @@ class Reversal(TiramisuAction):
         self.legality_check_string = self.tiramisu_optim_str
 
     @classmethod
-    def get_candidates(cls, program_tree: TiramisuTree) -> Dict[str, List[str]]:
-        candidates: Dict[str, List[str]] = {}
+    def get_candidates(
+        cls, program_tree: TiramisuTree
+    ) -> dict[IteratorIdentifier, list[IteratorIdentifier]]:
+        candidates: dict[IteratorIdentifier, list[IteratorIdentifier]] = {}
         for root in program_tree.roots:
             rootId = program_tree.iterators[root].id
             candidates[rootId] = [rootId] + [

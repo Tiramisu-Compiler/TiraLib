@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 import math
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
@@ -20,7 +20,7 @@ class MatrixTransform(TiramisuAction):
     Matrix optimization command.
     """
 
-    def __init__(self, params: List[int], comps: List[str]):
+    def __init__(self, params: list[int], comps: list[str]):
         # MatrixTransform takes the list of parameters of the polyhedral transformation matrix
         # assert that len(params) is a square number (square matrix)
         assert math.sqrt(len(params)) == int(math.sqrt(len(params))), (
@@ -46,7 +46,7 @@ class MatrixTransform(TiramisuAction):
     def set_string_representations(self, tiramisu_tree: TiramisuTree):
         self.tiramisu_optim_str = ""
 
-        row_vects = []
+        row_vects: list[str] = []
         for row in self.matrix:
             row_vects.append("{" + ",".join([str(p) for p in row]) + "}")
         mat_vect = "{" + ",".join(row_vects) + "}"

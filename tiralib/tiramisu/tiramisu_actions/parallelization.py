@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-from typing import Dict, List
 
 from tiralib.tiramisu.tiramisu_iterator_node import IteratorIdentifier
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
@@ -19,8 +18,8 @@ class Parallelization(TiramisuAction):
 
     def __init__(
         self,
-        params: List[IteratorIdentifier],
-        comps: List[str] | None = None,
+        params: list[IteratorIdentifier],
+        comps: list[str] = [],
     ):
         # Parallelization only takes one parameter the loop to
         # parallelize specified by a tuple (computation_name, iterator_level)
@@ -43,7 +42,7 @@ class Parallelization(TiramisuAction):
             self.iterator_id = self.tree.get_iterator_of_computation(
                 *self.iterator_id
             ).id
-        if self.comps is None:
+        if not self.comps:
             iterator = tiramisu_tree.iterators[self.iterator_id]
 
             self.comps = tiramisu_tree.get_iterator_subtree_computations(iterator.id)
@@ -68,10 +67,10 @@ class Parallelization(TiramisuAction):
 
     @classmethod
     def _get_candidates_of_node(
-        cls, node_name: str, program_tree: TiramisuTree
-    ) -> list:
-        candidates = []
-        node = program_tree.iterators[node_name]
+        cls, node_id: IteratorIdentifier, program_tree: TiramisuTree
+    ) -> list[list[IteratorIdentifier]]:
+        candidates: list[list[IteratorIdentifier]] = []
+        node = program_tree.iterators[node_id]
 
         if node.child_iterators:
             candidates.append(
@@ -84,7 +83,9 @@ class Parallelization(TiramisuAction):
         return candidates
 
     @classmethod
-    def get_candidates(cls, program_tree: TiramisuTree) -> Dict[str, List[str]]:
+    def get_candidates(
+        cls, program_tree: TiramisuTree
+    ) -> dict[IteratorIdentifier, list[list[IteratorIdentifier]]]:
         """Get the list of candidates for parallelization.
 
         Parameters:
@@ -94,11 +95,11 @@ class Parallelization(TiramisuAction):
 
         Returns:
         -------
-        `Dict`
+        `dict[IteratorIdentifier, list[list[IteratorIdentifier]]]`
             Dictionary of candidates for parallelization of each root.
         """
 
-        candidates = {}
+        candidates: dict[IteratorIdentifier, list[list[IteratorIdentifier]]] = {}
 
         for root in program_tree.roots:
             rootId = program_tree.iterators[root].id
