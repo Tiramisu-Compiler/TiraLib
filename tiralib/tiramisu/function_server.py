@@ -198,6 +198,7 @@ class FunctionServer:
         operation: Literal["execution", "legality"] = "legality",
         schedule: "Schedule | None" = None,
         nbr_executions: int = 30,
+        delete_files: bool = False,
     ):
         """Run the server code."""
         if not BaseConfig.base_config:
@@ -233,6 +234,8 @@ class FunctionServer:
             logger.error(e.output)
             logger.error(e.stderr)
             raise e
+        if delete_files:
+            self.delete_temporary_files()
         return ResultInterface(output)
 
     def get_annotations(self):
@@ -264,3 +267,18 @@ class FunctionServer:
             raise e
 
         return output.decode("utf-8").strip()
+
+    def delete_temporary_files(self):
+        """Delete files temporary files"""
+        assert BaseConfig.base_config, "BaseConfig not initialized"
+        subprocess.run(
+            [
+                # cd to the workspace and clean generated files
+                f"cd {BaseConfig.base_config.workspace} && rm {self.tiramisu_program.temp_files_identifier}*{{.o,.cpp,.h,.so,.d}}"  # noqa: E501
+            ],
+            capture_output=True,
+            text=True,
+            shell=True,
+            check=False,
+            executable="/bin/bash",
+        )
