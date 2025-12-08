@@ -126,7 +126,7 @@ class FunctionServer:
             return
 
         # Generate the server code
-        server_code = FunctionServer._generate_server_code_from_cpp_code(
+        server_code = FunctionServer._generate_server_code_from_program(
             tiramisu_program
         )
 
@@ -152,26 +152,12 @@ class FunctionServer:
         self._compile_server_code()
 
     @classmethod
-    def _generate_server_code_from_cpp_code(cls, tiramisu_program: "TiramisuProgram"):
-        original_str = tiramisu_program.cpp_code
-        # Generate function
-        body = re.findall(
-            r"int main\([\w\s,*]+\)\s*\{([\W\w\s]*)tiramisu::codegen",
-            original_str,
-        )[0]
-        name = re.findall(r"tiramisu::init\(\"(\w+)\"\);", original_str)[0]
-        # Remove the wrapper include from the original string
-        wrapper_str = f'#include "{name}_wrapper.h"'
-        original_str = original_str.replace(wrapper_str, f"// {wrapper_str}")
-        buffers_vector = re.findall(
-            r"(?<=tiramisu::codegen\()\{[&\w,\s]+\}", original_str
-        )[0]
-
+    def _generate_server_code_from_program(cls, tiramisu_program: "TiramisuProgram"):
         # fill the template
         function_str = templateWithEverythinginUtils.format(
-            name=name,
-            body=body,
-            buffers=buffers_vector,
+            name = tiramisu_program.name,
+            body = tiramisu_program.body,
+            buffers = '{&' + ', &'.join(tiramisu_program.IO_buffer_names) + '}',
         )
         return function_str
 

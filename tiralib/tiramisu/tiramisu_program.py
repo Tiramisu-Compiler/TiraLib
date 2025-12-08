@@ -206,6 +206,10 @@ class TiramisuProgram:
         legality check code and annotations
         """
         self.name = re.findall(r"tiramisu::init\(\"(\w+)\"\);", self.cpp_code)[0]
+        self.body = re.findall(
+            r"int main\([\w\s,*]+\)\s*\{([\W\w\s]*)tiramisu::codegen",
+            self.cpp_code,
+        )[0]
         # Remove the wrapper include from the original string
         self.wrapper_str = f'#include "{self.name}_wrapper.h"'
         self.cpp_code = self.cpp_code.replace(
