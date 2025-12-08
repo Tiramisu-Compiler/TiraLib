@@ -118,7 +118,8 @@ class FunctionServer:
         )
 
         server_path = (
-            Path(BaseConfig.base_config.workspace) / f"{tiramisu_program.temp_files_identifier}_server"
+            Path(BaseConfig.base_config.workspace)
+            / f"{tiramisu_program.temp_files_identifier}_server"
         )
 
         if reuse_server and server_path.exists():
@@ -155,9 +156,9 @@ class FunctionServer:
     def _generate_server_code_from_program(cls, tiramisu_program: "TiramisuProgram"):
         # fill the template
         function_str = templateWithEverythinginUtils.format(
-            name = tiramisu_program.temp_files_identifier,
-            body = tiramisu_program.body,
-            buffers = '{&' + ', &'.join(tiramisu_program.IO_buffer_names) + '}',
+            name=tiramisu_program.temp_files_identifier,
+            body=tiramisu_program.body,
+            buffers="{&" + ", &".join(tiramisu_program.IO_buffer_names) + "}",
         )
         return function_str
 
@@ -203,12 +204,13 @@ class FunctionServer:
         """Run the server code."""
         if not BaseConfig.base_config:
             raise ValueError("BaseConfig not initialized")
-        assert operation in [
-            "execution",
-            "legality",
-        ], (
-            f"Invalid operation {operation}. Valid operations are: execution, legality, annotations"
-        )  # noqa: E501
+        assert (
+            operation
+            in [
+                "execution",
+                "legality",
+            ]
+        ), f"Invalid operation {operation}. Valid operations are: execution, legality, annotations"  # noqa: E501
 
         env_vars = " && ".join(
             [
