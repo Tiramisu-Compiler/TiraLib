@@ -198,7 +198,9 @@ class FunctionServer:
         self,
         operation: Literal["execution", "legality"] = "legality",
         schedule: "Schedule | None" = None,
-        nbr_executions: int = 30,
+        min_runs: int = 1,
+        max_runs: int | None = None,
+        time_budget: float | None = None,
         delete_files: bool = False,
     ):
         """Run the server code."""
@@ -225,7 +227,7 @@ class FunctionServer:
             f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
         )
 
-        command = f'{env_vars} && cd {BaseConfig.base_config.workspace} && NB_EXEC={nbr_executions} ./{self.tiramisu_program.temp_files_identifier}_server {operation} "{schedule or ""}"'  # noqa: E501
+        command = f'{env_vars} && cd {BaseConfig.base_config.workspace} && MIN_RUNS={min_runs} MAX_RUNS={max_runs if max_runs else "inf"} TIME_BUDGET={time_budget if time_budget else "-1"} ./{self.tiramisu_program.temp_files_identifier}_server {operation} "{schedule or ""}"'  # noqa: E501
 
         # run the command and retrieve the execution status
         try:

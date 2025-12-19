@@ -267,38 +267,90 @@ int main(int, char **argv){
 
 $buffers_init$
 
-    //halide_set_num_threads(48);
+    // halide_set_num_threads(48); 
 
-    int nb_execs = get_nb_exec();
+    TuneParams params = get_tune_params();
+    setup_signal_handler();
+
+    bool use_budget = (params.time_budget_ms > 0);
+    int limit = 0;
+
+    // Determine loop iteration limit.
+    // If budget is unset, run exactly min_runs.
+    // If budget is set, run up to max_runs, but correct for cases where max_runs < min_runs.
+    if (!use_budget) {
+        limit = params.min_runs;
+    } else {
+        limit = std::max(params.min_runs, params.max_runs);
+    }
 
     double duration;
+    auto total_start = std::chrono::high_resolution_clock::now();
+    
+    for (int i = 0; i < limit; ++i) {
+        
+        bool timer_active = false;
 
-    for (int i = 0; i < nb_execs; ++i) {
+        // Initiate timeout logic only if the mandatory minimum runs are satisfied.
+        if (use_budget && i >= params.min_runs) {
+            
+            auto now = std::chrono::high_resolution_clock::now();
+            double total_elapsed_ms = std::chrono::duration_cast<std::chrono::nanoseconds>(now - total_start).count() / 1000000.0;
+            double remaining_ms = params.time_budget_ms - total_elapsed_ms;
+
+            // Abort if budget is exhausted between runs.
+            if (remaining_ms <= 0.0) {
+                break; 
+            }
+            
+            // Ensure timer value is non-zero to prevent inadvertent disablement.
+            if (remaining_ms < 0.001) remaining_ms = 0.001;
+            
+            set_execution_timer(remaining_ms);
+            timer_active = true;
+        }
+
         auto begin = std::chrono::high_resolution_clock::now();
         $func_name$($func_params$);
         auto end = std::chrono::high_resolution_clock::now();
 
+        // Disarm timer immediately post-execution to protect I/O operations.
+        if (timer_active) {
+            clear_execution_timer();
+        }
+
         duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count() / (double)1000000;
         std::cout << duration << " " << std::flush;
-
     }
+
     std::cout << std::endl;
     return 0;
 }"""  # noqa: E501
 wrapper_h_template = """#include <tiramisu/utils.h>
 #include <sys/time.h>
+#include <unistd.h>
+#include <signal.h>
 #include <cstdlib>
 #include <algorithm>
 #include <vector>
 #include <string>
 #include <limits>
+#include <iostream>
 
 #define NB_THREAD_INIT 48
+
 struct args {
     double *buf;
     unsigned long long int part_start;
     unsigned long long int part_end;
     double value;
+};
+
+// Configuration parameters for execution scheduling
+struct TuneParams {
+    int min_runs;
+    int max_runs;
+    double time_budget_ms; // -1.0 indicates no budget constraint
 };
 
 void *init_part(void *params)
@@ -326,6 +378,7 @@ void parallel_init_buffer(double* buf, unsigned long long int size, double value
         pthread_join(threads[i], NULL);
     return;
 }
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -334,40 +387,74 @@ int $func_name$($func_params$);
 }  // extern "C"
 #endif
 
+// Parses environment variables to configure tuning parameters
+TuneParams get_tune_params() {
+    TuneParams params;
 
-int get_beam_size(){
-    if (std::getenv("BEAM_SIZE")!=NULL)
-        return std::stoi(std::getenv("BEAM_SIZE"));
-    else{
-        std::cerr<<"error: Environment Variable BEAM_SIZE not declared"<<std::endl;
-        exit(1);
-    }
-}
+    // Parse MIN_RUNS. Defaults to 0 if undefined.
+    const char* min_runs_env = std::getenv("MIN_RUNS");
+    params.min_runs = (min_runs_env != nullptr) ? std::stoi(min_runs_env) : 0;
 
-int get_max_depth(){
-    if (std::getenv("MAX_DEPTH")!=NULL)
-        return std::stoi(std::getenv("MAX_DEPTH"));
-    else{
-        std::cerr<<"error: Environment Variable MAX_DEPTH not declared"<<std::endl;
-        exit(1);
-    }
-}
-
-void declare_memory_usage(){
-    setenv("MEM_SIZE", std::to_string((double)(256*192+320*256+320*192)*8/1024/1024).c_str(), true); // This value was set by the Code Generator
-}
-
-int get_nb_exec() {
-    const char* env_var = std::getenv("NB_EXEC");
-    if (env_var != nullptr) {
-        std::string env_value(env_var);
-        if (env_value == "inf") {
-            return std::numeric_limits<int>::max(); // Use maximum int value to represent +infinity
-        } else {
-            return std::stoi(env_value);
-        }
+    // Parse TIME_BUDGET. Defaults to -1.0 (infinite) if undefined.
+    const char* budget_env = std::getenv("TIME_BUDGET");
+    if (budget_env != nullptr) {
+        params.time_budget_ms = std::stof(budget_env);
     } else {
-        return 30; // Default value
+        params.time_budget_ms = -1.0; 
     }
+
+    // Parse MAX_RUNS. Defaults to INT_MAX if undefined or "inf".
+    const char* max_runs_env = std::getenv("MAX_RUNS");
+    if (max_runs_env != nullptr && std::string(max_runs_env) != "inf") {
+        params.max_runs = std::stoi(max_runs_env);
+    } else {
+        params.max_runs = std::numeric_limits<int>::max();
+    }
+    
+    return params;
+}
+
+// Handler for SIGALRM.
+// Invokes _exit() to immediately terminate the process when the time budget is exceeded.
+// Partial results have already been flushed to stdout.
+void timer_handler(int signum) {
+    _exit(0); 
+}
+
+// Configures the SIGALRM handler.
+void setup_signal_handler() {
+    struct sigaction sa;
+    sa.sa_handler = timer_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGALRM, &sa, NULL);
+}
+
+// Arms the OS timer for the specified duration (milliseconds).
+void set_execution_timer(double time_left_ms) {
+    if (time_left_ms <= 0) return;
+
+    struct itimerval timer;
+    long seconds = (long)(time_left_ms / 1000.0);
+    long useconds = (long)((time_left_ms - (seconds * 1000.0)) * 1000.0);
+
+    timer.it_value.tv_sec = seconds;
+    timer.it_value.tv_usec = useconds;
+    
+    // Non-repeating timer
+    timer.it_interval.tv_sec = 0;
+    timer.it_interval.tv_usec = 0;
+
+    setitimer(ITIMER_REAL, &timer, NULL);
+}
+
+// Disarms the OS timer to prevent interruption during non-execution phases.
+void clear_execution_timer() {
+    struct itimerval timer;
+    timer.it_value.tv_sec = 0;
+    timer.it_value.tv_usec = 0;
+    timer.it_interval.tv_sec = 0;
+    timer.it_interval.tv_usec = 0;
+    setitimer(ITIMER_REAL, &timer, NULL);
 }
 """  # noqa: E501
