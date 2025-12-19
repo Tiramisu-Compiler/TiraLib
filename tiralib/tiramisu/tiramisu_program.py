@@ -325,7 +325,7 @@ $buffers_init$
 
     std::cout << std::endl;
     return 0;
-}""" # noqa: E501
+}"""  # noqa: E501
 wrapper_h_template = """#include <tiramisu/utils.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -457,4 +457,4 @@ void clear_execution_timer() {
     timer.it_interval.tv_usec = 0;
     setitimer(ITIMER_REAL, &timer, NULL);
 }
-"""
+"""  # noqa: E501

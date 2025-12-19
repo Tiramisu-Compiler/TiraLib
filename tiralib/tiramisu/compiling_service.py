@@ -508,14 +508,14 @@ class CompilingService:
                             min_runs=min_runs,
                             max_runs=max_runs,
                             time_budget=time_budget,
-                            tiramisu_program=tiramisu_program
+                            tiramisu_program=tiramisu_program,
                         )
                     )
                 ],
                 capture_output=True,
                 text=True,
                 shell=True,
-                check=True, # This ensures CRASHES (segfaults) are raised as Exceptions
+                check=True,  # This ensures CRASHES (segfaults) are raised as Exceptions
             )
 
             # If we reached this line, the C++ wrapper exited cleanly (Exit Code 0)
@@ -526,18 +526,24 @@ class CompilingService:
                 # This happens if Time Budget < 1st Run Duration.
                 if min_runs == 0:
                     # This is a valid outcome: The budget killed it before the first run finished.
-                    logger.info(f"Target {tiramisu_program.name}: Time budget exhausted before 1st run. Returning empty.")
+                    logger.info(
+                        f"Target {tiramisu_program.name}: Time budget exhausted before 1st run. Returning empty."
+                    )
                     # results remains empty list
                 else:
-                    # If min_runs > 0, we were GUARANTEED at least one print. 
+                    # If min_runs > 0, we were GUARANTEED at least one print.
                     # If empty -> Logic Error or Flush failure (Unlikely with current cpp)
-                    logger.error("No output from schedule execution despite min_runs > 0")
+                    logger.error(
+                        "No output from schedule execution despite min_runs > 0"
+                    )
                     logger.error(compiler.stderr)
                     logger.error(compiler.stdout)
                     logger.error(
                         f"The following schedule execution returned no results despite min_runs > 0: {tiramisu_program.name}, schedule: {optims_list} \n\n {cpp_code}\n\n"  # noqa: E501
                     )
-                    raise ScheduleExecutionError("Schedule execution returned 0 results, expected > 0")
+                    raise ScheduleExecutionError(
+                        "Schedule execution returned 0 results, expected > 0"
+                    )
 
             if delete_files:
                 CompilingService.delete_temporary_files(
@@ -558,9 +564,8 @@ class CompilingService:
         cls,
         tiramisu_program: TiramisuProgram,
         min_runs: int = 1,
-        max_runs: int |  None = None,
-        time_budget: float |  None = None,
-
+        max_runs: int | None = None,
+        time_budget: float | None = None,
     ):
         """Get the script to run the program n times."""
         if not BaseConfig.base_config:
@@ -572,10 +577,10 @@ class CompilingService:
             f"cd {BaseConfig.base_config.workspace}",
             #  set the env variables
             f"export MIN_RUNS={min_runs}",
-            f'export MAX_RUNS={max_runs if max_runs else "inf"}',
-            f'export TIME_BUDGET={time_budget if time_budget else "-1"}',
+            f"export MAX_RUNS={max_runs if max_runs else 'inf'}",
+            f"export TIME_BUDGET={time_budget if time_budget else '-1'}",
             # run the wrapper
-            f"./{tiramisu_program.temp_files_identifier}_wrapper"
+            f"./{tiramisu_program.temp_files_identifier}_wrapper",
         ]
 
     @classmethod

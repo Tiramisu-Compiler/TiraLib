@@ -118,18 +118,21 @@ class Schedule:
         The execution time of the Tiramisu program after applying the schedule.
         """
 
-        # Time budgetting params validation 
+        # Time budgetting params validation
         assert min_runs >= 0, "min_runs must be non-negative"
         if time_budget and time_budget > 0:
             # Case: Using Time Budget
             if max_runs is not None:
-                assert max_runs >= min_runs, f"max_runs ({max_runs}) must be >= min_runs ({min_runs})"
+                assert max_runs >= min_runs, (
+                    f"max_runs ({max_runs}) must be >= min_runs ({min_runs})"
+                )
         else:
             # Case: Fixed Number of Runs (No valid budget)
             assert min_runs > 0, "Without a time_budget, min_runs must be > 0"
-            assert max_runs is None, "max_runs is ignored without a time_budget (ambiguous); set it to None"
+            assert max_runs is None, (
+                "max_runs is ignored without a time_budget (ambiguous); set it to None"
+            )
 
-            
         if self.tiramisu_program.server:
             result = self.tiramisu_program.server.run(
                 operation="execution",
