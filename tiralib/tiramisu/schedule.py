@@ -123,6 +123,7 @@ class Schedule:
                 operation="execution",
                 schedule=self,
                 nbr_executions=min_runs,
+                delete_files=delete_files,
             )
             if result.legality is False:
                 raise Exception("Schedule is not legal")

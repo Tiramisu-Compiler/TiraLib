@@ -114,11 +114,12 @@ class FunctionServer:
 
         server_path_cpp = (
             Path(BaseConfig.base_config.workspace)
-            / f"{tiramisu_program.name}_server.cpp"
+            / f"{tiramisu_program.temp_files_identifier}_server.cpp"
         )
 
         server_path = (
-            Path(BaseConfig.base_config.workspace) / f"{tiramisu_program.name}_server"
+            Path(BaseConfig.base_config.workspace)
+            / f"{tiramisu_program.temp_files_identifier}_server"
         )
 
         if reuse_server and server_path.exists():
@@ -126,7 +127,7 @@ class FunctionServer:
             return
 
         # Generate the server code
-        server_code = FunctionServer._generate_server_code_from_cpp_code(
+        server_code = FunctionServer._generate_server_code_from_program(
             tiramisu_program
         )
 
@@ -136,14 +137,14 @@ class FunctionServer:
         # Write the wrapper code to a file
         wrapper_path = (
             Path(BaseConfig.base_config.workspace)
-            / f"{tiramisu_program.name}_wrapper.cpp"
+            / f"{tiramisu_program.temp_files_identifier}_wrapper.cpp"
         )
         wrapper_path.write_text(tiramisu_program.wrappers["cpp"])
 
         # Write the wrapper header to a file
         wrapper_header_path = (
             Path(BaseConfig.base_config.workspace)
-            / f"{tiramisu_program.name}_wrapper.h"
+            / f"{tiramisu_program.temp_files_identifier}_wrapper.h"
         )
 
         wrapper_header_path.write_text(tiramisu_program.wrappers["h"])
@@ -152,26 +153,12 @@ class FunctionServer:
         self._compile_server_code()
 
     @classmethod
-    def _generate_server_code_from_cpp_code(cls, tiramisu_program: "TiramisuProgram"):
-        original_str = tiramisu_program.cpp_code
-        # Generate function
-        body = re.findall(
-            r"int main\([\w\s,*]+\)\s*\{([\W\w\s]*)tiramisu::codegen",
-            original_str,
-        )[0]
-        name = re.findall(r"tiramisu::init\(\"(\w+)\"\);", original_str)[0]
-        # Remove the wrapper include from the original string
-        wrapper_str = f'#include "{name}_wrapper.h"'
-        original_str = original_str.replace(wrapper_str, f"// {wrapper_str}")
-        buffers_vector = re.findall(
-            r"(?<=tiramisu::codegen\()\{[&\w,\s]+\}", original_str
-        )[0]
-
+    def _generate_server_code_from_program(cls, tiramisu_program: "TiramisuProgram"):
         # fill the template
         function_str = templateWithEverythinginUtils.format(
-            name=name,
-            body=body,
-            buffers=buffers_vector,
+            name=tiramisu_program.temp_files_identifier,
+            body=tiramisu_program.body,
+            buffers="{&" + ", &".join(tiramisu_program.IO_buffer_names) + "}",
         )
         return function_str
 
@@ -196,7 +183,7 @@ class FunctionServer:
 
         libs = ":".join(BaseConfig.base_config.dependencies.libs)
 
-        compile_command = f"cd {BaseConfig.base_config.workspace} && {env_vars} && export FUNC_NAME={self.tiramisu_program.name} && $CXX -fvisibility-inlines-hidden -ftree-vectorize  -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -ldl -g -fno-rtti -lpthread -std=c++17 -MD -MT ${{FUNC_NAME}}.cpp.o -MF ${{FUNC_NAME}}.cpp.o.d -o ${{FUNC_NAME}}.cpp.o -c ${{FUNC_NAME}}_server.cpp && $CXX -fvisibility-inlines-hidden -ftree-vectorize  -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -ldl -g -fno-rtti -lpthread ${{FUNC_NAME}}.cpp.o -o ${{FUNC_NAME}}_server -ltiramisu -ltiramisu_auto_scheduler -lHalide -lisl -lTiraLibCPP {'-lsqlite3' if BaseConfig.base_config.tiralib_cpp.use_sqlite else ''} -lz"  # noqa: E501
+        compile_command = f"cd {BaseConfig.base_config.workspace} && {env_vars} && export FUNC_NAME={self.tiramisu_program.temp_files_identifier} && $CXX -fvisibility-inlines-hidden -ftree-vectorize  -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -ldl -g -fno-rtti -lpthread -std=c++17 -MD -MT ${{FUNC_NAME}}.cpp.o -MF ${{FUNC_NAME}}.cpp.o.d -o ${{FUNC_NAME}}.cpp.o -c ${{FUNC_NAME}}_server.cpp && $CXX -fvisibility-inlines-hidden -ftree-vectorize  -fstack-protector-strong -fno-plt -O3 -ffunction-sections -pipe -ldl -g -fno-rtti -lpthread ${{FUNC_NAME}}.cpp.o -o ${{FUNC_NAME}}_server -ltiramisu -ltiramisu_auto_scheduler -lHalide -lisl -lTiraLibCPP {'-lsqlite3' if BaseConfig.base_config.tiralib_cpp.use_sqlite else ''} -lz"  # noqa: E501
 
         # run the command and retrieve the execution status
         try:
@@ -212,6 +199,7 @@ class FunctionServer:
         operation: Literal["execution", "legality"] = "legality",
         schedule: "Schedule | None" = None,
         nbr_executions: int = 30,
+        delete_files: bool = False,
     ):
         """Run the server code."""
         if not BaseConfig.base_config:
@@ -237,7 +225,7 @@ class FunctionServer:
             f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
         )
 
-        command = f'{env_vars} && cd {BaseConfig.base_config.workspace} && NB_EXEC={nbr_executions} ./{self.tiramisu_program.name}_server {operation} "{schedule or ""}"'  # noqa: E501
+        command = f'{env_vars} && cd {BaseConfig.base_config.workspace} && NB_EXEC={nbr_executions} ./{self.tiramisu_program.temp_files_identifier}_server {operation} "{schedule or ""}"'  # noqa: E501
 
         # run the command and retrieve the execution status
         try:
@@ -247,6 +235,8 @@ class FunctionServer:
             logger.error(e.output)
             logger.error(e.stderr)
             raise e
+        if delete_files:
+            self.delete_temporary_files()
         return ResultInterface(output)
 
     def get_annotations(self):
@@ -266,7 +256,7 @@ class FunctionServer:
             f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
         )
 
-        command = f"{env_vars} && cd {BaseConfig.base_config.workspace} && ./{self.tiramisu_program.name}_server annotations"  # noqa: E501
+        command = f"{env_vars} && cd {BaseConfig.base_config.workspace} && ./{self.tiramisu_program.temp_files_identifier}_server annotations"  # noqa: E501
 
         # run the command and retrieve the execution status
         try:
@@ -278,3 +268,18 @@ class FunctionServer:
             raise e
 
         return output.decode("utf-8").strip()
+
+    def delete_temporary_files(self):
+        """Delete files temporary files"""
+        assert BaseConfig.base_config, "BaseConfig not initialized"
+        subprocess.run(
+            [
+                # cd to the workspace and clean generated files
+                f"cd {BaseConfig.base_config.workspace} && rm {self.tiramisu_program.temp_files_identifier}*{{.o,.cpp,.h,.so,.d}}"  # noqa: E501
+            ],
+            capture_output=True,
+            text=True,
+            shell=True,
+            check=False,
+            executable="/bin/bash",
+        )
