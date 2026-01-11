@@ -206,32 +206,41 @@ class TiramisuTree:
                 iterator_id = (first_comp, iterator_level)
                 name_to_iterator_identifier[iterator_name] = iterator_id
 
-                tiramisu_tree.iterators[iterator_id] = IteratorNode(
-                    name=iterator_name,
-                    id=iterator_id,
-                    lower_bound=lower_bound,
-                    upper_bound=upper_bound,
-                    child_iterators=[],
-                    computations_list=[],
-                    parent_iterator=(
-                        None
-                        if iterator_level == 0
-                        else level_iterator_map[iterator_level - 1][-1]
-                    ),
-                    level=iterator_level,
+                parent_iterator = (
+                    None
+                    if iterator_level == 0
+                    else level_iterator_map[iterator_level - 1][-1]
                 )
+
+                # Do not overwrite the iterator node if it already exists.
+                # Some iterators appear in separate blocks with the same iterator_id;
+                # we want the union of those blocks instead of keeping only the latest.
+                if iterator_id not in tiramisu_tree.iterators:
+                    tiramisu_tree.iterators[iterator_id] = IteratorNode(
+                        name=iterator_name,
+                        id=iterator_id,
+                        lower_bound=lower_bound,
+                        upper_bound=upper_bound,
+                        child_iterators=[],
+                        computations_list=[],
+                        parent_iterator=parent_iterator,
+                        level=iterator_level,
+                    )
+
                 if iterator_level not in level_iterator_map:
                     level_iterator_map[iterator_level] = []
                 level_iterator_map[iterator_level].append(iterator_id)
 
                 if iterator_level == 0:
-                    tiramisu_tree.roots.append(iterator_id)
+                    if iterator_id not in tiramisu_tree.roots:
+                        tiramisu_tree.roots.append(iterator_id)
                 else:
                     # Add the iterator to its parent's child iterators
                     # (the last iterator we added in the previous level)
-                    tiramisu_tree.iterators[
-                        level_iterator_map[iterator_level - 1][-1]
-                    ].child_iterators.append(iterator_id)
+                    parent_id = level_iterator_map[iterator_level - 1][-1]
+                    parent_node = tiramisu_tree.iterators[parent_id]
+                    if iterator_id not in parent_node.child_iterators:
+                        parent_node.child_iterators.append(iterator_id)
 
             elif "|computation|" in str_line:
                 level_str, _, comp_name = str_line.split("|")
@@ -244,9 +253,9 @@ class TiramisuTree:
                 # Some computations might occur in a single iteration loop which
                 # would be romved by ISL
                 if line_idx != 0:
-                    tiramisu_tree.iterators[
-                        level_iterator_map[line_idx - 1][-1]
-                    ].computations_list.append(comp_name)
+                    it = tiramisu_tree.iterators[level_iterator_map[line_idx - 1][-1]]
+                    if comp_name not in it.computations_list:
+                        it.computations_list.append(comp_name)
 
                 # Add the computation to the absolute order dict
                 tiramisu_tree.computations_absolute_order[comp_name] = (
