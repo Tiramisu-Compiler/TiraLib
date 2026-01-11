@@ -118,11 +118,28 @@ class Schedule:
         The execution time of the Tiramisu program after applying the schedule.
         """
 
+        # Time budgetting params validation
+        assert min_runs >= 0, "min_runs must be non-negative"
+        if time_budget and time_budget > 0:
+            # Case: Using Time Budget
+            if max_runs is not None:
+                assert max_runs >= min_runs, (
+                    f"max_runs ({max_runs}) must be >= min_runs ({min_runs})"
+                )
+        else:
+            # Case: Fixed Number of Runs (No valid budget)
+            assert min_runs > 0, "Without a time_budget, min_runs must be > 0"
+            assert max_runs is None, (
+                "max_runs is ignored without a time_budget (ambiguous); set it to None"
+            )
+
         if self.tiramisu_program.server:
             result = self.tiramisu_program.server.run(
                 operation="execution",
                 schedule=self,
-                nbr_executions=min_runs,
+                min_runs=min_runs,
+                max_runs=max_runs,
+                time_budget=time_budget,
                 delete_files=delete_files,
             )
             if result.legality is False:
@@ -144,10 +161,10 @@ class Schedule:
         return CompilingService.get_cpu_exec_times(
             self.tiramisu_program,
             self.optims_list,
-            min_runs,
-            max_runs,
-            time_budget,
-            delete_files,
+            min_runs=min_runs,
+            max_runs=max_runs,
+            time_budget=time_budget,
+            delete_files=delete_files,
         )
 
     def is_legal(self, with_ast: bool = False) -> bool:

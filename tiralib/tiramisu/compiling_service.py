@@ -4,7 +4,7 @@ import logging
 import os
 import re
 import subprocess
-from typing import TYPE_CHECKING, List, Literal
+from typing import TYPE_CHECKING, List
 
 from tiralib.config import BaseConfig
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
@@ -498,91 +498,52 @@ class CompilingService:
             logger.debug(f"Generated Halide code:\n{halide_repr}")
 
             # if a minimal number if executions is set, perform them without a timeout
-            if min_runs > 0:
-                # run the wrapper and get the execution time
-                compiler = subprocess.run(
-                    [
-                        " && ".join(
-                            env_vars
-                            + CompilingService.get_n_runs_script(
-                                nb_exec=min_runs, tiramisu_program=tiramisu_program
-                            )
+            # if min_runs > 0:
+            # run the wrapper and get the execution time
+            compiler = subprocess.run(
+                [
+                    " && ".join(
+                        env_vars
+                        + CompilingService.get_n_runs_script(
+                            min_runs=min_runs,
+                            max_runs=max_runs,
+                            time_budget=time_budget,
+                            tiramisu_program=tiramisu_program,
                         )
-                    ],
-                    capture_output=True,
-                    text=True,
-                    shell=True,
-                    check=True,
-                )
+                    )
+                ],
+                capture_output=True,
+                text=True,
+                shell=True,
+                check=True,  # This ensures CRASHES (segfaults) are raised as Exceptions
+            )
 
-                if compiler.stdout:
-                    results += [float(x) for x in compiler.stdout.split()]
+            # If we reached this line, the C++ wrapper exited cleanly (Exit Code 0)
+            if compiler.stdout:
+                results += [float(x) for x in compiler.stdout.split()]
+            else:
+                # Exit Code 0, but no output.
+                # This happens if Time Budget < 1st Run Duration.
+                if min_runs == 0:
+                    # This is a valid outcome: The budget killed it before the first run finished.
+                    logger.info(
+                        f"Target {tiramisu_program.name}: Time budget exhausted before 1st run. Returning empty."
+                    )
+                    # results remains empty list
                 else:
-                    logger.error("No output from schedule execution")
+                    # If min_runs > 0, we were GUARANTEED at least one print.
+                    # If empty -> Logic Error or Flush failure (Unlikely with current cpp)
+                    logger.error(
+                        "No output from schedule execution despite min_runs > 0"
+                    )
                     logger.error(compiler.stderr)
                     logger.error(compiler.stdout)
                     logger.error(
-                        f"The following schedule execution crashed: {tiramisu_program.name}, schedule: {optims_list} \n\n {cpp_code}\n\n"  # noqa: E501
+                        f"The following schedule execution returned no results despite min_runs > 0: {tiramisu_program.name}, schedule: {optims_list} \n\n {cpp_code}\n\n"  # noqa: E501
                     )
-                    raise ScheduleExecutionError("No output from schedule execution")
-
-            if time_budget is not None:
-                consumed_time = sum(results)
-                if consumed_time >= time_budget:
-                    logger.debug(
-                        f"No time budget left to perform extra runs. Consumed time:{consumed_time} >= time budget:{time_budget}. Completed {len(results)} out of {min_runs} min_runs and 0 out of {max_runs - min_runs if max_runs else 'inf'} extra runs."
+                    raise ScheduleExecutionError(
+                        "Schedule execution returned 0 results, expected > 0"
                     )
-                # if a time_budget is set and hasn't been consumed by the min_runs
-                else:
-                    # if max_runs not defined, run indefinitely until time_budget reached
-                    if max_runs is None:
-                        nb_exec_left = "inf"
-                    else:
-                        nb_exec_left = max_runs - min_runs
-                    # run the wrapper and get the execution time
-                    compiler = subprocess.run(
-                        [
-                            " && ".join(
-                                env_vars
-                                + CompilingService.get_n_runs_script(
-                                    nb_exec=nb_exec_left,
-                                    tiramisu_program=tiramisu_program,
-                                    timeout=time_budget - consumed_time,
-                                )
-                            )
-                        ],
-                        capture_output=True,
-                        text=True,
-                        shell=True,
-                        check=False,
-                    )
-
-                    # if the command has to quit properly, that is either on timeout or (noraml completion and non-empty stdout)
-                    if not (
-                        compiler.returncode == 124
-                        or (compiler.returncode == 0 and compiler.stdout)
-                    ):
-                        logger.error(
-                            "Timed-out wrapper execution did not terminate properly"
-                        )
-                        logger.error(f"return code {compiler.returncode}")
-                        logger.error(compiler.stderr)
-                        logger.error(compiler.stdout)
-                        logger.error(
-                            f"The following schedule execution crashed: {tiramisu_program.name}, schedule: {optims_list} \n\n {cpp_code}\n\n"  # noqa: E501
-                        )
-                        raise ScheduleExecutionError(
-                            "Timed-out wrapper execution did not terminate properly"
-                        )
-
-                    # Extract the execution times from the output and return the min
-                    else:
-                        # if the command timed out
-                        if compiler.returncode == 124:
-                            logger.debug(
-                                f"Execution of wrapper timed-out. Completed {len(results)} out of {min_runs} min_runs and {len(compiler.stdout.split())} out of {nb_exec_left} extra runs. Collected measurements are [{' '.join(list(map(str, results)))}]+[{compiler.stdout}]."
-                            )
-                        results += [float(x) for x in compiler.stdout.split()]
 
             if delete_files:
                 CompilingService.delete_temporary_files(
@@ -602,24 +563,24 @@ class CompilingService:
     def get_n_runs_script(
         cls,
         tiramisu_program: TiramisuProgram,
-        nb_exec: int | Literal["inf"] = 1,
-        timeout: float | None = None,
+        min_runs: int = 1,
+        max_runs: int | None = None,
+        time_budget: float | None = None,
     ):
         """Get the script to run the program n times."""
         if not BaseConfig.base_config:
             raise ValueError("BaseConfig not initialized")
 
         env_vars = CompilingService.get_env_vars()
-
         return env_vars + [
             # cd to the workspace
             f"cd {BaseConfig.base_config.workspace}",
             #  set the env variables
-            f"export NB_EXEC={nb_exec}",
+            f"export MIN_RUNS={min_runs}",
+            f"export MAX_RUNS={max_runs if max_runs else 'inf'}",
+            f"export TIME_BUDGET={time_budget if time_budget else '-1'}",
             # run the wrapper
-            f"./{tiramisu_program.temp_files_identifier}_wrapper"
-            if timeout is None
-            else f"timeout {timeout / 1000} ./{tiramisu_program.temp_files_identifier}_wrapper",
+            f"./{tiramisu_program.temp_files_identifier}_wrapper",
         ]
 
     @classmethod
