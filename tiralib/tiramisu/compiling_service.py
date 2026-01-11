@@ -4,7 +4,7 @@ import logging
 import os
 import re
 import subprocess
-from typing import TYPE_CHECKING, List, Literal
+from typing import TYPE_CHECKING, List
 
 from tiralib.config import BaseConfig
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
