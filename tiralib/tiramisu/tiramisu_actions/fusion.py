@@ -101,7 +101,7 @@ perform_full_dependency_analysis();
 """  # noqa: E501
 
         self.str_representation = (
-            f"F(L{self.params[0][1]},comps=[{self.params[0][0]},{self.params[1][0]}])"
+            f"F(L{self.params[0][1]},comps=['{self.params[0][0]}', '{self.params[1][0]}'])"
         )
 
         self.legality_check_string = (
