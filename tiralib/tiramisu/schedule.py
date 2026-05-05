@@ -228,6 +228,7 @@ class Schedule:
     ) -> "Schedule":
         schedule = cls(tiramisu_program)
         assert schedule.tree
+        sched_str = sched_str.replace('"', "'")
         for optimization_str in sched_str.split("|"):
             if optimization_str == "":
                 continue
