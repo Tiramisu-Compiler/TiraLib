@@ -1,3 +1,5 @@
+import pytest
+
 import tests.utils as test_utils
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_actions.unrolling import Unrolling
@@ -37,6 +39,26 @@ def test_set_string_representations():
         reversal.legality_check_string
         == "prepare_schedules_for_legality_checks(true);\n    is_legal &= loop_unrolling_is_legal(0, {&comp00});\n    comp00.unroll(0,4);"  # noqa: E501
     )
+
+
+def test_initialize_action_for_tree_l_neg_1():
+    BaseConfig.init()
+    sample = test_utils.unrolling_sample()
+    unrolling = Unrolling([("comp00", -1), 4])
+    unrolling.initialize_action_for_tree(sample.tree)
+    # comp00's innermost level in the sample is 1
+    assert unrolling.iterator_id == ("comp00", 1)
+    assert unrolling.tiramisu_optim_str == "comp00.unroll(1,4);"
+    assert unrolling.str_representation == "U(L1,4,comps=['comp00'])"
+
+
+def test_initialize_action_for_tree_l_neg_1_mismatch():
+    BaseConfig.init()
+    tree = test_utils.tree_test_sample()
+    # comp01's innermost depth is 1, comp03's is 3 — must error.
+    unrolling = Unrolling([("comp01", -1), 4], ["comp01", "comp03"])
+    with pytest.raises(ValueError):
+        unrolling.initialize_action_for_tree(tree)
 
 
 def test_get_candidates():

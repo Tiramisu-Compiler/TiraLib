@@ -251,7 +251,7 @@ class Schedule:
             elif optimization_str[0] == "U":
                 # extract loop level, factor and comps using
                 # U\(L(\d),(\d+),comps=\[([\w',]*)\]\)
-                regex = r"U\(L(\d),(\d+),comps=\[([\w', ]*)\]\)"
+                regex = r"U\(L(-?\d+),(\d+),comps=\[([\w', ]*)\]\)"
                 match = re.match(regex, optimization_str)
                 if match:
                     loop_level = int(match.group(1))

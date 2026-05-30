@@ -39,6 +39,36 @@ class Unrolling(TiramisuAction):
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
         # clone the tree to be able to restore it later
         self.tree = copy.deepcopy(tiramisu_tree)
+
+        comp_name, level = self.iterator_id
+        if level == -1:
+            # L-1 means "innermost loop after previously applied
+            # transformations"; resolve against the current tree state.
+            def innermost_level_of(comp: str) -> int:
+                levels = [
+                    it.level
+                    for it in tiramisu_tree.iterators.values()
+                    if comp in it.computations_list
+                ]
+                if not levels:
+                    raise ValueError(
+                        f"Cannot resolve L-1 for unrolling: computation "
+                        f"{comp!r} is not in the current tree."
+                    )
+                return max(levels)
+
+            reference_comps = self.comps or [comp_name]
+            innermost_levels = {c: innermost_level_of(c) for c in reference_comps}
+            unique_levels = set(innermost_levels.values())
+            if len(unique_levels) > 1:
+                raise ValueError(
+                    "U(L-1,...) requires all target computations to share "
+                    f"the same innermost loop depth; got {innermost_levels}. "
+                    "Split non-perfectly-nested computations into separate "
+                    "U(...) actions."
+                )
+            self.iterator_id = (comp_name, unique_levels.pop())
+
         if self.iterator_id not in tiramisu_tree.iterators:
             self.iterator_id = self.tree.get_iterator_of_computation(
                 *self.iterator_id

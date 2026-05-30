@@ -132,6 +132,33 @@ def test_str_representation():
     assert str(schedule) == "P(L0,comps=['comp02'])"
 
 
+def test_from_sched_str_unrolling_l_neg_1():
+    BaseConfig.init()
+
+    # Pre-tiling: innermost level of `w` in gemver is 1 (it's a 2D loop).
+    test_program = test_utils.multiple_roots_sample()
+    pre_schedule = Schedule.from_sched_str(
+        "U(L-1,4,comps=['w'])", test_program
+    )
+    assert pre_schedule is not None
+    pre_unrolling = pre_schedule.optims_list[0]
+    pre_level = pre_unrolling.iterator_id[1]
+    assert pre_level == 1
+    # Serialization carries the resolved level, not L-1.
+    assert "L-1" not in str(pre_schedule)
+    assert "L1" in str(pre_schedule)
+
+    # Post-tiling: T2 on (w,0)(w,1) introduces 2 new loops; the new
+    # innermost level for `w` should be deeper than before.
+    post_schedule = Schedule.from_sched_str(
+        "T2(L0,L1,32,32,comps=['w'])|U(L-1,4,comps=['w'])", test_program
+    )
+    assert post_schedule is not None
+    post_unrolling = post_schedule.optims_list[1]
+    post_level = post_unrolling.iterator_id[1]
+    assert post_level > pre_level
+
+
 def test_from_sched_str():
     BaseConfig.init()
 
