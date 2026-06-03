@@ -137,9 +137,7 @@ def test_from_sched_str_unrolling_l_neg_1():
 
     # Pre-tiling: innermost level of `w` in gemver is 1 (it's a 2D loop).
     test_program = test_utils.multiple_roots_sample()
-    pre_schedule = Schedule.from_sched_str(
-        "U(L-1,4,comps=['w'])", test_program
-    )
+    pre_schedule = Schedule.from_sched_str("U(L-1,4,comps=['w'])", test_program)
     assert pre_schedule is not None
     pre_unrolling = pre_schedule.optims_list[0]
     pre_level = pre_unrolling.iterator_id[1]
