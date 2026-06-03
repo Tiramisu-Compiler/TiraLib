@@ -228,7 +228,10 @@ class Schedule:
     ) -> "Schedule":
         schedule = cls(tiramisu_program)
         assert schedule.tree
-        sched_str = sched_str.replace('"', "'")
+        # Normalize: collapse all whitespace and canonicalize quotes so the
+        # per-action regexes can stay strict. Tiramisu identifiers are \w+,
+        # so stripping whitespace inside the schedule string is lossless.
+        sched_str = re.sub(r"\s+", "", sched_str).replace('"', "'")
         for optimization_str in sched_str.split("|"):
             if optimization_str == "":
                 continue
