@@ -235,6 +235,7 @@ class Schedule:
         for optimization_str in sched_str.split("|"):
             if optimization_str == "":
                 continue
+            prev_count = len(schedule.optims_list)
             if optimization_str[0] == "P":
                 # extract loop level and comps using P\(L(\d),comps=\[([\w',]*)
                 regex = r"P\(L(\d),comps=\[([\w', ]*)\]\)"
@@ -428,6 +429,14 @@ class Schedule:
             elif optimization_str[:2] == "TG":
                 raise NotImplementedError
                 # regex =
+
+            if len(schedule.optims_list) == prev_count:
+                # Either the leading character matched no branch, or the
+                # branch's regex didn't match the body. Surface it instead
+                # of silently dropping the token.
+                raise ValueError(
+                    f"Failed to parse schedule token: {optimization_str!r}"
+                )
 
         return schedule
 
