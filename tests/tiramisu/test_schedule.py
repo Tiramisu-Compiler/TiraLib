@@ -1,3 +1,5 @@
+import pytest
+
 import tests.utils as test_utils
 from tiralib.tiramisu import tiramisu_actions
 from tiralib.tiramisu.schedule import Schedule
@@ -230,3 +232,18 @@ def test_from_sched_str():
 
     for idx, optim in enumerate(schedule.optims_list):
         assert optim == new_schedule.optims_list[idx]
+
+
+def test_from_sched_str_unknown_action_raises():
+    BaseConfig.init()
+    test_program = benchmark_program_test_sample()
+    with pytest.raises(ValueError, match="Failed to parse schedule token"):
+        Schedule.from_sched_str("Z(L0,comps=['comp02'])", test_program)
+
+
+def test_from_sched_str_malformed_body_raises():
+    BaseConfig.init()
+    test_program = benchmark_program_test_sample()
+    # Known leading char "P" but missing the closing paren.
+    with pytest.raises(ValueError, match="Failed to parse schedule token"):
+        Schedule.from_sched_str("P(L0,comps=['comp02']", test_program)
