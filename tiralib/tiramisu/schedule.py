@@ -142,6 +142,7 @@ class Schedule:
                 time_budget=time_budget,
                 delete_files=delete_files,
             )
+            self.legality = result.legality
             if result.legality is False:
                 raise Exception("Schedule is not legal")
 
@@ -152,7 +153,7 @@ class Schedule:
 
             return result.exec_times
 
-        if self.legality is None and self.optims_list:
+        if self.legality is None:
             self.is_legal()
 
         if self.legality is False:
@@ -175,6 +176,10 @@ class Schedule:
         -------
         Boolean indicating if the schedule is legal.
         """
+        if not self.optims_list:
+            self.legality = True
+            return True
+
         if self.tiramisu_program.server:
             result = self.tiramisu_program.server.run("legality", self)
             self.tree = TiramisuTree.from_isl_ast_string_list(

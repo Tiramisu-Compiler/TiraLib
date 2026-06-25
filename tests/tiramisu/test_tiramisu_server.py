@@ -81,6 +81,46 @@ def test_get_exec_times():
     assert len(schedule.execute()) > 0
 
 
+def test_execute_sets_legality():
+    BaseConfig.init()
+
+    cpp_code = Path("examples/function_gemver_MINI_generator.cpp").read_text()
+    sample = TiramisuProgram.init_server(
+        cpp_code=cpp_code,
+        load_isl_ast=True,
+        load_tree=True,
+        reuse_server=True,
+    )
+
+    schedule = Schedule(sample)
+    schedule.add_optimizations(
+        [tiramisu_actions.Interchange(params=[("x_temp", 0), ("x_temp", 1)])]
+    )
+    assert schedule.legality is None
+
+    schedule.execute(min_runs=1)
+    assert schedule.legality is True
+
+
+def test_is_legal_empty_schedule_short_circuits():
+    BaseConfig.init()
+
+    cpp_code = Path("examples/function_gemver_MINI_generator.cpp").read_text()
+    sample = TiramisuProgram.init_server(
+        cpp_code=cpp_code,
+        load_isl_ast=True,
+        load_tree=True,
+        reuse_server=True,
+    )
+
+    schedule = Schedule(sample)
+    assert schedule.optims_list == []
+    assert schedule.legality is None
+
+    assert schedule.is_legal() is True
+    assert schedule.legality is True
+
+
 def test_get_skewing_factors():
     BaseConfig.init()
 
