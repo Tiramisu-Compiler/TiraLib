@@ -95,9 +95,29 @@ class Unrolling(TiramisuAction):
         loop_level = self.iterator_id[1]
         unrolling_factor = self.unrolling_factor
         # for comp in self.comps:
-        self.tiramisu_optim_str = "\n    ".join(
-            [f"{comp}.unroll({loop_level},{unrolling_factor});" for comp in self.comps]
-        )
+        unroll_lines = [
+            f"{comp}.unroll({loop_level},{unrolling_factor});" for comp in self.comps
+        ]
+        # Unrolling splits the shared loop of each computation independently,
+        # which fissions computations that were fused into one loop each. Re-issue
+        # the .after() ordering at their (now deeper) innermost loop level so
+        # codegen keeps them fused, matching the LOOPer autoscheduler (and the
+        # TiraLibCPP server path). Without this, a subset-unroll of mutually
+        # dependent computations (e.g. deriche's recursive filter) is distributed
+        # and produces wrong results.
+        if len(self.comps) > 1:
+            first = self.comps[0]
+            innermost = (
+                f"(isl_map_dim({first}.get_schedule(), isl_dim_out) - 2) / 2 - 1"
+            )
+            refusion_lines = [f"int __unroll_innermost = {innermost};"]
+            for prev, cur in zip(self.comps, self.comps[1:]):
+                refusion_lines.append(f"{cur}.after({prev}, __unroll_innermost);")
+            self.tiramisu_optim_str = (
+                "{\n    " + "\n    ".join(unroll_lines + refusion_lines) + "\n    }"
+            )
+        else:
+            self.tiramisu_optim_str = "\n    ".join(unroll_lines)
         self.str_representation = (
             f"U(L{str(loop_level)},{str(unrolling_factor)},comps={self.comps})"
         )
