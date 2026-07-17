@@ -253,6 +253,7 @@ class Schedule:
                         [
                             tiramisu_actions.Parallelization(
                                 [(comps[0], loop_level)],
+                                comps=comps,
                             )
                         ]
                     )

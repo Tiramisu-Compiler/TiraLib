@@ -250,6 +250,22 @@ def test_from_sched_str():
         assert optim == new_schedule.optims_list[idx]
 
 
+def test_from_sched_str_preserves_parallelization_computations():
+    BaseConfig.init()
+    test_program = test_utils.multiple_roots_sample()
+
+    schedule = Schedule.from_sched_str(
+        "P(L0,comps=['A_hat','x_temp','A_hat'])", test_program
+    )
+
+    parallelization = schedule.optims_list[0]
+    assert parallelization.comps == ["A_hat", "x_temp"]
+    assert parallelization.tiramisu_optim_str == (
+        "A_hat.tag_parallel_level(0);\n"
+        "x_temp.tag_parallel_level(0);\n"
+    )
+
+
 def test_from_sched_str_unknown_action_raises():
     BaseConfig.init()
     test_program = benchmark_program_test_sample()
