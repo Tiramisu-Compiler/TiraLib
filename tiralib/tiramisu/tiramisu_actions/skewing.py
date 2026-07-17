@@ -18,8 +18,18 @@ from tiralib.tiramisu.tiramisu_actions.tiramisu_action import (
 
 
 class Skewing(TiramisuAction):
-    """
-    Skewing optimization command.
+    """Skew two consecutive iterators ``i`` and ``j``.
+
+    The transformed iterators are::
+
+        [i']   [alpha  beta ] [i]
+        [j'] = [gamma  sigma] [j]
+
+    With two factors, ``[f_i, f_j]`` supplies the first matrix row and
+    Tiramisu computes ``gamma`` and ``sigma`` such that
+    ``f_i * sigma - f_j * gamma = 1``. With four factors,
+    ``[alpha, beta, gamma, sigma]`` supplies the complete matrix directly;
+    its determinant must have absolute value one.
     """
 
     def __init__(
@@ -27,11 +37,12 @@ class Skewing(TiramisuAction):
         params: List[IteratorIdentifier | int],
         comps: List[str] = [],
     ):
-        # Skewing takes four parameters of the form L1, L2, F3, F4
+        # Skewing takes either four parameters of the form L1, L2, f_i, f_j
+        # or six parameters of the form L1, L2, alpha, beta, gamma, sigma.
         # 1. L1 and L2 are the levels of the iterators to skew
-        # 2. F3 and F4 are the factors of the skewing
+        # 2. Two factors fill the matrix's first row; four fill it row-major.
 
-        assert len(params) == 4
+        assert len(params) in (4, 6)
         super().__init__(
             type=TiramisuActionType.SKEWING,
             params=params,
@@ -42,8 +53,8 @@ class Skewing(TiramisuAction):
         assert isinstance(params[0], tuple) and isinstance(params[1], tuple), (
             "The first two parameters must be tuples"
         )
-        assert isinstance(params[2], int) and isinstance(params[3], int), (
-            "The last two parameters must be integers"
+        assert all(isinstance(factor, int) for factor in params[2:]), (
+            "The skewing factors must be integers"
         )
 
         self.iterators: list[IteratorIdentifier] = params[:2]  # type: ignore
@@ -77,16 +88,17 @@ class Skewing(TiramisuAction):
     def set_string_representations(self, tiramisu_tree: TiramisuTree):
         assert self.iterators is not None
         assert self.comps is not None
-        assert len(self.params) == 4
+        assert len(self.params) in (4, 6)
         assert isinstance(self.iterators[0], tuple) and isinstance(
             self.iterators[1], tuple
         )
 
         self.tiramisu_optim_str = ""
+        factors_str = ", ".join(str(factor) for factor in self.factors)
         for comp in self.comps:
-            self.tiramisu_optim_str += f"{comp}.skew({self.iterators[0][1]}, {self.iterators[1][1]}, {self.factors[0]}, {self.factors[1]});\n"  # noqa: E501
+            self.tiramisu_optim_str += f"{comp}.skew({self.iterators[0][1]}, {self.iterators[1][1]}, {factors_str});\n"  # noqa: E501
 
-        self.str_representation = f"S(L{self.iterators[0][1]},L{self.iterators[1][1]},{self.factors[0]},{self.factors[1]},comps={self.comps})"  # noqa: E501
+        self.str_representation = f"S(L{self.iterators[0][1]},L{self.iterators[1][1]},{','.join(str(factor) for factor in self.factors)},comps={self.comps})"  # noqa: E501
 
         self.legality_check_string = self.tiramisu_optim_str
 

@@ -208,6 +208,24 @@ def test_from_sched_str():
     for idx, optim in enumerate(schedule.optims_list):
         assert optim == new_schedule.optims_list[idx]
 
+    schedule = Schedule(test_program)
+    assert schedule.tree
+
+    schedule.add_optimizations(
+        [
+            tiramisu_actions.Skewing(
+                [("x_temp", 0), ("x_temp", 1), 1, 0, 1, 1]
+            ),
+        ]
+    )
+
+    sched_str = str(schedule)
+    new_schedule = Schedule.from_sched_str(sched_str, test_program)
+
+    assert new_schedule is not None
+    assert len(new_schedule.optims_list) == len(schedule.optims_list)
+    assert schedule.optims_list == new_schedule.optims_list
+
     test_program = test_utils.tiling_3d_sample()
 
     schedule = Schedule(test_program)
