@@ -33,6 +33,7 @@ class Unrolling(TiramisuAction):
 
         self.params = params
         self.comps = comps
+        self.legality_comps: List[str] = []
 
         super().__init__(type=TiramisuActionType.UNROLLING, params=params, comps=comps)
 
@@ -74,15 +75,25 @@ class Unrolling(TiramisuAction):
                 *self.iterator_id
             ).id
 
-        if not self.comps:
-            iterator = tiramisu_tree.iterators[self.iterator_id]
+        iterator = tiramisu_tree.iterators[self.iterator_id]
 
-            # Get the computations that are in the loop to be unrolled
-            self.comps = tiramisu_tree.get_iterator_subtree_computations(iterator.id)
-            # order the computations by their absolute order
-            self.comps.sort(
-                key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
-            )
+        # The specialized Tiramisu legality check operates on every computation
+        # in the selected loop.  Keep that historical behavior even when a
+        # serialized schedule explicitly unrolls only a subset of them.
+        self.legality_comps = tiramisu_tree.get_iterator_subtree_computations(
+            iterator.id
+        )
+        self.legality_comps.extend(
+            comp for comp in self.comps if comp not in self.legality_comps
+        )
+        self.legality_comps.sort(
+            key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
+        )
+
+        if not self.comps:
+            # Direct API calls that omit `comps` retain the original behavior:
+            # unroll the complete iterator subtree.
+            self.comps = self.legality_comps.copy()
 
         self.set_string_representations(tiramisu_tree)
 
@@ -91,38 +102,56 @@ class Unrolling(TiramisuAction):
         assert self.unrolling_factor is not None
         assert self.comps is not None
 
-        self.tiramisu_optim_str = ""
         loop_level = self.iterator_id[1]
         unrolling_factor = self.unrolling_factor
-        # for comp in self.comps:
-        unroll_lines = [
-            f"{comp}.unroll({loop_level},{unrolling_factor});" for comp in self.comps
-        ]
-        # Unrolling splits the shared loop of each computation independently,
-        # which fissions computations that were fused into one loop each. Re-issue
-        # the .after() ordering at their (now deeper) innermost loop level so
-        # codegen keeps them fused, matching the LOOPer autoscheduler (and the
-        # TiraLibCPP server path). Without this, a subset-unroll of mutually
-        # dependent computations (e.g. deriche's recursive filter) is distributed
-        # and produces wrong results.
-        if len(self.comps) > 1:
-            first = self.comps[0]
-            innermost = (
-                f"(isl_map_dim({first}.get_schedule(), isl_dim_out) - 2) / 2 - 1"
-            )
-            refusion_lines = [f"int __unroll_innermost = {innermost};"]
-            for prev, cur in zip(self.comps, self.comps[1:]):
-                refusion_lines.append(f"{cur}.after({prev}, __unroll_innermost);")
-            self.tiramisu_optim_str = (
-                "{\n    " + "\n    ".join(unroll_lines + refusion_lines) + "\n    }"
-            )
-        else:
-            self.tiramisu_optim_str = "\n    ".join(unroll_lines)
+
+        def make_optim_str(comps: List[str]) -> str:
+            unroll_lines = [
+                f"{comp}.unroll({loop_level},{unrolling_factor});" for comp in comps
+            ]
+            # Unrolling splits a shared loop independently for each computation.
+            # Re-issue the ordering for a multi-computation group so the legality
+            # path retains TiraLib's original full-subtree behavior.
+            if len(comps) > 1:
+                first = comps[0]
+                innermost = (
+                    f"(isl_map_dim({first}.get_schedule(), isl_dim_out) - 2) / 2 - 1"
+                )
+                refusion_lines = [f"int __unroll_innermost = {innermost};"]
+                for prev, cur in zip(comps, comps[1:]):
+                    refusion_lines.append(
+                        f"{cur}.after({prev}, __unroll_innermost);"
+                    )
+                return (
+                    "{\n    "
+                    + "\n    ".join(unroll_lines + refusion_lines)
+                    + "\n    }"
+                )
+            return "\n    ".join(unroll_lines)
+
+        self.tiramisu_optim_str = make_optim_str(self.comps)
         self.str_representation = (
             f"U(L{str(loop_level)},{str(unrolling_factor)},comps={self.comps})"
         )
-
-        self.legality_check_string = f"prepare_schedules_for_legality_checks(true);\n    is_legal &= loop_unrolling_is_legal({loop_level}, {{{', '.join([f'&{comp}' for comp in self.comps])}}});\n    {self.tiramisu_optim_str}"  # noqa: E501
+        legality_check = f"prepare_schedules_for_legality_checks(true);\n    is_legal &= loop_unrolling_is_legal({loop_level}, {{{', '.join([f'&{comp}' for comp in self.legality_comps])}}});"  # noqa: E501
+        if self.comps == self.legality_comps:
+            # Full-loop unrolling keeps the original TiraLib legality path,
+            # including applying the transformation before the final global
+            # dependency check.
+            self.legality_str_representation = self.str_representation
+            self.legality_check_string = (
+                f"{legality_check}\n    {self.tiramisu_optim_str}"
+            )
+        else:
+            # Tiramisu's transformed-schedule legality machinery cannot
+            # represent a subset-unrolled fused loop.  Its dedicated unrolling
+            # check can: validate the complete loop group without mutating the
+            # legality schedule, then apply the exact subset only for execution.
+            self.legality_str_representation = (
+                f"UCheck(L{str(loop_level)},{str(unrolling_factor)},"
+                f"comps={self.legality_comps})"
+            )
+            self.legality_check_string = legality_check
 
     @classmethod
     def get_candidates(cls, program_tree: TiramisuTree) -> List[IteratorIdentifier]:

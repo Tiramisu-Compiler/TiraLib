@@ -275,6 +275,7 @@ class Schedule:
                                     (comps[0], loop_level),
                                     factor,
                                 ],
+                                comps=comps,
                             )
                         ]
                     )
@@ -454,6 +455,18 @@ class Schedule:
         sched_str = "|".join([str(optim) for optim in self.optims_list])
 
         return sched_str
+
+    def get_legality_str(self) -> str:
+        """Serialize the transformations used by the legality backend.
+
+        Most actions use their normal serialization.  Subset unrolling uses a
+        check-only full-loop representation because Tiramisu's transformed
+        legality schedule cannot express that subset directly.
+        """
+        return "|".join(
+            getattr(optim, "legality_str_representation", str(optim))
+            for optim in self.optims_list
+        )
 
     def __repr__(self) -> str:
         return self.__str__()
