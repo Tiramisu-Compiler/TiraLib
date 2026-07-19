@@ -162,9 +162,7 @@ def test_from_sched_str_unrolling_l_neg_1():
 def test_from_sched_str_preserves_unrolling_computations():
     test_program = test_utils.fusion_sample()
 
-    parsed_schedule = Schedule.from_sched_str(
-        "U(L2,4,comps=['comp03'])", test_program
-    )
+    parsed_schedule = Schedule.from_sched_str("U(L2,4,comps=['comp03'])", test_program)
     parsed_unrolling = parsed_schedule.optims_list[0]
 
     assert parsed_unrolling.comps == ["comp03"]
@@ -245,9 +243,7 @@ def test_from_sched_str():
 
     schedule.add_optimizations(
         [
-            tiramisu_actions.Skewing(
-                [("x_temp", 0), ("x_temp", 1), 1, 0, 1, 1]
-            ),
+            tiramisu_actions.Skewing([("x_temp", 0), ("x_temp", 1), 1, 0, 1, 1]),
         ]
     )
 
@@ -293,8 +289,7 @@ def test_from_sched_str_preserves_parallelization_computations():
     parallelization = schedule.optims_list[0]
     assert parallelization.comps == ["A_hat", "x_temp"]
     assert parallelization.tiramisu_optim_str == (
-        "A_hat.tag_parallel_level(0);\n"
-        "x_temp.tag_parallel_level(0);\n"
+        "A_hat.tag_parallel_level(0);\nx_temp.tag_parallel_level(0);\n"
     )
 
 

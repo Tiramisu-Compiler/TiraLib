@@ -13,9 +13,7 @@ def test_parallelization_init():
     assert parallelization.iterator_id == ("comp01", 1)
     assert parallelization.comps == ["comp01"]
 
-    parallelization = Parallelization(
-        [("comp01", 1)], comps=["comp01", "comp01"]
-    )
+    parallelization = Parallelization([("comp01", 1)], comps=["comp01", "comp01"])
     assert parallelization.comps == ["comp01"]
 
 

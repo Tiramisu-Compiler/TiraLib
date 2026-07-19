@@ -119,13 +119,9 @@ class Unrolling(TiramisuAction):
                 )
                 refusion_lines = [f"int __unroll_innermost = {innermost};"]
                 for prev, cur in zip(comps, comps[1:]):
-                    refusion_lines.append(
-                        f"{cur}.after({prev}, __unroll_innermost);"
-                    )
+                    refusion_lines.append(f"{cur}.after({prev}, __unroll_innermost);")
                 return (
-                    "{\n    "
-                    + "\n    ".join(unroll_lines + refusion_lines)
-                    + "\n    }"
+                    "{\n    " + "\n    ".join(unroll_lines + refusion_lines) + "\n    }"
                 )
             return "\n    ".join(unroll_lines)
 

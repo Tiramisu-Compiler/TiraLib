@@ -15,9 +15,7 @@ def test_skewing_init():
     assert skewing.factors == [1, 1]
     assert skewing.comps == ["comp00"]
 
-    skewing = Skewing(
-        [("comp00", 0), ("comp00", 1), 1, 0, 1, 1], ["comp00"]
-    )
+    skewing = Skewing([("comp00", 0), ("comp00", 1), 1, 0, 1, 1], ["comp00"])
     assert skewing.iterators == [("comp00", 0), ("comp00", 1)]
     assert skewing.factors == [1, 0, 1, 1]
     assert skewing.comps == ["comp00"]
