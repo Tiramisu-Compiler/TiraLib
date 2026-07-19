@@ -15,6 +15,11 @@ def test_skewing_init():
     assert skewing.factors == [1, 1]
     assert skewing.comps == ["comp00"]
 
+    skewing = Skewing([("comp00", 0), ("comp00", 1), 1, 0, 1, 1], ["comp00"])
+    assert skewing.iterators == [("comp00", 0), ("comp00", 1)]
+    assert skewing.factors == [1, 0, 1, 1]
+    assert skewing.comps == ["comp00"]
+
 
 def test_initialize_action_for_tree():
     BaseConfig.init()
@@ -33,6 +38,16 @@ def test_set_string_representations():
     schedule = Schedule(sample)
     schedule.add_optimizations([skewing])
     assert skewing.tiramisu_optim_str == "comp00.skew(0, 1, 1, 1);\n"
+
+
+def test_set_string_representations_four_factors():
+    BaseConfig.init()
+    sample = test_utils.skewing_example()
+    skewing = Skewing([("comp00", 0), ("comp00", 1), 1, 0, 1, 1])
+    schedule = Schedule(sample)
+    schedule.add_optimizations([skewing])
+    assert skewing.tiramisu_optim_str == "comp00.skew(0, 1, 1, 0, 1, 1);\n"
+    assert str(skewing) == "S(L0,L1,1,0,1,1,comps=['comp00'])"
 
 
 def test_get_candidates():

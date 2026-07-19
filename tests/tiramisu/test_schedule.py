@@ -159,6 +159,36 @@ def test_from_sched_str_unrolling_l_neg_1():
     assert post_level > pre_level
 
 
+def test_from_sched_str_preserves_unrolling_computations():
+    test_program = test_utils.fusion_sample()
+
+    parsed_schedule = Schedule.from_sched_str("U(L2,4,comps=['comp03'])", test_program)
+    parsed_unrolling = parsed_schedule.optims_list[0]
+
+    assert parsed_unrolling.comps == ["comp03"]
+    assert parsed_unrolling.legality_comps == ["comp03", "comp04"]
+    assert parsed_unrolling.tiramisu_optim_str == "comp03.unroll(2,4);"
+    assert str(parsed_schedule) == "U(L2,4,comps=['comp03'])"
+    assert parsed_schedule.get_legality_str() == (
+        "UCheck(L2,4,comps=['comp03', 'comp04'])"
+    )
+    assert "loop_unrolling_is_legal" in parsed_unrolling.legality_check_string
+    assert ".unroll(" not in parsed_unrolling.legality_check_string
+
+    # Omitting `comps` from the action API must retain the original behavior:
+    # infer every computation in the selected iterator subtree.
+    inferred_schedule = Schedule(test_program)
+    inferred_unrolling = tiramisu_actions.Unrolling([("comp03", 2), 4])
+    inferred_schedule.add_optimizations([inferred_unrolling])
+
+    assert inferred_unrolling.comps == ["comp03", "comp04"]
+    assert inferred_unrolling.legality_comps == ["comp03", "comp04"]
+    assert "comp03.unroll(2,4);" in inferred_unrolling.tiramisu_optim_str
+    assert "comp04.unroll(2,4);" in inferred_unrolling.tiramisu_optim_str
+    assert "comp03.unroll(2,4);" in inferred_unrolling.legality_check_string
+    assert "comp04.unroll(2,4);" in inferred_unrolling.legality_check_string
+
+
 def test_from_sched_str():
     BaseConfig.init()
 
@@ -208,6 +238,22 @@ def test_from_sched_str():
     for idx, optim in enumerate(schedule.optims_list):
         assert optim == new_schedule.optims_list[idx]
 
+    schedule = Schedule(test_program)
+    assert schedule.tree
+
+    schedule.add_optimizations(
+        [
+            tiramisu_actions.Skewing([("x_temp", 0), ("x_temp", 1), 1, 0, 1, 1]),
+        ]
+    )
+
+    sched_str = str(schedule)
+    new_schedule = Schedule.from_sched_str(sched_str, test_program)
+
+    assert new_schedule is not None
+    assert len(new_schedule.optims_list) == len(schedule.optims_list)
+    assert schedule.optims_list == new_schedule.optims_list
+
     test_program = test_utils.tiling_3d_sample()
 
     schedule = Schedule(test_program)
@@ -230,6 +276,21 @@ def test_from_sched_str():
 
     for idx, optim in enumerate(schedule.optims_list):
         assert optim == new_schedule.optims_list[idx]
+
+
+def test_from_sched_str_preserves_parallelization_computations():
+    BaseConfig.init()
+    test_program = test_utils.multiple_roots_sample()
+
+    schedule = Schedule.from_sched_str(
+        "P(L0,comps=['A_hat','x_temp','A_hat'])", test_program
+    )
+
+    parallelization = schedule.optims_list[0]
+    assert parallelization.comps == ["A_hat", "x_temp"]
+    assert parallelization.tiramisu_optim_str == (
+        "A_hat.tag_parallel_level(0);\nx_temp.tag_parallel_level(0);\n"
+    )
 
 
 def test_from_sched_str_unknown_action_raises():

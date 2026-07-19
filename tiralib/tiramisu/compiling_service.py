@@ -94,6 +94,7 @@ class CompilingService:
         legality_check_lines += """
     prepare_schedules_for_legality_checks(true);
     is_legal &= check_legality_of_function();
+    is_legal &= check_legality_of_parallelism();
     std::cout << is_legal << std::endl;
 """
 
@@ -270,6 +271,9 @@ class CompilingService:
         function * fct = tiramisu::global::get_implicit_function();\n"""
         legality_cpp_code = legality_cpp_code.replace(
             "is_legal &= check_legality_of_function();", ""
+        )
+        legality_cpp_code = legality_cpp_code.replace(
+            "is_legal &= check_legality_of_parallelism();", ""
         )
         legality_cpp_code = legality_cpp_code.replace("bool is_legal=true;", "")
         legality_cpp_code = re.sub(

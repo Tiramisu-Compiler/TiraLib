@@ -25,12 +25,17 @@ class Parallelization(TiramisuAction):
         # parallelize specified by a tuple (computation_name, iterator_level)
         assert len(params) == 1
         self.params = params
-        self.comps = comps
+        # Preserve the user-provided order, but make repeated computation names
+        # idempotent.  Tiramisu stores every tag_parallel_level() call, so there
+        # is no benefit in emitting the exact same (computation, level) tag more
+        # than once.
+        unique_comps = list(dict.fromkeys(comps))
+        self.comps = unique_comps
         self.iterator_id = self.params[0]
         super().__init__(
             type=TiramisuActionType.PARALLELIZATION,
             params=params,
-            comps=comps,
+            comps=unique_comps,
         )
 
     def initialize_action_for_tree(self, tiramisu_tree: TiramisuTree):
@@ -51,6 +56,8 @@ class Parallelization(TiramisuAction):
                 key=lambda comp: tiramisu_tree.computations_absolute_order[comp]
             )
 
+        self.comps = list(dict.fromkeys(self.comps))
+
         self.set_string_representations(tiramisu_tree)
 
     def set_string_representations(self, tiramisu_tree: TiramisuTree):
@@ -58,8 +65,9 @@ class Parallelization(TiramisuAction):
         assert self.comps is not None
 
         level = self.iterator_id[1]
-        first_comp = self.comps[0]
-        self.tiramisu_optim_str = f"{first_comp}.tag_parallel_level({level});\n"
+        self.tiramisu_optim_str = "".join(
+            f"{comp}.tag_parallel_level({level});\n" for comp in self.comps
+        )
 
         self.str_representation = f"P(L{level},comps={self.comps})"
 

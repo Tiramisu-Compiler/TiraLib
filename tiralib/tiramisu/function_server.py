@@ -213,6 +213,27 @@ class FunctionServer:
             f"Invalid operation {operation}. Valid operations are: execution, legality, annotations"
         )  # noqa: E501
 
+        legality_result = None
+        server_operation = operation
+        if operation == "execution" and schedule is not None:
+            # Validate subset unrolling with the specialized full-loop check,
+            # then replay the exact serialized computation subset in a fresh
+            # server process.  Tiramisu's transformed-schedule legality path
+            # cannot represent subset unrolling directly.
+            legality_result = self.run(
+                operation="legality",
+                schedule=schedule,
+                min_runs=min_runs,
+                max_runs=max_runs,
+                time_budget=time_budget,
+                delete_files=False,
+            )
+            if not legality_result.legality:
+                if delete_files:
+                    self.delete_temporary_files()
+                return legality_result
+            server_operation = "execution_no_check"
+
         env_vars = " && ".join(
             [
                 f"export {key}={value}"
@@ -227,7 +248,12 @@ class FunctionServer:
             f" && export CPATH={':'.join(BaseConfig.base_config.dependencies.includes)}"
         )
 
-        command = f'{env_vars} && cd {BaseConfig.base_config.workspace} && MIN_RUNS={min_runs} MAX_RUNS={max_runs if max_runs else "inf"} TIME_BUDGET={time_budget if time_budget else "-1"} ./{self.tiramisu_program.temp_files_identifier}_server {operation} "{schedule or ""}"'  # noqa: E501
+        if operation == "legality" and schedule is not None:
+            schedule_str = schedule.get_legality_str()
+        else:
+            schedule_str = str(schedule or "")
+
+        command = f'{env_vars} && cd {BaseConfig.base_config.workspace} && MIN_RUNS={min_runs} MAX_RUNS={max_runs if max_runs else "inf"} TIME_BUDGET={time_budget if time_budget else "-1"} ./{self.tiramisu_program.temp_files_identifier}_server {server_operation} "{schedule_str}"'  # noqa: E501
 
         # run the command and retrieve the execution status
         try:
@@ -239,7 +265,10 @@ class FunctionServer:
             raise e
         if delete_files:
             self.delete_temporary_files()
-        return ResultInterface(output)
+        result = ResultInterface(output)
+        if legality_result is not None:
+            result.legality = legality_result.legality
+        return result
 
     def get_annotations(self):
         """Run the server code to get the annotations."""

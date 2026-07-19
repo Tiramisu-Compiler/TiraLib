@@ -192,7 +192,7 @@ class Schedule:
                 if "skewing_factors" in result.additional_info:
                     for action in self.optims_list:
                         if isinstance(action, tiramisu_actions.Skewing):
-                            if action.params[2] == 0:
+                            if len(action.factors) == 2 and action.factors == [0, 0]:
                                 factors = result.additional_info.replace(
                                     "skewing_factors:", ""
                                 ).split(",")
@@ -253,6 +253,7 @@ class Schedule:
                         [
                             tiramisu_actions.Parallelization(
                                 [(comps[0], loop_level)],
+                                comps=comps,
                             )
                         ]
                     )
@@ -274,6 +275,7 @@ class Schedule:
                                     (comps[0], loop_level),
                                     factor,
                                 ],
+                                comps=comps,
                             )
                         ]
                     )
@@ -360,14 +362,15 @@ class Schedule:
                         ]
                     )
             elif optimization_str[0] == "S":
-                regex = r"S\(L(\d),L(\d),(-?\d+),(-?\d+),comps=\[([\w', ]*)\]\)"
-                match = re.match(regex, optimization_str)
+                regex = r"S\(L(\d),L(\d),(-?\d+),(-?\d+)(?:,(-?\d+),(-?\d+))?,comps=\[([\w', ]*)\]\)"
+                match = re.fullmatch(regex, optimization_str)
                 if match:
                     outer_loop_level = int(match.group(1))
                     inner_loop_level = int(match.group(2))
-                    outer_loop_factor = int(match.group(3))
-                    inner_loop_factor = int(match.group(4))
-                    comps = match.group(5).split(",")
+                    factors = [int(match.group(3)), int(match.group(4))]
+                    if match.group(5) is not None:
+                        factors.extend([int(match.group(5)), int(match.group(6))])
+                    comps = match.group(7).split(",")
                     comps = [comp.strip("' ").strip() for comp in comps]
                     schedule.add_optimizations(
                         [
@@ -375,8 +378,7 @@ class Schedule:
                                 [
                                     (comps[0], outer_loop_level),
                                     (comps[0], inner_loop_level),
-                                    outer_loop_factor,
-                                    inner_loop_factor,
+                                    *factors,
                                 ],
                             )
                         ]
@@ -453,6 +455,18 @@ class Schedule:
         sched_str = "|".join([str(optim) for optim in self.optims_list])
 
         return sched_str
+
+    def get_legality_str(self) -> str:
+        """Serialize the transformations used by the legality backend.
+
+        Most actions use their normal serialization.  Subset unrolling uses a
+        check-only full-loop representation because Tiramisu's transformed
+        legality schedule cannot express that subset directly.
+        """
+        return "|".join(
+            getattr(optim, "legality_str_representation", str(optim))
+            for optim in self.optims_list
+        )
 
     def __repr__(self) -> str:
         return self.__str__()

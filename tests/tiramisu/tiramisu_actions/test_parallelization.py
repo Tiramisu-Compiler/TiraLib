@@ -13,6 +13,9 @@ def test_parallelization_init():
     assert parallelization.iterator_id == ("comp01", 1)
     assert parallelization.comps == ["comp01"]
 
+    parallelization = Parallelization([("comp01", 1)], comps=["comp01", "comp01"])
+    assert parallelization.comps == ["comp01"]
+
 
 def test_initialize_action_for_tree():
     t_tree = test_utils.tree_test_sample()
@@ -31,6 +34,30 @@ def test_set_string_representations():
     schedule.add_optimizations([parallelization])
 
     assert parallelization.tiramisu_optim_str == "comp02.tag_parallel_level(0);\n"
+
+
+def test_set_string_representations_tags_each_distinct_computation():
+    t_tree = test_utils.tree_test_sample_2()
+    parallelization = Parallelization(
+        [("comp05", 1)],
+        comps=["comp05", "comp06", "comp06", "comp07"],
+    )
+    parallelization.initialize_action_for_tree(t_tree)
+
+    assert parallelization.comps == ["comp05", "comp06", "comp07"]
+    assert parallelization.tiramisu_optim_str == (
+        "comp05.tag_parallel_level(1);\n"
+        "comp06.tag_parallel_level(1);\n"
+        "comp07.tag_parallel_level(1);\n"
+    )
+    assert parallelization.legality_check_string == (
+        "prepare_schedules_for_legality_checks(true);\n"
+        "    is_legal &= loop_parallelization_is_legal(1, "
+        "{&comp05, &comp06, &comp07});\n"
+        "    comp05.tag_parallel_level(1);\n"
+        "comp06.tag_parallel_level(1);\n"
+        "comp07.tag_parallel_level(1);\n"
+    )
 
 
 def test_get_candidates():
