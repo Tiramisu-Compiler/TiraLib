@@ -182,10 +182,16 @@ class Schedule:
 
         if self.tiramisu_program.server:
             result = self.tiramisu_program.server.run("legality", self)
-            self.tree = TiramisuTree.from_isl_ast_string_list(
-                isl_ast_string_list=result.isl_ast.split("\n")
-            )
             self.legality = result.legality
+            if result.legality:
+                if not result.isl_ast:
+                    raise RuntimeError(
+                        "The server accepted the schedule without returning "
+                        "its ISL AST."
+                    )
+                self.tree = TiramisuTree.from_isl_ast_string_list(
+                    isl_ast_string_list=result.isl_ast.split("\n")
+                )
 
             # Update the skewing factors if they are not set
             if result.additional_info:
@@ -207,8 +213,7 @@ class Schedule:
 
         assert isinstance(legality, bool)
         self.legality = legality
-        if with_ast:
-            assert new_tree
+        if with_ast and new_tree is not None:
             self.tree = new_tree
         return self.legality
 
@@ -218,6 +223,11 @@ class Schedule:
         """
         if self.tiramisu_program.server:
             result = self.tiramisu_program.server.run("legality", self)
+            if not result.legality:
+                self.legality = False
+                raise tiramisu_actions.CannotApplyException(
+                    "Cannot update the loop tree for an illegal schedule prefix."
+                )
             self.tree = TiramisuTree.from_isl_ast_string_list(
                 isl_ast_string_list=result.isl_ast.split("\n")
             )
@@ -237,6 +247,25 @@ class Schedule:
         # per-action regexes can stay strict. Tiramisu identifiers are \w+,
         # so stripping whitespace inside the schedule string is lossless.
         sched_str = re.sub(r"\s+", "", sched_str).replace('"', "'")
+
+        def normalize_computations(raw_comps: str) -> list[str]:
+            return list(
+                dict.fromkeys(comp.strip("' ") for comp in raw_comps.split(","))
+            )
+
+        def reference_computation(comps: list[str], level: int) -> str:
+            """Choose a target that exposes the serialized loop level."""
+            for comp in comps:
+                try:
+                    schedule.tree.get_iterator_of_computation(comp, level)
+                    return comp
+                except ValueError:
+                    continue
+            raise ValueError(
+                f"None of the target computations has an iterator at level "
+                f"{level}: {comps}"
+            )
+
         for optimization_str in sched_str.split("|"):
             if optimization_str == "":
                 continue
@@ -247,12 +276,12 @@ class Schedule:
                 match = re.match(regex, optimization_str)
                 if match:
                     loop_level = int(match.group(1))
-                    comps = match.group(2).split(",")
-                    comps = [comp.strip("' ") for comp in comps]
+                    comps = normalize_computations(match.group(2))
+                    reference_comp = reference_computation(comps, loop_level)
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Parallelization(
-                                [(comps[0], loop_level)],
+                                [(reference_comp, loop_level)],
                                 comps=comps,
                             )
                         ]
@@ -266,13 +295,17 @@ class Schedule:
                 if match:
                     loop_level = int(match.group(1))
                     factor = int(match.group(2))
-                    comps = match.group(3).split(",")
-                    comps = [comp.strip("' ") for comp in comps]
+                    comps = normalize_computations(match.group(3))
+                    reference_comp = (
+                        comps[0]
+                        if loop_level == -1
+                        else reference_computation(comps, loop_level)
+                    )
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Unrolling(
                                 [
-                                    (comps[0], loop_level),
+                                    (reference_comp, loop_level),
                                     factor,
                                 ],
                                 comps=comps,
@@ -285,15 +318,18 @@ class Schedule:
                 if match:
                     first_loop_level = int(match.group(1))
                     second_loop_level = int(match.group(2))
-                    comps = match.group(3).split(",")
-                    comps = [comp.strip("' ") for comp in comps]
+                    comps = normalize_computations(match.group(3))
+                    reference_comp = reference_computation(
+                        comps, max(first_loop_level, second_loop_level)
+                    )
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Interchange(
                                 [
-                                    (comps[0], first_loop_level),
-                                    (comps[0], second_loop_level),
+                                    (reference_comp, first_loop_level),
+                                    (reference_comp, second_loop_level),
                                 ],
+                                comps=comps,
                             )
                         ]
                     )
@@ -302,12 +338,13 @@ class Schedule:
                 match = re.match(regex, optimization_str)
                 if match:
                     loop_level = int(match.group(1))
-                    comps = match.group(2).split(",")
-                    comps = [comp.strip("' ") for comp in comps]
+                    comps = normalize_computations(match.group(2))
+                    reference_comp = reference_computation(comps, loop_level)
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Reversal(
-                                [(comps[0], loop_level)],
+                                [(reference_comp, loop_level)],
+                                comps=comps,
                             )
                         ]
                     )
@@ -319,17 +356,20 @@ class Schedule:
                     inner_loop_level = int(match.group(2))
                     outer_loop_factor = int(match.group(3))
                     inner_loop_factor = int(match.group(4))
-                    comps = match.group(5).split(",")
-                    comps = [comp.strip("' ").strip() for comp in comps]
+                    comps = normalize_computations(match.group(5))
+                    reference_comp = reference_computation(
+                        comps, max(outer_loop_level, inner_loop_level)
+                    )
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Tiling2D(
                                 [
-                                    (comps[0], outer_loop_level),
-                                    (comps[0], inner_loop_level),
+                                    (reference_comp, outer_loop_level),
+                                    (reference_comp, inner_loop_level),
                                     outer_loop_factor,
                                     inner_loop_factor,
                                 ],
+                                comps=comps,
                             )
                         ]
                     )
@@ -345,19 +385,27 @@ class Schedule:
                     outer_loop_factor = int(match.group(4))
                     middle_loop_factor = int(match.group(5))
                     inner_loop_factor = int(match.group(6))
-                    comps = match.group(7).split(",")
-                    comps = [comp.strip("' ").strip() for comp in comps]
+                    comps = normalize_computations(match.group(7))
+                    reference_comp = reference_computation(
+                        comps,
+                        max(
+                            outer_loop_level,
+                            middle_loop_level,
+                            inner_loop_level,
+                        ),
+                    )
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Tiling3D(
                                 [
-                                    (comps[0], outer_loop_level),
-                                    (comps[0], middle_loop_level),
-                                    (comps[0], inner_loop_level),
+                                    (reference_comp, outer_loop_level),
+                                    (reference_comp, middle_loop_level),
+                                    (reference_comp, inner_loop_level),
                                     outer_loop_factor,
                                     middle_loop_factor,
                                     inner_loop_factor,
                                 ],
+                                comps=comps,
                             )
                         ]
                     )
@@ -370,16 +418,19 @@ class Schedule:
                     factors = [int(match.group(3)), int(match.group(4))]
                     if match.group(5) is not None:
                         factors.extend([int(match.group(5)), int(match.group(6))])
-                    comps = match.group(7).split(",")
-                    comps = [comp.strip("' ").strip() for comp in comps]
+                    comps = normalize_computations(match.group(7))
+                    reference_comp = reference_computation(
+                        comps, max(outer_loop_level, inner_loop_level)
+                    )
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Skewing(
                                 [
-                                    (comps[0], outer_loop_level),
-                                    (comps[0], inner_loop_level),
+                                    (reference_comp, outer_loop_level),
+                                    (reference_comp, inner_loop_level),
                                     *factors,
                                 ],
+                                comps=comps,
                             )
                         ]
                     )
