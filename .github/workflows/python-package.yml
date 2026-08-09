@@ -42,7 +42,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: skourta/tiramisu:latest
+      image: mascinissa/tiramisu:looper_master
     strategy:
       fail-fast: false
       matrix:
@@ -64,6 +64,7 @@ jobs:
 
     - name: Install TiraLibCPP
       run: |
+        apt update
         apt install -y sqlite3 libsqlite3-dev zlib1g-dev
         git clone https://github.com/skourta/TiraLibCpp.git
         cd TiraLibCpp
