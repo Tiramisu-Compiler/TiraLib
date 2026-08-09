@@ -245,7 +245,6 @@ class TiramisuTree:
             elif "|computation|" in str_line:
                 level_str, _, comp_name = str_line.split("|")
                 line_idx = int(level_str)
-                tiramisu_tree.computations.append(comp_name)
 
                 # Add the computation to its iterator's computations list
                 # (the last iterator we added in the previous level)
@@ -257,11 +256,15 @@ class TiramisuTree:
                     if comp_name not in it.computations_list:
                         it.computations_list.append(comp_name)
 
-                # Add the computation to the absolute order dict
-                tiramisu_tree.computations_absolute_order[comp_name] = (
-                    current_absolute_order
-                )
-                current_absolute_order += 1
+                # A computation may occur in several AST branches, but it is
+                # still one schedule target.  Keep its first lexical position
+                # as the absolute order and expose it only once globally.
+                if comp_name not in tiramisu_tree.computations_absolute_order:
+                    tiramisu_tree.computations.append(comp_name)
+                    tiramisu_tree.computations_absolute_order[comp_name] = (
+                        current_absolute_order
+                    )
+                    current_absolute_order += 1
         return tiramisu_tree
 
     def _get_subtree_representation(self, node_id: IteratorIdentifier) -> str:
@@ -373,7 +376,7 @@ class TiramisuTree:
         for child in candidate_node.child_iterators:
             computations += self.get_iterator_subtree_computations(child)
 
-        return computations
+        return list(dict.fromkeys(computations))
 
     def get_iterator_levels(
         self, iterators_list: list[IteratorIdentifier]

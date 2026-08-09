@@ -1,11 +1,13 @@
+from types import SimpleNamespace
+
 import pytest
 
 import tests.utils as test_utils
+from tests.utils import benchmark_program_test_sample
+from tiralib.config import BaseConfig
 from tiralib.tiramisu import tiramisu_actions
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_actions.parallelization import Parallelization
-from tiralib.config import BaseConfig
-from tests.utils import benchmark_program_test_sample
 
 
 def test_execute():
@@ -103,6 +105,58 @@ def test_is_legal():
     legality = schedule.is_legal()
 
     assert legality is True
+
+
+def test_illegal_server_result_keeps_last_valid_tree():
+    BaseConfig.init()
+    test_program = benchmark_program_test_sample()
+
+    class FakeServer:
+        def run(self, *args, **kwargs):
+            return SimpleNamespace(
+                legality=False,
+                isl_ast="",
+                additional_info="",
+            )
+
+    test_program.server = FakeServer()
+    schedule = Schedule(test_program)
+    original_tree = schedule.tree
+    schedule.add_optimizations([Parallelization(params=[("comp02", 0)])])
+
+    assert schedule.is_legal() is False
+    assert schedule.tree is original_tree
+
+
+def test_legal_server_result_updates_tree_for_follow_up_actions():
+    BaseConfig.init()
+    test_program = benchmark_program_test_sample()
+
+    class FakeServer:
+        def run(self, *args, **kwargs):
+            return SimpleNamespace(
+                legality=True,
+                isl_ast=(
+                    "0|iterator|i|0|i <= 3|\n"
+                    "1|iterator|j|0|j <= 7|\n"
+                    "2|computation|comp02\n"
+                ),
+                additional_info="",
+            )
+
+    test_program.server = FakeServer()
+    schedule = Schedule(test_program)
+    schedule.add_optimizations([Parallelization(params=[("comp02", 0)])])
+
+    assert schedule.is_legal() is True
+    unrolling = tiramisu_actions.Unrolling(
+        params=[("comp02", -1), 4],
+        comps=["comp02"],
+    )
+    schedule.add_optimizations([unrolling])
+
+    assert unrolling.iterator_id == ("comp02", 1)
+    assert str(unrolling) == "U(L1,4,comps=['comp02'])"
 
 
 def test_copy():

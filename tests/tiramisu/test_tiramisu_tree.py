@@ -1,6 +1,6 @@
 import tests.utils as test_utils
-from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 from tiralib.config import BaseConfig
+from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 
 def test_from_annotations():
@@ -56,6 +56,21 @@ def test_get_candidate_computations():
         "comp03",
         "comp04",
     ]
+
+
+def test_repeated_isl_ast_computations_are_unique():
+    t_tree = TiramisuTree.from_isl_ast_string_list(
+        [
+            "0|iterator|i|0|i <= 3|",
+            "1|computation|comp00",
+            "0|iterator|i|0|i <= 3|",
+            "1|computation|comp00",
+        ]
+    )
+
+    assert t_tree.computations == ["comp00"]
+    assert t_tree.computations_absolute_order == {"comp00": 1}
+    assert t_tree.get_iterator_subtree_computations(("comp00", 0)) == ["comp00"]
 
 
 def test_get_root_of_node():

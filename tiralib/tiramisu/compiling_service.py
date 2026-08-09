@@ -55,10 +55,12 @@ class CompilingService:
             legality_result = legality_result.strip()
             if legality_result not in ["0", "1"]:
                 raise Exception(f"Error in legality check: {legality_result}")
+            if legality_result == "0":
+                return False, None
             ast = TiramisuTree.from_isl_ast_string_list(
                 isl_ast_string_list=result_lines[1:]
             )
-            return legality_result == "1", ast
+            return True, ast
 
         else:
             result = result.strip()
@@ -100,11 +102,14 @@ class CompilingService:
 
         if with_ast:
             legality_check_lines += """
-    auto fct = tiramisu::global::get_implicit_function();
+    if (is_legal)
+    {
+        auto fct = tiramisu::global::get_implicit_function();
 
-    fct->gen_time_space_domain();
-    fct->gen_isl_ast();
-    fct->print_isl_ast_representation();
+        fct->gen_time_space_domain();
+        fct->gen_isl_ast();
+        fct->print_isl_ast_representation();
+    }
 """
 
         cpp_code = schedule.tiramisu_program.cpp_code.replace(
