@@ -1,3 +1,4 @@
+import os
 from types import SimpleNamespace
 
 import pytest
@@ -8,6 +9,7 @@ from tiralib.config import BaseConfig
 from tiralib.tiramisu import tiramisu_actions
 from tiralib.tiramisu.schedule import Schedule
 from tiralib.tiramisu.tiramisu_actions.parallelization import Parallelization
+from tiralib.tiramisu.tiramisu_program import TiramisuProgram
 
 
 def test_execute():
@@ -345,6 +347,50 @@ def test_from_sched_str_preserves_parallelization_computations():
     assert parallelization.tiramisu_optim_str == (
         "A_hat.tag_parallel_level(0);\nx_temp.tag_parallel_level(0);\n"
     )
+
+
+def _legality_regression_program(cpp_filename: str) -> TiramisuProgram:
+    """Load a kernel from tests/data with its server-built loop tree."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    cpp = open(os.path.join(here, "..", "data", cpp_filename)).read()
+    return TiramisuProgram.init_server(
+        cpp_code=cpp, load_annotations=True, load_tree=True, reuse_server=False
+    )
+
+
+def test_from_sched_str_interchange_regression_is_legal():
+    """Interchange targets the whole loop nest, so 2mm stays legal.
+
+    function_2mm_MINI, regression case from cases.json.
+    """
+    BaseConfig.init()
+    program = _legality_regression_program("function_2mm_MINI.cpp")
+    schedule = Schedule.from_sched_str("I(L0,L1,comps=['D_beta'])", program)
+
+    interchange = schedule.optims_list[0]
+    assert interchange.is_interchange()
+    # transform covers the whole nest, not just the listed computation
+    assert "D_beta" in interchange.comps
+    assert len(interchange.comps) > 1
+    assert schedule.is_legal() is True
+
+
+def test_from_sched_str_skew_regression_is_legal():
+    """Skew targets the whole loop nest, so symm stays legal.
+
+    function_symm_MINI, regression case from cases.json.
+    """
+    BaseConfig.init()
+    program = _legality_regression_program("function_symm_MINI.cpp")
+    schedule = Schedule.from_sched_str(
+        "S(L0,L1,0,0,comps=['temp_init'])", program
+    )
+
+    skew = schedule.optims_list[0]
+    assert skew.is_skewing()
+    assert "temp_init" in skew.comps
+    assert len(skew.comps) > 1
+    assert schedule.is_legal() is True
 
 
 def test_from_sched_str_unknown_action_raises():

@@ -254,17 +254,14 @@ class Schedule:
             )
 
         def reference_computation(comps: list[str], level: int) -> str:
-            """Choose a target that exposes the serialized loop level."""
+            """Return a target computation exposing ``level`` (fallback: first)."""
             for comp in comps:
                 try:
                     schedule.tree.get_iterator_of_computation(comp, level)
                     return comp
                 except ValueError:
                     continue
-            raise ValueError(
-                f"None of the target computations has an iterator at level "
-                f"{level}: {comps}"
-            )
+            return comps[0]
 
         for optimization_str in sched_str.split("|"):
             if optimization_str == "":
@@ -322,6 +319,8 @@ class Schedule:
                     reference_comp = reference_computation(
                         comps, max(first_loop_level, second_loop_level)
                     )
+                    # Applies to the whole loop nest: leave comps unset so the
+                    # action derives the affected computations from the tree.
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Interchange(
@@ -329,7 +328,6 @@ class Schedule:
                                     (reference_comp, first_loop_level),
                                     (reference_comp, second_loop_level),
                                 ],
-                                comps=comps,
                             )
                         ]
                     )
@@ -340,11 +338,11 @@ class Schedule:
                     loop_level = int(match.group(1))
                     comps = normalize_computations(match.group(2))
                     reference_comp = reference_computation(comps, loop_level)
+                    # Derive the affected computations from the tree.
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Reversal(
                                 [(reference_comp, loop_level)],
-                                comps=comps,
                             )
                         ]
                     )
@@ -360,6 +358,7 @@ class Schedule:
                     reference_comp = reference_computation(
                         comps, max(outer_loop_level, inner_loop_level)
                     )
+                    # Derive the affected computations from the tree.
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Tiling2D(
@@ -369,7 +368,6 @@ class Schedule:
                                     outer_loop_factor,
                                     inner_loop_factor,
                                 ],
-                                comps=comps,
                             )
                         ]
                     )
@@ -394,6 +392,7 @@ class Schedule:
                             inner_loop_level,
                         ),
                     )
+                    # Derive the affected computations from the tree.
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Tiling3D(
@@ -405,7 +404,6 @@ class Schedule:
                                     middle_loop_factor,
                                     inner_loop_factor,
                                 ],
-                                comps=comps,
                             )
                         ]
                     )
@@ -422,6 +420,7 @@ class Schedule:
                     reference_comp = reference_computation(
                         comps, max(outer_loop_level, inner_loop_level)
                     )
+                    # Derive the affected computations from the tree.
                     schedule.add_optimizations(
                         [
                             tiramisu_actions.Skewing(
@@ -430,7 +429,6 @@ class Schedule:
                                     (reference_comp, inner_loop_level),
                                     *factors,
                                 ],
-                                comps=comps,
                             )
                         ]
                     )
