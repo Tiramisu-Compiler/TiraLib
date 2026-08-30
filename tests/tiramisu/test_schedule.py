@@ -382,9 +382,7 @@ def test_from_sched_str_skew_regression_is_legal():
     """
     BaseConfig.init()
     program = _legality_regression_program("function_symm_MINI.cpp")
-    schedule = Schedule.from_sched_str(
-        "S(L0,L1,0,0,comps=['temp_init'])", program
-    )
+    schedule = Schedule.from_sched_str("S(L0,L1,0,0,comps=['temp_init'])", program)
 
     skew = schedule.optims_list[0]
     assert skew.is_skewing()
