@@ -113,6 +113,23 @@ class Schedule:
             None, max_run will be set to infinity.
         `delete_files` : bool
             Defines whether to delete the temporary generated files or not.
+
+        Notes
+        -----
+        The parameters above describe runs of the program's measurement
+        harness (`tiramisu_program.harness`):
+
+        - Under the `DefaultHarness`, runs are back-to-back kernel
+          invocations inside one warm process, and the time budget aborts
+          an in-flight run via SIGALRM.
+        - Under the `PolybenchHarness`, each run is a full PolyBench-style
+          measurement in a freshly exec'ed process (deterministic init,
+          cache flush, one kernel invocation); the time budget kills the
+          in-flight measurement process (its time is discarded).
+
+        In both cases the returned times are in milliseconds and the first
+        `min_runs` measurements are not abortable.
+
         Returns
         -------
         The execution time of the Tiramisu program after applying the schedule.
