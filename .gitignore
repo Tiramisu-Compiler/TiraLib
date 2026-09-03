@@ -13,3 +13,5 @@ main.py
 poetry.lock
 lcov.info
 *.lcov
+# Jupyter
+.ipynb_checkpoints/

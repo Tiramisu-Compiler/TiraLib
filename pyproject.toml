@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tiralib"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 authors = ["Smail KOURTA <sk10691@nyu.edu>"]
 readme = "README.md"

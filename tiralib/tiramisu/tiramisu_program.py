@@ -6,6 +6,13 @@ from typing import Any
 
 from tiralib.tiramisu.compiling_service import CompilingService
 from tiralib.tiramisu.function_server import FunctionServer
+from tiralib.tiramisu.harness import (
+    DefaultHarness,
+    Harness,
+    PolybenchHarness,
+    wrapper_cpp_template,  # noqa: F401  (re-exported for backward compat)
+    wrapper_h_template,  # noqa: F401  (re-exported for backward compat)
+)
 from tiralib.tiramisu.tiramisu_tree import TiramisuTree
 
 
@@ -36,6 +43,12 @@ class TiramisuProgram:
         The wrapper object of the function
     `server`: FunctionServer
         TiralibCpp server object
+    `harness`: Harness
+        The measurement harness used to generate the execution wrapper.
+        Defaults to :class:`DefaultHarness`; PolyBench-derived programs
+        with an init sidecar next to their generator file are
+        auto-detected and get a :class:`PolybenchHarness` (see
+        `from_file`).
     """
 
     def __init__(self: "TiramisuProgram"):
@@ -45,42 +58,16 @@ class TiramisuProgram:
         self.tree: TiramisuTree
         self.IO_buffer_names: list[str]
         self.buffer_sizes: list[list[str]]
+        self.buffer_types: list[str] = []
         self.annotations: dict[str, Any] | None = None
         self.isl_ast_string: str | None = None
         self.wrapper_obj: bytes | None = None
         self.server: FunctionServer | None = None
+        self.harness: Harness = DefaultHarness()
 
     @property
     def wrappers(self):
-        buffers_init_lines = ""
-        for i, buffer_name in enumerate(self.IO_buffer_names):
-            buffers_init_lines += f"""
-    double *c_{buffer_name} = (double*)malloc({"*".join(self.buffer_sizes[i][::-1])}* sizeof(double));
-    parallel_init_buffer(c_{buffer_name}, {"*".join(self.buffer_sizes[i][::-1])}, (double){str(random.randint(1, 10))});
-    Halide::Buffer<double> {buffer_name}(c_{buffer_name}, {",".join(self.buffer_sizes[i][::-1])});
-    """  # noqa: E501
-
-        wrapper_cpp_code = wrapper_cpp_template.replace(
-            "$func_id$", self.temp_files_identifier
-        ).replace("$func_name$", self.name)
-        wrapper_cpp_code = wrapper_cpp_code.replace(
-            "$buffers_init$", buffers_init_lines
-        )
-        wrapper_cpp_code = wrapper_cpp_code.replace(
-            "$func_params$",
-            ",".join([name + ".raw_buffer()" for name in self.IO_buffer_names]),
-        )
-
-        wrapper_h_code = wrapper_h_template.replace("$func_name$", self.name)
-        wrapper_h_code = wrapper_h_code.replace(
-            "$func_params$",
-            ",".join(["halide_buffer_t *" + name for name in self.IO_buffer_names]),
-        )
-
-        return {
-            "cpp": wrapper_cpp_code,
-            "h": wrapper_h_code,
-        }
+        return self.harness.generate_wrappers(self)
 
     @classmethod
     def from_annotations(
@@ -89,12 +76,15 @@ class TiramisuProgram:
         cpp_code: str,
         load_tree: bool = True,
         wrapper_obj: bytes | None = None,
+        harness: Harness | None = None,
     ) -> "TiramisuProgram":
         # Initiate an instante of the TiramisuProgram class
         tiramisu_prog = cls()
         tiramisu_prog.cpp_code = cpp_code
         tiramisu_prog.annotations = annotations
         tiramisu_prog.load_code_lines()
+        if harness is not None:
+            tiramisu_prog.harness = harness
 
         if wrapper_obj:
             tiramisu_prog.wrapper_obj = wrapper_obj
@@ -112,6 +102,7 @@ class TiramisuProgram:
         load_annotations: bool = False,
         load_isl_ast: bool = False,
         load_tree: bool = False,
+        harness: Harness | None = None,
     ) -> "TiramisuProgram":
         """This function loads a tiramisu function from its cpp file and its
         wrapper files.
@@ -126,6 +117,12 @@ class TiramisuProgram:
             A flag to indicate if the isl ast should be loaded or not
         `load_tree`: bool
             A flag to indicate if the tree should be constructed or not
+        `harness`: Harness or None
+            The measurement harness to use when executing the program. If
+            None (default), a PolyBench init sidecar
+            (``<function_name>_init.h``) is looked up next to `file_path`;
+            if found, a :class:`PolybenchHarness` is used, otherwise the
+            :class:`DefaultHarness`.
 
         Returns
         -------
@@ -138,6 +135,11 @@ class TiramisuProgram:
         with open(file_path, "r") as f:
             tiramisu_prog.cpp_code = f.read()
         tiramisu_prog.load_code_lines()
+
+        if harness is None:
+            harness = PolybenchHarness.detect(file_path, tiramisu_prog.name)
+        if harness is not None:
+            tiramisu_prog.harness = harness
 
         if load_annotations:
             tiramisu_prog.annotations = json.loads(
@@ -175,11 +177,16 @@ class TiramisuProgram:
         load_isl_ast: bool = False,
         load_tree: bool = False,
         reuse_server: bool = False,
+        harness: Harness | None = None,
     ) -> "TiramisuProgram":
         # Initiate an instante of the TiramisuProgram class
         tiramisu_prog = cls()
         tiramisu_prog.cpp_code = cpp_code
         tiramisu_prog.load_code_lines()
+        # The harness must be set before creating the server: the server
+        # writes the harness-generated wrapper files at construction time.
+        if harness is not None:
+            tiramisu_prog.harness = harness
         tiramisu_prog.server = FunctionServer(tiramisu_prog, reuse_server=reuse_server)
 
         if load_annotations:
@@ -239,222 +246,20 @@ class TiramisuProgram:
         buffers_vect = re.findall(r"{(.+)}", self.code_gen_line)[0]
         self.IO_buffer_names = re.findall(r"\w+", buffers_vect)
         self.buffer_sizes = []
+        self.buffer_types = []
         for buf_name in self.IO_buffer_names:
-            sizes_vect = re.findall(r"buffer " + buf_name + ".*{(.*)}", self.cpp_code)[
-                0
-            ]
+            # Anchor on the opening parenthesis so that e.g. b_A does not
+            # match the declaration of b_AB.
+            buffer_decl = re.findall(
+                r"buffer\s+" + buf_name + r"\s*\(.*", self.cpp_code
+            )[0]
+            sizes_vect = re.findall(r"{(.*)}", buffer_decl)[0]
             self.buffer_sizes.append(re.findall(r"\d+", sizes_vect))
+            buffer_p_type = re.findall(r"(p_\w+)", buffer_decl)
+            self.buffer_types.append(buffer_p_type[0] if buffer_p_type else "p_float64")
 
     def __str__(self) -> str:
         return f"TiramisuProgram(name={self.name})"
 
     def __repr__(self) -> str:
         return self.__str__()
-
-
-wrapper_cpp_template = """#include "Halide.h"
-#include "$func_id$_wrapper.h"
-#include "tiramisu/utils.h"
-#include <iostream>
-#include <time.h>
-#include <fstream>
-#include <chrono>
-
-using namespace std::chrono;
-using namespace std;
-
-int main(int, char **argv){
-
-$buffers_init$
-
-    // halide_set_num_threads(48); 
-
-    TuneParams params = get_tune_params();
-    setup_signal_handler();
-
-    bool use_budget = (params.time_budget_ms > 0);
-    int limit = 0;
-
-    // Determine loop iteration limit.
-    // If budget is unset, run exactly min_runs.
-    // If budget is set, run up to max_runs, but correct for cases where max_runs < min_runs.
-    if (!use_budget) {
-        limit = params.min_runs;
-    } else {
-        limit = std::max(params.min_runs, params.max_runs);
-    }
-
-    double duration;
-    auto total_start = std::chrono::high_resolution_clock::now();
-    
-    for (int i = 0; i < limit; ++i) {
-        
-        bool timer_active = false;
-
-        // Initiate timeout logic only if the mandatory minimum runs are satisfied.
-        if (use_budget && i >= params.min_runs) {
-            
-            auto now = std::chrono::high_resolution_clock::now();
-            double total_elapsed_ms = std::chrono::duration_cast<std::chrono::nanoseconds>(now - total_start).count() / 1000000.0;
-            double remaining_ms = params.time_budget_ms - total_elapsed_ms;
-
-            // Abort if budget is exhausted between runs.
-            if (remaining_ms <= 0.0) {
-                break; 
-            }
-            
-            // Ensure timer value is non-zero to prevent inadvertent disablement.
-            if (remaining_ms < 0.001) remaining_ms = 0.001;
-            
-            set_execution_timer(remaining_ms);
-            timer_active = true;
-        }
-
-        auto begin = std::chrono::high_resolution_clock::now();
-        $func_name$($func_params$);
-        auto end = std::chrono::high_resolution_clock::now();
-
-        // Disarm timer immediately post-execution to protect I/O operations.
-        if (timer_active) {
-            clear_execution_timer();
-        }
-
-        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count() / (double)1000000;
-        std::cout << duration << " " << std::flush;
-    }
-
-    std::cout << std::endl;
-    return 0;
-}"""  # noqa: E501
-wrapper_h_template = """#include <tiramisu/utils.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <signal.h>
-#include <cstdlib>
-#include <algorithm>
-#include <vector>
-#include <string>
-#include <limits>
-#include <iostream>
-
-#define NB_THREAD_INIT 48
-
-struct args {
-    double *buf;
-    unsigned long long int part_start;
-    unsigned long long int part_end;
-    double value;
-};
-
-// Configuration parameters for execution scheduling
-struct TuneParams {
-    int min_runs;
-    int max_runs;
-    double time_budget_ms; // -1.0 indicates no budget constraint
-};
-
-void *init_part(void *params)
-{
-   double *buffer = ((struct args*) params)->buf;
-   unsigned long long int start = ((struct args*) params)->part_start;
-   unsigned long long int end = ((struct args*) params)->part_end;
-   double val = ((struct args*) params)->value;
-   for (unsigned long long int k = start; k < end; k++){
-       buffer[k]=val;
-   }
-   pthread_exit(NULL);
-}
-
-void parallel_init_buffer(double* buf, unsigned long long int size, double value){
-    pthread_t threads[NB_THREAD_INIT];
-    struct args params[NB_THREAD_INIT];
-    for (int i = 0; i < NB_THREAD_INIT; i++) {
-        unsigned long long int start = i*size/NB_THREAD_INIT;
-        unsigned long long int end = std::min((i+1)*size/NB_THREAD_INIT, size);
-        params[i] = (struct args){buf, start, end, value};
-        pthread_create(&threads[i], NULL, init_part, (void*)&(params[i]));
-    }
-    for (int i = 0; i < NB_THREAD_INIT; i++)
-        pthread_join(threads[i], NULL);
-    return;
-}
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-int $func_name$($func_params$);
-#ifdef __cplusplus
-}  // extern "C"
-#endif
-
-// Parses environment variables to configure tuning parameters
-TuneParams get_tune_params() {
-    TuneParams params;
-
-    // Parse MIN_RUNS. Defaults to 0 if undefined.
-    const char* min_runs_env = std::getenv("MIN_RUNS");
-    params.min_runs = (min_runs_env != nullptr) ? std::stoi(min_runs_env) : 0;
-
-    // Parse TIME_BUDGET. Defaults to -1.0 (infinite) if undefined.
-    const char* budget_env = std::getenv("TIME_BUDGET");
-    if (budget_env != nullptr) {
-        params.time_budget_ms = std::stof(budget_env);
-    } else {
-        params.time_budget_ms = -1.0; 
-    }
-
-    // Parse MAX_RUNS. Defaults to INT_MAX if undefined or "inf".
-    const char* max_runs_env = std::getenv("MAX_RUNS");
-    if (max_runs_env != nullptr && std::string(max_runs_env) != "inf") {
-        params.max_runs = std::stoi(max_runs_env);
-    } else {
-        params.max_runs = std::numeric_limits<int>::max();
-    }
-    
-    return params;
-}
-
-// Handler for SIGALRM.
-// Invokes _exit() to immediately terminate the process when the time budget is exceeded.
-// Partial results have already been flushed to stdout.
-void timer_handler(int signum) {
-    _exit(0); 
-}
-
-// Configures the SIGALRM handler.
-void setup_signal_handler() {
-    struct sigaction sa;
-    sa.sa_handler = timer_handler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGALRM, &sa, NULL);
-}
-
-// Arms the OS timer for the specified duration (milliseconds).
-void set_execution_timer(double time_left_ms) {
-    if (time_left_ms <= 0) return;
-
-    struct itimerval timer;
-    long seconds = (long)(time_left_ms / 1000.0);
-    long useconds = (long)((time_left_ms - (seconds * 1000.0)) * 1000.0);
-
-    timer.it_value.tv_sec = seconds;
-    timer.it_value.tv_usec = useconds;
-    
-    // Non-repeating timer
-    timer.it_interval.tv_sec = 0;
-    timer.it_interval.tv_usec = 0;
-
-    setitimer(ITIMER_REAL, &timer, NULL);
-}
-
-// Disarms the OS timer to prevent interruption during non-execution phases.
-void clear_execution_timer() {
-    struct itimerval timer;
-    timer.it_value.tv_sec = 0;
-    timer.it_value.tv_usec = 0;
-    timer.it_interval.tv_sec = 0;
-    timer.it_interval.tv_usec = 0;
-    setitimer(ITIMER_REAL, &timer, NULL);
-}
-"""  # noqa: E501
