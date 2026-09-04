@@ -108,6 +108,49 @@ def test_polybench_wrapper_content():
     assert 'extern "C"' in header
 
 
+def test_polybench_openmp_runtime_default():
+    """The frozen measurement policy: OpenMP runtime, schedule(static,1),
+    bound threads — baked into the generated wrapper."""
+    BaseConfig.init()
+    program = TiramisuProgram.from_file(GEMM_GENERATOR)
+    harness = program.harness
+    assert harness.runtime == "openmp"
+    assert harness.omp_schedule == "static,1"
+    cpp = program.wrappers["cpp"]
+    assert "tiralib_install_openmp_runtime();" in cpp
+    assert "#pragma omp parallel for schedule(static,1)" in cpp
+    assert 'setenv("OMP_PROC_BIND", "close", 1)' in cpp
+    assert 'setenv("OMP_PLACES", "cores", 1)' in cpp
+    assert "sched_setaffinity" in cpp  # orchestrator affinity reset
+
+
+def test_polybench_halide_runtime_option():
+    """runtime='halide' keeps Halide's pool and scrubs the OpenMP binding
+    vars that would otherwise serialize it."""
+    BaseConfig.init()
+    harness = PolybenchHarness(GEMM_SIDECAR, runtime="halide")
+    program = TiramisuProgram.from_file(GEMM_GENERATOR, harness=harness)
+    cpp = program.wrappers["cpp"]
+    assert "tiralib_install_openmp_runtime" not in cpp
+    assert 'unsetenv("OMP_PROC_BIND");' in cpp
+    assert 'unsetenv("GOMP_CPU_AFFINITY");' in cpp
+    assert "sched_setaffinity" in cpp
+
+
+def test_polybench_runtime_options_validated():
+    with pytest.raises(ValueError):
+        PolybenchHarness(GEMM_SIDECAR, runtime="tbb")
+    with pytest.raises(ValueError):
+        PolybenchHarness(GEMM_SIDECAR, omp_schedule="static,x")
+    with pytest.raises(ValueError):
+        PolybenchHarness(GEMM_SIDECAR, omp_schedule="auto")
+    with pytest.raises(ValueError):
+        PolybenchHarness(GEMM_SIDECAR, omp_proc_bind="master")
+    # valid variants construct fine
+    PolybenchHarness(GEMM_SIDECAR, omp_schedule="dynamic")
+    PolybenchHarness(GEMM_SIDECAR, omp_schedule="guided,4", omp_proc_bind="spread")
+
+
 def test_polybench_wrapper_options():
     BaseConfig.init()
     harness = PolybenchHarness(GEMM_SIDECAR, cache_size_kb=1024, flush_cache=False)

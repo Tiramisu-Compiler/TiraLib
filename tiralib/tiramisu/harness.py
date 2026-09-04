@@ -134,9 +134,36 @@ class PolybenchHarness(Harness):
     `linux_fifo_scheduler` : bool
         If True, defines ``POLYBENCH_LINUX_FIFO_SCHEDULER`` (requires
         running as root, see PolyBench documentation).
+    `runtime` : "openmp" | "halide"
+        Parallel runtime used by the measured kernel. The default,
+        ``"openmp"``, maps Halide parallel loops onto
+        ``#pragma omp parallel for`` (via
+        ``halide_set_custom_parallel_runtime``) with bound threads —
+        the frozen measurement policy for PolyBench comparisons: the
+        OpenMP team is pre-warmed by the (untimed) PolyBench cache
+        flush, threads are pinned one-per-core, and scheduling is
+        deterministic. ``"halide"`` keeps Halide's own work-stealing
+        thread pool (the historical behavior).
+    `omp_schedule` : str
+        OpenMP schedule for ``runtime="openmp"``. Default ``"static,1"``
+        (cyclic): deterministic thread-to-iteration mapping with balanced
+        distribution of triangular/imbalanced loops. Accepts
+        ``static``/``dynamic``/``guided`` with an optional chunk size.
+    `omp_proc_bind` : str
+        Value for ``OMP_PROC_BIND`` (with ``OMP_PLACES=cores``), exported
+        by the measurement orchestrator for its fresh-process children.
+        Default ``"close"``. Only used with ``runtime="openmp"``.
 
     Notes
     -----
+    Environment hygiene is handled by the wrapper itself: the
+    orchestrator sets (``runtime="openmp"``) or clears
+    (``runtime="halide"``) the OpenMP binding variables for its children
+    and resets its own CPU affinity mask, so stray ``OMP_PROC_BIND``
+    settings in the caller's environment cannot serialize the
+    measurement (libgomp pins the orchestrator's thread at startup and
+    forked children would otherwise inherit a single-core mask).
+
     Measurement semantics under this harness:
 
     - ``min_runs``/``max_runs`` count *process-level* measurements: each
@@ -165,15 +192,34 @@ class PolybenchHarness(Harness):
         linux_fifo_scheduler: bool = False,
         *,
         init_sidecar_code: str | None = None,
+        runtime: str = "openmp",
+        omp_schedule: str = "static,1",
+        omp_proc_bind: str = "close",
     ):
         if (init_sidecar_path is None) == (init_sidecar_code is None):
             raise ValueError(
                 "PolybenchHarness requires exactly one of init_sidecar_path "
                 "or init_sidecar_code"
             )
+        if runtime not in ("openmp", "halide"):
+            raise ValueError(
+                f"PolybenchHarness: unknown runtime {runtime!r} "
+                "(expected 'openmp' or 'halide')"
+            )
+        if not re.fullmatch(r"(static|dynamic|guided)(,\d+)?", omp_schedule):
+            raise ValueError(
+                f"PolybenchHarness: invalid omp_schedule {omp_schedule!r}"
+            )
+        if omp_proc_bind not in ("close", "spread", "true"):
+            raise ValueError(
+                f"PolybenchHarness: invalid omp_proc_bind {omp_proc_bind!r}"
+            )
         self.cache_size_kb = cache_size_kb
         self.flush_cache = flush_cache
         self.linux_fifo_scheduler = linux_fifo_scheduler
+        self.runtime = runtime
+        self.omp_schedule = omp_schedule
+        self.omp_proc_bind = omp_proc_bind
 
         if init_sidecar_path is not None:
             self.init_sidecar_path = Path(init_sidecar_path)
@@ -284,6 +330,28 @@ class PolybenchHarness(Harness):
             name + ".raw_buffer()" for name in program.IO_buffer_names
         )
 
+        if self.runtime == "openmp":
+            runtime_override = polybench_openmp_runtime_template.replace(
+                "$omp_schedule$", self.omp_schedule
+            )
+            install_runtime_call = "tiralib_install_openmp_runtime();"
+            orchestrator_env = (
+                f'    setenv("OMP_PROC_BIND", "{self.omp_proc_bind}", 1);\n'
+                '    setenv("OMP_PLACES", "cores", 1);\n'
+                '    unsetenv("GOMP_CPU_AFFINITY");'
+            )
+        else:
+            runtime_override = ""
+            install_runtime_call = ""
+            # Halide's pool ignores OpenMP binding vars, but libgomp (linked
+            # for the PolyBench flush) pins threads when they are set, which
+            # would serialize the kernel. Scrub them for the children.
+            orchestrator_env = (
+                '    unsetenv("OMP_PROC_BIND");\n'
+                '    unsetenv("OMP_PLACES");\n'
+                '    unsetenv("GOMP_CPU_AFFINITY");'
+            )
+
         wrapper_cpp_code = (
             polybench_wrapper_cpp_template.replace(
                 "$polybench_defines$", "\n".join(defines)
@@ -291,6 +359,9 @@ class PolybenchHarness(Harness):
             .replace("$polybench_h$", polybench_h)
             .replace("$polybench_c$", polybench_c)
             .replace("$init_sidecar$", self.sidecar_code)
+            .replace("$runtime_override$", runtime_override)
+            .replace("$install_runtime_call$", install_runtime_call)
+            .replace("$orchestrator_env$", orchestrator_env)
             .replace("$func_id$", program.temp_files_identifier)
             .replace("$func_name$", program.name)
             .replace("$buffers_decl$", buffers_decl)
@@ -601,11 +672,14 @@ $init_sidecar$
 #include <cstring>
 #include <limits>
 #include <string>
+#include <sched.h>
 #include <signal.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+$runtime_override$
 
 namespace {
 
@@ -639,6 +713,7 @@ TuneParams get_tune_params() {
 
 // One PolyBench-style measurement, meant to run in a fresh process.
 int run_single_measurement(bool dump_arrays) {
+    $install_runtime_call$
     // Allocation via polybench_alloc_data: 4096-byte aligned, PolyBench
     // inter-array padding semantics.
 $buffers_decl$
@@ -710,6 +785,20 @@ int main(int argc, char **argv) {
     if (argc > 1 && std::strcmp(argv[1], "--tiralib-single-run") == 0) {
         bool dump = (argc > 2 && std::strcmp(argv[2], "--dump") == 0);
         return run_single_measurement(dump);
+    }
+
+    // Measurement-policy environment for the fresh-process children
+    // (libgomp reads these at exec time in each child).
+$orchestrator_env$
+    {
+        // Undo any affinity clamp libgomp's constructor applied to THIS
+        // process (the wrapper links OpenMP for the PolyBench flush, and
+        // OMP_PROC_BIND in the inherited environment pins the initial
+        // thread): children must inherit the full allowed cpu set.
+        cpu_set_t tl_full;
+        CPU_ZERO(&tl_full);
+        for (int c = 0; c < CPU_SETSIZE; c++) CPU_SET(c, &tl_full);
+        sched_setaffinity(0, sizeof(tl_full), &tl_full);
     }
 
     TuneParams params = get_tune_params();
@@ -805,6 +894,76 @@ int main(int argc, char **argv) {
     std::fflush(stdout);
     return 0;
 }"""  # noqa: E501
+
+# OpenMP-backed parallel runtime for the measured kernel. Installed via
+# Halide's public halide_set_custom_parallel_runtime API (no linker
+# tricks, works with both wrapper build paths). The (untimed) PolyBench
+# cache flush is itself an OpenMP loop, so the team the kernel uses is
+# created and bound before the timer starts — matching what the stock
+# PolyBench harness gives OpenMP-based tools such as Pluto.
+polybench_openmp_runtime_template = """\
+// ===== PolyBench measurement policy: OpenMP-backed parallel runtime =====
+// Halide parallel loops execute as '#pragma omp parallel for
+// schedule($omp_schedule$)'. Tasks with semaphore dependencies (none in
+// practice for PolyBench kernels) keep Halide's default runtime.
+static int tiralib_omp_do_par_for(void *user_context, halide_task_t task,
+                                  int min, int extent, uint8_t *closure) {
+    static bool announced = false;
+    if (!announced) {
+        fprintf(stderr,
+                "[tiralib openmp runtime: schedule($omp_schedule$)]\\n");
+        announced = true;
+    }
+    int err = 0;
+    #pragma omp parallel for schedule($omp_schedule$)
+    for (int i = 0; i < extent; i++) {
+        int r = task(user_context, min + i, closure);
+        if (r != 0) err = r;
+    }
+    return err;
+}
+
+static int tiralib_omp_do_parallel_tasks(void *user_context, int num_tasks,
+                                         struct halide_parallel_task_t *tasks,
+                                         void *task_parent) {
+    for (int t = 0; t < num_tasks; t++) {
+        if (tasks[t].num_semaphores != 0 || tasks[t].serial) {
+            return halide_default_do_parallel_tasks(user_context, num_tasks,
+                                                    tasks, task_parent);
+        }
+    }
+    static bool announced = false;
+    if (!announced) {
+        fprintf(stderr,
+                "[tiralib openmp runtime: parallel_tasks "
+                "schedule($omp_schedule$)]\\n");
+        announced = true;
+    }
+    int err = 0;
+    for (int t = 0; t < num_tasks && err == 0; t++) {
+        struct halide_parallel_task_t *pt = &tasks[t];
+        #pragma omp parallel for schedule($omp_schedule$)
+        for (int i = 0; i < pt->extent; i++) {
+            int r = pt->fn(user_context, pt->min + i, 1, pt->closure,
+                           task_parent);
+            if (r != 0) err = r;
+        }
+    }
+    return err;
+}
+
+static void tiralib_install_openmp_runtime() {
+    halide_set_custom_parallel_runtime(
+        tiralib_omp_do_par_for,
+        halide_default_do_task,
+        halide_default_do_loop_task,
+        tiralib_omp_do_parallel_tasks,
+        halide_default_semaphore_init,
+        halide_default_semaphore_try_acquire,
+        halide_default_semaphore_release);
+}
+// ===== end OpenMP runtime =====
+"""
 
 # The wrapper header is included both by the wrapper TU and by the
 # generated schedule TU (the Tiramisu generator re-enables its wrapper
