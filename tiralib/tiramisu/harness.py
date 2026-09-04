@@ -207,9 +207,7 @@ class PolybenchHarness(Harness):
                 "(expected 'openmp' or 'halide')"
             )
         if not re.fullmatch(r"(static|dynamic|guided)(,\d+)?", omp_schedule):
-            raise ValueError(
-                f"PolybenchHarness: invalid omp_schedule {omp_schedule!r}"
-            )
+            raise ValueError(f"PolybenchHarness: invalid omp_schedule {omp_schedule!r}")
         if omp_proc_bind not in ("close", "spread", "true"):
             raise ValueError(
                 f"PolybenchHarness: invalid omp_proc_bind {omp_proc_bind!r}"
